@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Veo Prompt Generator</title>
+    <title>Prompt D - Generator</title>
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
@@ -550,11 +550,11 @@
     position: absolute;
     top: 8px;
     right: 8px;
-    background: var(--surface-light);
+    background: var(--primary);
     border: 1px solid var(--border);
     color: var(--text-secondary);
     padding: 4px 8px;
-    border-radius: 6px;
+    border-radius: 20px;
     cursor: pointer;
     font-size: 12px;
     font-family: 'Kanit', sans-serif;
@@ -2491,19 +2491,19 @@ line-clamp: 3;
 /* Floating Action Button */
 .fab-announcement {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
+    bottom: 20px;
+    right: 20px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     border: none;
     border-radius: 30px;
-    padding: 16px 24px;
+    padding: 12px 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
     font-family: 'Kanit', sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     box-shadow: 0 4px 20px rgba(147, 51, 234, 0.4);
     transition: all 0.3s ease;
@@ -2688,19 +2688,19 @@ line-clamp: 3;
 /* Floating Course Button - ขนาดเล็กลงเหมือนข่าวสาร */
 .fab-course {
     position: fixed;
-    bottom: 100px;
-    right: 30px;
+    bottom: 80px;
+    right: 20px;
     background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
     color: white;
     border: none;
     border-radius: 30px;
-    padding: 16px 24px; /* เหมือนข่าวสาร */
+    padding: 12px 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     gap: 8px;
     font-family: 'Kanit', sans-serif;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
     transition: all 0.3s ease;
@@ -3477,6 +3477,75 @@ line-clamp: 3;
 }
 /* ========== END MOBILE DROPDOWN ========== */
 
+/* Image Gen Button - Special Style */
+.mode-btn.new-feature {
+    position: relative;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
+    border: 2px solid #ff4757;
+    color: white !important;
+    animation: pulse-glow 2s infinite;
+}
+
+.mode-btn.new-feature:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 24px rgba(255, 71, 87, 0.4);
+}
+
+/* NEW Badge */
+.new-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #00ff00;
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    animation: blink 1s infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(255, 71, 87, 0.6);
+    }
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Active state สำหรับ Image Gen */
+.mode-btn.new-feature.active {
+    background: linear-gradient(135deg, #ff4757 0%, #ee5a6f 100%);
+    box-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
+}
+
+.mode-btn.new-feature::after {
+    content: 'สร้างภาพด้วย AI!';
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.mode-btn.new-feature:hover::after {
+    opacity: 1;
+}
+
     </style>  <!-- นี่คือ closing tag -->
 </head>
 <body>
@@ -3487,8 +3556,8 @@ line-clamp: 3;
                 <div class="logo">
                     <div class="logo-icon">🎬</div>
                     <div class="logo-text">
-                        <h1>Veo Prompt Generator</h1>
-                        <p>สร้าง Cinematic Prompts สำหรับ AI Video</p>
+                        <h1>Prompt D - Generator</h1>
+<p>AI-Powered Prompt Generator</p>
                     </div>
                 </div>
                 <div class="usage-display">
@@ -3514,17 +3583,19 @@ line-clamp: 3;
         <span class="mode-icon">🎭</span>
         <span class="mode-text">Prompt Master</span>
     </button>
+    <!-- ย้าย Image Gen มาตรงนี้ พร้อมเพิ่ม class พิเศษ -->
+    <button class="mode-btn new-feature" data-mode="image" onclick="switchMode('image')">
+        <span class="mode-icon">🎨</span>
+        <span class="mode-text">Image Gen</span>
+        <span class="new-badge">NEW!</span>
+    </button>
     <button class="mode-btn" data-mode="character" onclick="switchMode('character')">
-        <span class="mode-icon">🧙</span>  <!-- เปลี่ยนจาก 👤 -->
+        <span class="mode-icon">🧙</span>
         <span class="mode-text">Character Creator</span>
     </button>
     <button class="mode-btn" data-mode="library" onclick="switchMode('library')">
-        <span class="mode-icon">🗂️</span>  <!-- เปลี่ยนจาก 📚 -->
+        <span class="mode-icon">🗂️</span>
         <span class="mode-text">My Characters</span>
-    </button>
-    <button class="mode-btn" data-mode="image" onclick="switchMode('image')">
-        <span class="mode-icon">🎨</span>
-        <span class="mode-text">Image Gen</span>
     </button>
 </div>
         </div>
@@ -3533,9 +3604,9 @@ line-clamp: 3;
             <select class="mobile-mode-dropdown" id="mobileModeDrop" onchange="switchMode(this.value)">
     <option value="general">🎬 General Prompt</option>
     <option value="multichar">🎭 Prompt Master</option>
+    <option value="image">🎨 Image Gen ✨NEW!</option>
     <option value="character">🧙 Character Creator</option>
     <option value="library">🗂️ My Characters</option>
-    <option value="image">🎨 Image Gen</option>
 </select>
 
             <!-- Mobile Info Toggle -->
@@ -3776,9 +3847,6 @@ line-clamp: 3;
         placeholder="อธิบายวิดีโอที่ต้องการ เช่น 'ภาพถ่ายทางอากาศของเมืองยามค่ำคืน แสงนีออนสว่างไสว คล้ายฉาก Blade Runner'..."
         rows="3"
     ></textarea>
-    <button id="expandBtn" class="expand-btn" onclick="toggleExpand()">
-        ⛶ ขยาย
-    </button>
     <button id="sendButton" class="send-btn">
         สร้าง Prompt ✨
     </button>
@@ -3888,7 +3956,27 @@ line-clamp: 3;
         </div>
         
         <div class="announcement-body">
-    <!-- ข่าวใหม่อันแรก -->
+    <!-- ข่าวใหม่อันแรก - Image Gen -->
+    <div class="announcement-item" style="border: 3px solid #ff4757; background: linear-gradient(135deg, rgba(255, 71, 87, 0.1) 0%, rgba(238, 90, 111, 0.1) 100%);">
+        <span class="announcement-badge new" style="background: #ff4757;">ใหม่ล่าสุด!</span>
+        <h3>🎨 Image Gen - สร้างภาพด้วย AI ได้แล้ว!</h3>
+        <p><strong>ฟีเจอร์ใหม่สุดร้อนแรง! สร้างภาพสวยๆ ด้วย AI ระดับโลก</strong></p>
+        <ul>
+            <li>🚀 <strong>3 โหมดให้เลือก:</strong>
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• Express Mode (0.15 เครดิต) - เร็ว 5-8 วินาที
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• Premium Mode (0.20 เครดิต) - คุณภาพสูง
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• 🔥 Ultra Mode (0.50 เครดิต) - ระดับ Pro!
+            </li>
+            <li>📐 <strong>5 Aspect Ratios:</strong> 1:1, 16:9, 9:16, 4:3, 3:4</li>
+            <li>💾 <strong>Download ภาพได้ทันที</strong> คุณภาพสูง</li>
+            <li>🎯 <strong>ใช้ง่าย:</strong> พิมพ์ prompt ภาษาอังกฤษ รอแป๊บเดียว</li>
+        </ul>
+        <div style="background: rgba(255, 71, 87, 0.2); padding: 12px; border-radius: 8px; margin-top: 12px;">
+            <p style="margin: 0; font-size: 13px; text-align: center;">
+                🎉 <strong>ลองเลย!</strong> คลิกที่แท็บ <strong style="color: #ff4757;">"Image Gen"</strong> ด้านบน
+            </p>
+        </div>
+    </div>
     <div class="announcement-item" style="border: 2px solid var(--primary);">
         <span class="announcement-badge new">ใหม่!</span>
         <h3>🎭 Prompt Master - ฟีเจอร์ใหม่สุดเทพ!</h3>
