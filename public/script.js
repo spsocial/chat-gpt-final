@@ -869,7 +869,7 @@ case 'image':
         imagePanel.style.opacity = '1';
     }
     
-    messageInput.placeholder = "Describe your image in English...";
+    messageInput.placeholder = "พิมพ์ช่องนี้!! Prompt ต้องเป็นภาษา English...";
     sendButton.innerHTML = 'สร้างภาพ 🎨';
     modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> AI จะสร้างภาพจาก prompt ของคุณ';
     modeNotice.classList.add('active');
