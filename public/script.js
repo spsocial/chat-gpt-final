@@ -3175,5 +3175,348 @@ function closeImageModal(event) {
     }
 }
 
+// ========== MOBILE FIX OVERRIDE ==========
+// แก้ไข Character Library สำหรับมือถือ
+
+// Override switchMode function for mobile
+const originalSwitchMode = window.switchMode;
+window.switchMode = function(mode) {
+    // เรียกฟังก์ชันเดิม
+    originalSwitchMode(mode);
+    
+    // เพิ่มการแก้ไขสำหรับ library mode บนมือถือ
+    if (mode === 'library' && window.innerWidth <= 968) {
+        const library = document.getElementById('characterLibrary');
+        const header = document.querySelector('.header');
+        const chatPanel = document.querySelector('.chat-panel');
+        const statusBar = document.querySelector('.status-bar');
+        
+        // ซ่อนทุกอย่าง
+        if (header) header.style.display = 'none';
+        if (chatPanel) chatPanel.style.display = 'none';
+        if (statusBar) statusBar.style.display = 'none';
+        
+        // ทำให้ library เต็มจอ
+        if (library) {
+            library.style.cssText = `
+                display: block !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                z-index: 9999 !important;
+                background: #0f0f0f !important;
+                overflow-y: auto !important;
+                padding: 20px !important;
+            `;
+        }
+    }
+};
+
+// Override backToChat function
+const originalBackToChat = window.backToChat;
+window.backToChat = function() {
+    const library = document.getElementById('characterLibrary');
+    const header = document.querySelector('.header');
+    const chatPanel = document.querySelector('.chat-panel');
+    const statusBar = document.querySelector('.status-bar');
+    
+    // แสดงทุกอย่างกลับมา
+    if (header) header.style.display = '';
+    if (chatPanel) chatPanel.style.display = '';
+    if (statusBar) statusBar.style.display = '';
+    
+    // เรียกฟังก์ชันเดิม
+    if (originalBackToChat) {
+        originalBackToChat();
+    } else {
+        // ถ้าไม่มีฟังก์ชันเดิม
+        if (library) {
+            library.classList.remove('active');
+            library.style.cssText = '';
+        }
+        switchMode('general');
+    }
+};
+
+console.log('✅ Mobile fixes applied!');
+
+// ========== MOBILE ENHANCEMENTS ==========
+
+// Toggle Mobile Info
+function toggleMobileInfo() {
+    const content = document.getElementById('mobileInfoContent');
+    const button = document.querySelector('.mobile-info-toggle');
+    
+    if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        button.innerHTML = 'ℹ️ ดูข้อมูล/วิธีใช้ ▼';
+    } else {
+        content.classList.add('show');
+        button.innerHTML = 'ℹ️ ซ่อนข้อมูล ▲';
+        
+        // Load content based on current mode
+        loadMobileInfo(currentMode);
+    }
+}
+
+// Load info content for mobile
+function loadMobileInfo(mode) {
+    const content = document.getElementById('mobileInfoContent');
+    let infoHTML = '';
+    
+    // เพิ่ม Quick Actions ที่ด้านบนเสมอ
+    const quickActionsHTML = `
+        <div style="
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #404040;
+        ">
+            <button onclick="showTemplates(); toggleMobileInfo();" style="
+                flex: 1;
+                padding: 12px;
+                background: #262626;
+                border: 1px solid #404040;
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                font-size: 14px;
+                font-family: 'Kanit', sans-serif;
+            ">
+                📚 Templates
+            </button>
+            <button onclick="showFavorites(); toggleMobileInfo();" style="
+                flex: 1;
+                padding: 12px;
+                background: #262626;
+                border: 1px solid #404040;
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                font-size: 14px;
+                font-family: 'Kanit', sans-serif;
+            ">
+                ⭐ Favorites
+            </button>
+        </div>
+    `;
+    
+    switch(mode) {
+        case 'general':
+            infoHTML = quickActionsHTML + `
+                <h4>✨ วิธีใช้ General Prompt</h4>
+                <p>• เล่าเรื่องง่ายๆ AI จะสร้าง prompt ระดับมืออาชีพให้</p>
+                <p>• แนบรูป reference ได้</p>
+                <p>• ใช้คำพิเศษ: "สมจริงตามกฏฟิสิกส์", "มุมกล้องระดับเทพ"</p>
+            `;
+            break;
+            
+        case 'character':
+            infoHTML = quickActionsHTML + `
+                <h4>🧙 วิธีใช้ Character Creator</h4>
+                <p>• บอกแค่ไอเดีย AI จะสร้าง Character Profile</p>
+                <p>• บันทึกไว้ใช้ซ้ำได้</p>
+                <p>• ตัวอย่าง: "นักสืบหญิงสไตล์ cyberpunk"</p>
+            `;
+            break;
+            
+        case 'multichar':
+            infoHTML = quickActionsHTML + `
+                <h4>🎭 Prompt Master</h4>
+                <div style="margin: 16px 0;">
+                    <button onclick="showSceneBuilder(); toggleMobileInfo();" style="
+                        width: 100%;
+                        padding: 16px;
+                        background: linear-gradient(135deg, #9333ea, #ec4899);
+                        color: white;
+                        border: none;
+                        border-radius: 12px;
+                        font-size: 16px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-family: 'Kanit', sans-serif;
+                    ">
+                        🎬 สร้าง Prompt Master
+                    </button>
+                </div>
+                <p style="font-size: 13px; color: #a1a1aa;">
+                    • รองรับ 2-5 ตัวละคร พร้อมบทพูด<br>
+                    • เหมาะกับฉากซับซ้อน
+                </p>
+            `;
+            break;
+            
+        case 'image':
+    infoHTML = quickActionsHTML + `
+        <h4>🎨 Image Generator</h4>
+        
+        <div style="margin: 16px 0;">
+            <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
+                ✨ เลือก Model:
+            </label>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+                <label style="
+                    display: flex;
+                    align-items: center;
+                    padding: 12px;
+                    background: #262626;
+                    border: 2px solid #9333ea;
+                    border-radius: 8px;
+                    cursor: pointer;
+                ">
+                    <input type="radio" name="mobileImageModel" value="flux-schnell" checked style="margin-right: 12px;">
+                    <div>
+                        <div style="font-weight: 600;">Express Mode</div>
+                        <div style="font-size: 12px; color: #a1a1aa;">💰 0.15 เครดิต | ⚡ เร็ว 5-8 วินาที</div>
+                    </div>
+                </label>
+                
+                <label style="
+                    display: flex;
+                    align-items: center;
+                    padding: 12px;
+                    background: #262626;
+                    border: 2px solid #404040;
+                    border-radius: 8px;
+                    cursor: pointer;
+                ">
+                    <input type="radio" name="mobileImageModel" value="flux-dev" style="margin-right: 12px;">
+                    <div>
+                        <div style="font-weight: 600;">Premium Mode</div>
+                        <div style="font-size: 12px; color: #a1a1aa;">💰 0.20 เครดิต | ✨ คุณภาพสูง</div>
+                    </div>
+                </label>
+                
+                <label style="
+                    display: flex;
+                    align-items: center;
+                    padding: 12px;
+                    background: #262626;
+                    border: 2px solid #404040;
+                    border-radius: 8px;
+                    cursor: pointer;
+                ">
+                    <input type="radio" name="mobileImageModel" value="flux-pro" style="margin-right: 12px;">
+                    <div>
+                        <div style="font-weight: 600; color: #ff6b6b;">🔥 Ultra Mode</div>
+                        <div style="font-size: 12px; color: #a1a1aa;">💰 0.50 เครดิต | 🌟 Pro Level!</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+        
+        <div style="margin: 16px 0;">
+            <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
+                📐 Aspect Ratio:
+            </label>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button onclick="setMobileRatio('1:1')" class="mobile-ratio-btn" style="
+                    padding: 8px 16px;
+                    background: #9333ea;
+                    border: 1px solid #404040;
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">1:1</button>
+                <button onclick="setMobileRatio('16:9')" class="mobile-ratio-btn" style="
+                    padding: 8px 16px;
+                    background: #262626;
+                    border: 1px solid #404040;
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">16:9</button>
+                <button onclick="setMobileRatio('9:16')" class="mobile-ratio-btn" style="
+                    padding: 8px 16px;
+                    background: #262626;
+                    border: 1px solid #404040;
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">9:16</button>
+                <button onclick="setMobileRatio('4:3')" class="mobile-ratio-btn" style="
+                    padding: 8px 16px;
+                    background: #262626;
+                    border: 1px solid #404040;
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">4:3</button>
+                <button onclick="setMobileRatio('3:4')" class="mobile-ratio-btn" style="
+                    padding: 8px 16px;
+                    background: #262626;
+                    border: 1px solid #404040;
+                    border-radius: 6px;
+                    color: white;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">3:4</button>
+            </div>
+        </div>
+    `;
+    break;
+            
+        case 'library':
+            infoHTML = quickActionsHTML + `
+                <h4>🗂️ My Character Library</h4>
+                <p>• บันทึกตัวละครไว้ใช้ซ้ำ</p>
+                <p>• คลิกเพื่อใช้งาน</p>
+                <p>• ลบตัวละครที่ไม่ใช้แล้ว</p>
+            `;
+            break;
+    }
+    
+    content.innerHTML = infoHTML;
+}
+
+// เพิ่มฟังก์ชันสำหรับ mobile image settings
+let mobileImageRatio = '1:1';
+
+function setMobileRatio(ratio) {
+    mobileImageRatio = ratio;
+    
+    // Update button styles
+    document.querySelectorAll('.mobile-ratio-btn').forEach(btn => {
+        if (btn.textContent === ratio) {
+            btn.style.background = '#9333ea';
+        } else {
+            btn.style.background = '#262626';
+        }
+    });
+}
+
+// Override getSelectedImageModel สำหรับ mobile
+const originalGetSelectedImageModel = window.getSelectedImageModel;
+window.getSelectedImageModel = function() {
+    if (window.innerWidth <= 768) {
+        const mobileSelected = document.querySelector('input[name="mobileImageModel"]:checked');
+        if (mobileSelected) {
+            return mobileSelected.value;
+        }
+    }
+    return originalGetSelectedImageModel();
+};
+
+// Override getSelectedRatio สำหรับ mobile
+const originalGetSelectedRatio = window.getSelectedRatio;
+window.getSelectedRatio = function() {
+    if (window.innerWidth <= 768) {
+        return mobileImageRatio;
+    }
+    return originalGetSelectedRatio();
+};
+
+// Export functions
+window.toggleMobileInfo = toggleMobileInfo;
+window.setMobileRatio = setMobileRatio;
+// ========== END MOBILE ENHANCEMENTS ==========
 
 // END OF PROFESSIONAL SCRIPT

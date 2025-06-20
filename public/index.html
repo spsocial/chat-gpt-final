@@ -3330,6 +3330,152 @@ line-clamp: 3;
     color: #ffe0e0;
 }
     
+/* ========== MOBILE FIX BY ASSISTANT ========== */
+/* แก้ไขสำหรับมือถือโดยเฉพาะ */
+
+/* Fix 1: Mode Selector */
+@media (max-width: 968px) {
+    .mode-selector {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        padding: 4px !important;
+    }
+    
+    .mode-btn {
+        flex: 0 0 calc(50% - 6px) !important;
+        min-width: unset !important;
+        font-size: 12px !important;
+        padding: 8px 4px !important;
+        min-height: 44px !important;
+    }
+}
+
+/* Fix 2: ปุ่มใหญ่ขึ้น */
+@media (max-width: 768px) {
+    /* ปุ่มทั้งหมด */
+    .upload-btn,
+    .voice-btn,
+    .send-btn,
+    .action-btn,
+    .quick-action-btn,
+    .copy-btn,
+    .save-btn,
+    .share-btn,
+    .favorite-btn,
+    .continue-btn {
+        min-height: 44px !important;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Star Rating */
+    .star-rating {
+        gap: 12px !important;
+    }
+    
+    .star {
+        font-size: 36px !important;
+        padding: 4px !important;
+    }
+    
+    /* Input */
+    .message-input {
+        font-size: 16px !important;
+        min-height: 60px !important;
+    }
+    
+    /* Character Library Full Screen */
+    .character-library.active {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 9999 !important;
+        display: block !important;
+    }
+}
+
+/* Fix 3: Image Mode Panel */
+@media (max-width: 768px) {
+    #imageInfo {
+        display: none !important;
+    }
+    
+    .main-content {
+        display: block !important;
+    }
+    
+    .chat-panel {
+        height: calc(100vh - 200px) !important;
+    }
+}
+/* ========== END MOBILE FIX ========== */
+
+/* ========== MOBILE DROPDOWN MODE SELECTOR ========== */
+@media (max-width: 768px) {
+    /* ซ่อน mode selector เดิม */
+    .mode-selector {
+        display: none !important;
+    }
+    
+    /* แสดง dropdown แทน */
+    .mobile-mode-dropdown {
+        display: block !important;
+        width: 100%;
+        padding: 12px 16px;
+        background: var(--surface-light);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: white;
+        font-size: 16px;
+        font-family: 'Kanit', sans-serif;
+        margin-bottom: 12px;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 20px;
+        padding-right: 40px;
+    }
+    
+    
+    /* Mobile info collapsed */
+    .mobile-info-toggle {
+        display: block !important;
+        width: 100%;
+        padding: 12px;
+        background: var(--surface-light);
+        border: none;
+        border-radius: 8px;
+        color: var(--text);
+        text-align: left;
+        cursor: pointer;
+        margin-bottom: 12px;
+        font-family: 'Kanit', sans-serif;
+    }
+    
+    .mobile-info-content {
+        display: none;
+        background: var(--surface);
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
+    
+    .mobile-info-content.show {
+        display: block;
+    }
+}
+
+/* Desktop - ซ่อน dropdown */
+.mobile-mode-dropdown,
+.mobile-fab-menu,
+.mobile-info-toggle {
+    display: none;
+}
+/* ========== END MOBILE DROPDOWN ========== */
 
     </style>  <!-- นี่คือ closing tag -->
 </head>
@@ -3359,41 +3505,46 @@ line-clamp: 3;
             </div>
             
             <!-- Mode Selector -->
-            <!-- Quick Actions Bar -->
-<div class="quick-actions-bar">
-    <button class="action-btn" onclick="showTemplates()">
-        <span class="action-icon">📚</span>
-        <span class="action-text">Templates</span>
+<div class="mode-selector">
+    <button class="mode-btn active" data-mode="general" onclick="switchMode('general')">
+        <span class="mode-icon">🎬</span>
+        <span class="mode-text">General Prompt</span>
     </button>
-    <button class="action-btn" onclick="showFavorites()">
-        <span class="action-icon">⭐</span>
-        <span class="action-text">Favorites</span>
-        <span class="favorites-count" id="favoritesCount">0</span>
-    </button>
-</div>
-    <div class="mode-selector">
-        <button class="mode-btn active" data-mode="general" onclick="switchMode('general')">
-            <span class="mode-icon">🎬</span>
-            <span class="mode-text">General Prompt</span>
-        </button>
     <button class="mode-btn" data-mode="multichar" onclick="switchMode('multichar')">
         <span class="mode-icon">🎭</span>
         <span class="mode-text">Prompt Master</span>
     </button>
     <button class="mode-btn" data-mode="character" onclick="switchMode('character')">
-        <span class="mode-icon">👤</span>
+        <span class="mode-icon">🧙</span>  <!-- เปลี่ยนจาก 👤 -->
         <span class="mode-text">Character Creator</span>
     </button>
     <button class="mode-btn" data-mode="library" onclick="switchMode('library')">
-        <span class="mode-icon">📚</span>
+        <span class="mode-icon">🗂️</span>  <!-- เปลี่ยนจาก 📚 -->
         <span class="mode-text">My Characters</span>
     </button>
     <button class="mode-btn" data-mode="image" onclick="switchMode('image')">
-    <span class="mode-icon">🎨</span>
-    <span class="mode-text">Image Gen</span>
-</button>
+        <span class="mode-icon">🎨</span>
+        <span class="mode-text">Image Gen</span>
+    </button>
 </div>
         </div>
+
+        <!-- Mobile Dropdown Mode Selector -->
+            <select class="mobile-mode-dropdown" id="mobileModeDrop" onchange="switchMode(this.value)">
+    <option value="general">🎬 General Prompt</option>
+    <option value="multichar">🎭 Prompt Master</option>
+    <option value="character">🧙 Character Creator</option>
+    <option value="library">🗂️ My Characters</option>
+    <option value="image">🎨 Image Gen</option>
+</select>
+
+            <!-- Mobile Info Toggle -->
+            <button class="mobile-info-toggle" onclick="toggleMobileInfo()">
+                ℹ️ ดูข้อมูล/วิธีใช้ ▼
+            </button>
+            <div class="mobile-info-content" id="mobileInfoContent">
+                <!-- Content จะถูกใส่ด้วย JS -->
+            </div>
 
         <!-- Main Content -->
         <div class="main-content">
