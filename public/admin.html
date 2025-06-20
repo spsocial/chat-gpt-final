@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Credit Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Kanit', sans-serif;
+            background: #0f0f0f;
+            color: #fff;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #9333ea;
+            margin-bottom: 8px;
+        }
+        
+        .form-card {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #a1a1aa;
+            font-size: 14px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #262626;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-family: 'Kanit', sans-serif;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #9333ea;
+        }
+        
+        .package-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .package-btn {
+            background: #262626;
+            border: 1px solid #404040;
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .package-btn:hover {
+            border-color: #9333ea;
+        }
+        
+        .package-btn.active {
+            background: #9333ea;
+            border-color: #9333ea;
+        }
+        
+        .package-btn h3 {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .package-btn p {
+            font-size: 14px;
+            color: #a1a1aa;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            background: #262626;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .result.success {
+            border: 1px solid #10b981;
+            color: #10b981;
+        }
+        
+        .result.error {
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        
+        .history-card {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+        }
+        
+        .history-item {
+            background: #262626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .check-btn {
+            background: #262626;
+            border: 1px solid #404040;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .check-btn:hover {
+            border-color: #9333ea;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .secret-key {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #262626;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="secret-key">Admin Key Required</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>💰 Admin Credit Management</h1>
+            <p>เติมเครดิตให้ลูกค้า</p>
+        </div>
+        
+        <div class="form-card">
+            <h2>เติมเครดิต</h2>
+            
+            <div class="form-group">
+                <label>User ID</label>
+                <input type="text" id="userId" placeholder="user_xxx">
+            </div>
+            
+            <label>เลือกแพ็คเกจ</label>
+            <div class="package-selector">
+                <div class="package-btn" onclick="selectPackage(5, 5)">
+                    <h3>5 เครดิต</h3>
+                    <p>฿5</p>
+                </div>
+                <div class="package-btn active" onclick="selectPackage(60, 50)">
+                    <h3>60 เครดิต</h3>
+                    <p>฿50</p>
+                </div>
+                <div class="package-btn" onclick="selectPackage(150, 100)">
+                    <h3>150 เครดิต</h3>
+                    <p>฿100</p>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>จำนวนเครดิต (ปรับได้)</label>
+                <input type="number" id="credits" value="60" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label>หมายเหตุ</label>
+                <textarea id="note" rows="2" placeholder="Payment 50 THB - TxID 12345"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Admin Secret Key</label>
+                <input type="password" id="adminKey" placeholder="Enter admin key">
+            </div>
+            
+            <button class="submit-btn" onclick="addCredits()">
+                เติมเครดิต
+            </button>
+            
+            <div id="result" class="result"></div>
+        </div>
+        
+        <div class="form-card">
+            <h2>เช็คเครดิต</h2>
+            <div class="form-group">
+                <label>User ID</label>
+                <div style="display: flex; gap: 12px;">
+                    <input type="text" id="checkUserId" placeholder="user_xxx" style="flex: 1;">
+                    <button class="check-btn" onclick="checkCredits()">เช็ค</button>
+                </div>
+            </div>
+            <div id="checkResult" class="result"></div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedCredits = 60;
+        let selectedPrice = 50;
+        
+        // Check if admin key is saved
+        const savedKey = localStorage.getItem('adminKey');
+        if (savedKey) {
+            document.getElementById('adminKey').value = savedKey;
+        }
+        
+        function selectPackage(credits, price) {
+            selectedCredits = credits;
+            selectedPrice = price;
+            document.getElementById('credits').value = credits;
+            document.getElementById('note').value = `Payment ${price} THB`;
+            
+            // Update active state
+            document.querySelectorAll('.package-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.package-btn').classList.add('active');
+        }
+        
+        async function addCredits() {
+            const userId = document.getElementById('userId').value.trim();
+            const credits = document.getElementById('credits').value;
+            const note = document.getElementById('note').value.trim();
+            const adminKey = document.getElementById('adminKey').value;
+            
+            if (!userId || !credits || !adminKey) {
+                showResult('กรุณากรอกข้อมูลให้ครบ', 'error');
+                return;
+            }
+            
+            // Save admin key
+            localStorage.setItem('adminKey', adminKey);
+            
+            const button = document.querySelector('.submit-btn');
+            button.disabled = true;
+            button.innerHTML = 'กำลังเติมเครดิต... <span class="loading"></span>';
+            
+            try {
+                const response = await fetch('/api/admin/add-credits', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Key': adminKey
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        amount: parseFloat(credits),
+                        note
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(`✅ เติมเครดิตสำเร็จ! เครดิตใหม่: ${data.newBalance}`, 'success');
+                    // Clear form
+                    document.getElementById('userId').value = '';
+                    document.getElementById('note').value = '';
+                } else {
+                    showResult(`❌ Error: ${data.error || 'Failed to add credits'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = 'เติมเครดิต';
+            }
+        }
+        
+        async function checkCredits() {
+            const userId = document.getElementById('checkUserId').value.trim();
+            
+            if (!userId) {
+                showCheckResult('กรุณาใส่ User ID', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/credits/${userId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = `<strong>💰 เครดิตปัจจุบัน: ${data.currentCredits}</strong><br><br>`;
+                    
+                    if (data.history && data.history.length > 0) {
+                        html += '<strong>ประวัติล่าสุด:</strong><br>';
+                        data.history.slice(0, 5).forEach(h => {
+                            const date = new Date(h.created_at).toLocaleString('th-TH');
+                            const type = h.type === 'ADD' ? '➕' : '➖';
+                            html += `${type} ${date} - ${h.amount} credits<br>`;
+                        });
+                    }
+                    
+                    showCheckResult(html, 'success');
+                } else {
+                    showCheckResult('ไม่พบข้อมูล', 'error');
+                }
+            } catch (error) {
+                showCheckResult(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function showResult(message, type) {
+            const result = document.getElementById('result');
+            result.innerHTML = message;
+            result.className = `result ${type}`;
+            result.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    result.style.display = 'none';
+                }, 5000);
+            }
+        }
+        
+        function showCheckResult(message, type) {
+            const result = document.getElementById('checkResult');
+            result.innerHTML = message;
+            result.className = `result ${type}`;
+            result.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
