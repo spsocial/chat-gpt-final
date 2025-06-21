@@ -4041,8 +4041,23 @@ line-clamp: 3;
             <div class="status-item" id="apiStatus">
                 API Connected
             </div>
-        </div>
+        <div class="status-item">
+        <button onclick="resetCurrentThread()" style="
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Kanit', sans-serif;
+            transition: all 0.2s ease;
+        " onmouseover="this.style.background='#dc2626'" 
+           onmouseout="this.style.background='#f59e0b'">
+            🔄 Reset
+        </button>
     </div>
+</div>
 
     <!-- Image URL Dialog -->
     <div id="imageUrlDialog" class="url-dialog" style="display: none;">

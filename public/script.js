@@ -1333,7 +1333,15 @@ loadUserCredits();
             
         } else {
     // Check if it's a thread error that needs retry
-    if (data.shouldRetry || data.clearThread) {
+    if (data.shouldRetry || data.clearThread || 
+    (data.error && (data.error.includes('invalid_image_format') || 
+                    data.error.includes('thread') ||
+                    data.error.includes('Thread')))) {
+    
+    // เคลียร์ thread อัตโนมัติ
+    const threadKey = `${userId}_${mode}`;
+    userThreads.delete(threadKey);
+    console.log('🔄 Auto-clearing problematic thread');
         addMessage(`⚠️ Session หมดอายุ กำลังสร้าง session ใหม่...`, 'assistant');
         
         // Wait a bit then retry automatically
@@ -3530,5 +3538,54 @@ function closeToolsMenu(e) {
 // Export functions
 window.toggleToolsMenu = toggleToolsMenu;
 window.closeToolsMenu = closeToolsMenu;
+
+// ========== RESET THREAD FUNCTION ==========
+function resetCurrentThread() {
+    // แสดง confirmation
+    if (!confirm('ต้องการ Reset การสนทนาหรือไม่?\n\nใช้เมื่อเจอ error หรือระบบค้าง')) {
+        return;
+    }
+    
+    try {
+        // 1. เคลียร์ thread
+        const threadKey = `${userId}_${currentMode}`;
+        if (userThreads.has(threadKey)) {
+            userThreads.delete(threadKey);
+            console.log('✅ Thread cleared:', threadKey);
+        }
+        
+        // 2. เคลียร์ chat history
+        if (chatHistory[currentMode]) {
+            chatHistory[currentMode] = '';
+        }
+        
+        // 3. เคลียร์หน้าจอ chat
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '';
+        }
+        
+        // 4. เคลียร์รูปที่ค้าง
+        window.imageUrls = [];
+        const imagePreview = document.getElementById('imagePreview');
+        if (imagePreview) {
+            imagePreview.innerHTML = '';
+        }
+        
+        // 5. แสดงข้อความต้อนรับใหม่
+        addWelcomeMessage(currentMode);
+        
+        // 6. แจ้งเตือนสำเร็จ
+        showNotification('✅ Reset เรียบร้อย! พร้อมใช้งานใหม่', 'success');
+        
+    } catch (error) {
+        console.error('Reset error:', error);
+        // ถ้า reset ไม่สำเร็จ ให้ reload หน้า
+        location.reload();
+    }
+}
+
+// Export function
+window.resetCurrentThread = resetCurrentThread;
 
 // END OF PROFESSIONAL SCRIPT
