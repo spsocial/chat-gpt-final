@@ -3390,24 +3390,6 @@ function loadMobileInfo(mode) {
                         <div style="font-size: 12px; color: #a1a1aa;">💰 0.20 เครดิต | ✨ คุณภาพสูง</div>
                     </div>
                 </label>
-                
-                <label style="
-                    display: flex;
-                    align-items: center;
-                    padding: 12px;
-                    background: #262626;
-                    border: 2px solid #404040;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">
-                    <input type="radio" name="mobileImageModel" value="flux-pro" style="margin-right: 12px;">
-                    <div>
-                        <div style="font-weight: 600; color: #ff6b6b;">🔥 Ultra Mode</div>
-                        <div style="font-size: 12px; color: #a1a1aa;">💰 0.50 เครดิต | 🌟 Pro Level!</div>
-                    </div>
-                </label>
-            </div>
-        </div>
         
         <div style="margin: 16px 0;">
             <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
@@ -3518,5 +3500,35 @@ window.getSelectedRatio = function() {
 window.toggleMobileInfo = toggleMobileInfo;
 window.setMobileRatio = setMobileRatio;
 // ========== END MOBILE ENHANCEMENTS ==========
+// FAB Tools Menu Toggle
+function toggleToolsMenu() {
+    const menu = document.getElementById('fabToolsMenu');
+    const isOpen = menu.style.display === 'flex';
+    
+    if (isOpen) {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'flex';
+        
+        // ปิดเมื่อคลิกที่อื่น
+        setTimeout(() => {
+            document.addEventListener('click', closeToolsMenu);
+        }, 100);
+    }
+}
+
+function closeToolsMenu(e) {
+    const menu = document.getElementById('fabToolsMenu');
+    const button = document.querySelector('.fab-tools');
+    
+    if (!menu.contains(e.target) && !button.contains(e.target)) {
+        menu.style.display = 'none';
+        document.removeEventListener('click', closeToolsMenu);
+    }
+}
+
+// Export functions
+window.toggleToolsMenu = toggleToolsMenu;
+window.closeToolsMenu = closeToolsMenu;
 
 // END OF PROFESSIONAL SCRIPT

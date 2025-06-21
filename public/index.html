@@ -3546,6 +3546,180 @@ line-clamp: 3;
     opacity: 1;
 }
 
+/* FAB Tools - อยู่เหนือคอร์ส */
+.fab-tools {
+    position: fixed;
+    bottom: 140px;
+    right: 20px;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    transition: all 0.3s ease;
+    z-index: 999;
+    animation: float 3s ease-in-out infinite;  /* เพิ่มบรรทัดนี้ */
+}
+
+/* Hover effect - ขยายเหมือนปุ่มอื่น */
+.fab-tools:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
+    padding: 16px 32px;
+}
+
+/* Icon animation */
+.fab-tools .fab-icon {
+    font-size: 20px;
+    animation: pulse 2s infinite;  /* เพิ่มบรรทัดนี้ */
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .fab-tools {
+        bottom: 150px;
+        right: 20px;
+        padding: 12px;
+        border-radius: 50%;
+        min-width: 56px;
+        width: 56px;
+        height: 56px;
+        justify-content: center;
+    }
+    
+    .fab-tools:hover {
+        padding: 12px; /* ไม่ขยายบนมือถือ */
+    }
+    
+    .fab-tools .fab-text {
+        display: none;
+    }
+    
+    .fab-tools .fab-icon {
+        font-size: 24px;
+    }
+}
+
+/* เพิ่ม Glow effect เหมือนปุ่มคอร์ส */
+.fab-tools::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* ซ่อนใน mobile ถ้าต้องการ */
+@media (max-width: 768px) {
+    .fab-tools,
+    .fab-tools-menu {
+        display: none !important;
+    }
+}
+.fab-tools-menu {
+    position: fixed !important;
+    bottom: 150px !important;  /* ปรับให้อยู่ระดับเดียวกับปุ่ม Tools */
+    right: 85px !important;    /* ขยับไปทางซ้าย */
+    display: none;
+    flex-direction: column !important;
+    gap: 10px !important;
+    z-index: 9999 !important;
+}
+
+.mini-fab {
+    background: #1a1a1a !important;
+    color: white !important;
+    border: 2px solid #9333ea !important;
+    border-radius: 50% !important;  /* ทำให้กลม */
+    width: 48px !important;         /* ขนาดคงที่ */
+    height: 48px !important;        /* ขนาดคงที่ */
+    padding: 0 !important;          /* ลบ padding */
+    cursor: pointer !important;
+    font-family: 'Kanit', sans-serif !important;
+    font-size: 20px !important;     /* ขนาด icon */
+    font-weight: 500 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;  /* จัดกึ่งกลาง */
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3) !important;
+}
+
+.mini-fab:hover {
+    background: #9333ea !important;
+    border-color: #9333ea !important;
+    transform: translateX(-10px) scale(1.1) !important;
+    box-shadow: 0 6px 20px rgba(147, 51, 234, 0.5) !important;
+}
+
+/* ทำให้ปุ่ม FAB หลักทั้งหมดเป็นแบบกลม */
+.fab-tools,
+.fab-course,
+.fab-announcement {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+}
+
+/* ซ่อนข้อความ แสดงแค่ icon */
+.fab-tools .fab-text,
+.fab-course .fab-text,
+.fab-announcement .fab-text {
+    display: none !important;
+}
+
+/* ขนาด icon */
+.fab-tools .fab-icon,
+.fab-course .fab-icon,
+.fab-announcement .fab-icon {
+    font-size: 24px !important;
+    margin: 0 !important;
+}
+
+/* ยกเลิก hover ที่ขยาย padding */
+.fab-tools:hover,
+.fab-course:hover,
+.fab-announcement:hover {
+    padding: 0 !important;
+    transform: translateY(-3px) scale(1.1) !important;
+}
+
+/* ปรับตำแหน่งให้พอดี */
+.fab-announcement {
+    bottom: 20px !important;
+}
+
+.fab-course {
+    bottom: 90px !important;
+}
+
+.fab-tools {
+    bottom: 160px !important;
+}
+
+/* Mini fab ให้เล็กลงหน่อย */
+.mini-fab {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 18px !important;
+}
+
     </style>  <!-- นี่คือ closing tag -->
 </head>
 <body>
@@ -4056,6 +4230,23 @@ line-clamp: 3;
     <span class="fab-icon">🎓</span>
     <span class="fab-text">คอร์สเรียน</span>
 </button>
+
+<!-- FAB Templates & Favorites - อยู่เหนือปุ่มคอร์ส -->
+<button class="fab-tools" onclick="toggleToolsMenu()" title="Templates & Favorites">
+    <span class="fab-icon">🛠️</span>
+    <span class="fab-text">Tools</span>
+</button>
+
+<!-- Mini Menu สำหรับ Tools -->
+<div class="fab-tools-menu" id="fabToolsMenu" style="display: none;">
+    <button class="mini-fab" onclick="showTemplates()" title="Templates">
+        <span>📚</span>
+    </button>
+    <button class="mini-fab" onclick="showFavorites()" title="Favorites">
+        <span>⭐</span>
+    </button>
+</div>
+
 <!-- เพิ่มโค้ดนี้ก่อน </body> ใน index.html -->
 <script>
 // Emergency fix - ตรวจสอบว่า script.js โหลดสำเร็จหรือไม่
@@ -4228,5 +4419,30 @@ window.addEventListener('error', function(e) {
     <button class="image-modal-close" onclick="closeImageModal()">&times;</button>
     <img id="modalImage" src="" alt="">
 </div>
+<script>
+function toggleToolsMenu() {
+    console.log('toggleToolsMenu called!'); // เพิ่มบรรทัดนี้
+    
+    const menu = document.getElementById('fabToolsMenu');
+    console.log('Menu element:', menu); // เพิ่มบรรทัดนี้
+    
+    if (!menu) {
+        console.error('Menu not found!');
+        return;
+    }
+    
+    const isOpen = menu.style.display === 'flex';
+    console.log('Current state:', isOpen ? 'open' : 'closed'); // เพิ่มบรรทัดนี้
+    
+    if (isOpen) {
+        menu.style.display = 'none';
+    } else {
+        menu.style.display = 'flex';
+    }
+}
+
+// Test ว่าฟังก์ชันทำงานไหม
+console.log('toggleToolsMenu loaded:', typeof toggleToolsMenu);
+</script>
 </body>
 </html>
