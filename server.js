@@ -510,7 +510,7 @@ app.get('/api/usage/:userId', async (req, res) => {
 // ========== ENHANCE PROMPT ENDPOINT ==========
 app.post('/api/enhance-prompt', async (req, res) => {
     const { prompt, userId = 'guest' } = req.body;
-    const assistantId = 'asst_fTpI5G9WTb9hUS165JsyDP94'; // AI Prompt Enhancer Assistant
+    const assistantId = process.env.ASSISTANT_ID || 'asst_p1ZxkTa5US7Yn1GgUSy8sNy9';
     
     if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
@@ -525,9 +525,9 @@ app.post('/api/enhance-prompt', async (req, res) => {
     }
     
     try {
-        // Check daily limit (เหมือนกับ chat)
+        // Check daily limit
         let shouldUseCredits = false;
-        const estimatedCost = 0.05; // ประมาณการ
+        const estimatedCost = 0.05;
         
         if (db) {
             const todayUsage = await db.getTodayUsage(userId);
@@ -562,70 +562,24 @@ app.post('/api/enhance-prompt', async (req, res) => {
         // Calculate cost and save usage
         const costTHB = calculateCost(result.usage);
         
-        // Save usage และหักเครดิตในที่เดียว
-if (db) {
-    // บันทึกการใช้งาน
-    const saveResult = await db.saveUsage(
-        userId, 
-        result.usage.prompt_tokens, 
-        result.usage.completion_tokens, 
-        costTHB
-    );
-    
-    console.log(`📝 Save usage result:`, saveResult);
-    
-    // Query ข้อมูลโดยตรงเพื่อ debug
-    const debugQuery = await db.pool.query(`
-        SELECT user_id, date, total_cost_thb 
-        FROM daily_limits 
-        WHERE user_id = $1 
-        ORDER BY date DESC 
-        LIMIT 5
-    `, [userId]);
-    
-    console.log(`\n🔍 DEBUG - User's usage records:`);
-    debugQuery.rows.forEach(row => {
-        console.log(`   Date: ${row.date}, Usage: ฿${row.total_cost_thb}`);
-    });
-    
-    // ตรวจสอบการใช้งานทันทีหลังบันทึก
-    const todayUsage = await db.getTodayUsage(userId);
-    console.log(`\n💳 ========== CREDIT CHECK ==========`);
-    console.log(`💳 Today's date (getTodayUsage): ${new Date().toISOString().split('T')[0]}`);
-    console.log(`💳 วันนี้ใช้ไป: ฿${todayUsage.toFixed(2)}/5.00`);
-    
-    // ถ้าใช้เกิน 5 บาท ให้หักเครดิตทันที
-    if (todayUsage > 5.0) {
-        const overAmount = todayUsage - 5.0;
-        const userCredits = await db.getUserCredits(userId);
-        
-        console.log(`💳 เกินโควต้า: ฿${overAmount.toFixed(2)}`);
-        console.log(`💳 เครดิตคงเหลือ: ฿${userCredits.toFixed(2)}`);
-        
-        // หักเครดิต
-        if (userCredits > 0) {
-            const amountToDeduct = Math.min(overAmount, userCredits);
+        if (db) {
+            await db.saveUsage(userId, result.usage.prompt_tokens, result.usage.completion_tokens, costTHB);
             
-            const deductResult = await db.useCredits(
-                userId,
-                amountToDeduct,
-                `Prompt ${mode} - ใช้เกินโควต้าประจำวัน`
-            );
-            
-            if (deductResult.success) {
-                console.log(`✅ หักเครดิต: ฿${amountToDeduct.toFixed(2)}`);
-                console.log(`💰 เครดิตคงเหลือใหม่: ฿${deductResult.newBalance.toFixed(2)}`);
-            } else {
-                console.error(`❌ หักเครดิตไม่สำเร็จ:`, deductResult.error);
+            // หักเครดิตถ้าใช้เกิน daily limit
+            // ⚠️ ไม่ใช้ตัวแปร mode ที่ไม่มี
+            if (shouldUseCredits) {
+                const latestUsage = await db.getTodayUsage(userId);
+                const overLimitAmount = Math.max(0, latestUsage - DAILY_LIMIT_THB);
+                
+                if (overLimitAmount > 0) {
+                    await db.useCredits(
+                        userId, 
+                        overLimitAmount, 
+                        'Enhance prompt - exceeded daily limit'  // ← แก้ตรงนี้
+                    );
+                }
             }
         }
-    }
-    console.log(`💳 ===================================\n`);
-}
-
-// อัพเดท display
-updateUsageDisplay();
-loadUserCredits();
         
         // Send response
         res.json({
