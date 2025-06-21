@@ -1180,7 +1180,7 @@ async function updateUsageDisplay() {
             const progressBar = document.getElementById('usageProgress');
             progressBar.style.width = percentage + '%';
             
-            document.getElementById('usageText').textContent = `฿${data.today.used}/${data.today.limit}`;
+            document.getElementById('usageText').textContent = `💰${data.today.used}/${data.today.limit}`;
             
             if (percentage >= 100) {
                 progressBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
@@ -1774,8 +1774,8 @@ function showUsageInfo(cost) {
         color: #a1a1aa;
     `;
     infoDiv.innerHTML = `
-        💰 ค่าใช้จ่าย: <strong style="color: #9333ea;">฿${cost.this_request}</strong> | 
-        วันนี้: <strong style="color: #9333ea;">฿${cost.today_total}/${cost.daily_limit}</strong>
+        💰 ค่าใช้จ่าย: <strong style="color: #9333ea;">💰${cost.this_request}</strong> | 
+        วันนี้: <strong style="color: #9333ea;">💰${cost.today_total}/${cost.daily_limit}</strong>
     `;
     messagesContainer.appendChild(infoDiv);
 }
