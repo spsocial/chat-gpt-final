@@ -21,26 +21,35 @@ pool.query('SELECT NOW()', (err, res) => {
 // Get today's usage for a user
 // เปลี่ยนจาก UTC เป็น Thailand Time
 async function getTodayUsage(userId) {
-    // ใช้ timezone ของไทย
-    const bangkokTime = new Date().toLocaleString("en-US", {timeZone: "Asia/Bangkok"});
-    const today = new Date(bangkokTime).toISOString().split('T')[0];
+    // ใช้ UTC date
+    const today = new Date().toISOString().split('T')[0];
     
     try {
+        console.log(`[getTodayUsage] Checking usage for ${userId} on ${today} (UTC)`);
+        
         const result = await pool.query(
             'SELECT total_cost_thb FROM daily_limits WHERE user_id = $1 AND date = $2',
             [userId, today]
         );
         
-        return parseFloat(result.rows[0]?.total_cost_thb || 0);
+        const usage = parseFloat(result.rows[0]?.total_cost_thb || 0);
+        console.log(`[getTodayUsage] Result: ฿${usage.toFixed(2)}`);
+        
+        return usage;
     } catch (error) {
         console.error('Error getting today usage:', error);
         return 0;
     }
 }
 
+
 // Save usage record
 async function saveUsage(userId, inputTokens, outputTokens, costTHB) {
-    const today = new Date().toISOString().split('T')[0];
+    // เปลี่ยนจาก Bangkok time เป็น UTC
+    const today = new Date().toISOString().split('T')[0];  // ← ต้องเป็น UTC
+    
+    console.log(`[saveUsage] Saving ฿${costTHB.toFixed(2)} for ${userId} on ${today} (UTC)`);
+    
     const client = await pool.connect();
     
     try {
