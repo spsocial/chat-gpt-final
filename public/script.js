@@ -711,6 +711,45 @@ document.addEventListener('DOMContentLoaded', async () => {
         userId = 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('userId', userId);
     }
+    document.addEventListener('change', (e) => {
+        if (e.target.name === 'imageModel' || e.target.name === 'mobileImageModel') {
+            updateModelSelection(e.target.value);
+        }
+    });
+
+// Function สำหรับ update UI เมื่อเลือก model
+function updateModelSelection(selectedModel) {
+    // Update desktop model cards
+    document.querySelectorAll('.model-option').forEach(option => {
+        const input = option.querySelector('input[type="radio"]');
+        const card = option.querySelector('.model-card');
+        
+        if (input && card) {
+            if (input.value === selectedModel) {
+                card.style.borderColor = '#9333ea';
+                card.style.background = 'rgba(147, 51, 234, 0.1)';
+            } else {
+                card.style.borderColor = '#404040';
+                card.style.background = '';
+            }
+        }
+    });
+    
+    // Update mobile model selection ถ้ามี
+    const mobileRadios = document.querySelectorAll('input[name="mobileImageModel"]');
+    mobileRadios.forEach(radio => {
+        const label = radio.closest('label');
+        if (label) {
+            if (radio.value === selectedModel) {
+                label.style.borderColor = '#9333ea';
+                label.style.background = 'rgba(147, 51, 234, 0.1)';
+            } else {
+                label.style.borderColor = '#404040';
+                label.style.background = '#262626';
+            }
+        }
+    });
+}
     
     // Update user ID display
     document.getElementById('userId').textContent = userId;
