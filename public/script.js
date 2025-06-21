@@ -548,16 +548,17 @@ window.addEventListener('scroll', () => {
 // ========== CREDIT SYSTEM FUNCTIONS ==========
 async function loadUserCredits() {
     try {
+        console.log('🔍 Loading credits for user:', userId);
         const response = await fetch(`${API_URL}/credits/${userId}`);
         const data = await response.json();
         
+        console.log('💰 Credits data:', data);
         userCredits = data.currentCredits || 0;
         updateCreditDisplay();
     } catch (error) {
         console.error('Error loading credits:', error);
     }
 }
-
 function updateCreditDisplay() {
     // เพิ่มการแสดงเครดิตใน header
     const creditDisplay = document.getElementById('creditDisplay');
@@ -1229,25 +1230,43 @@ async function updateUsageDisplay() {
         const data = await response.json();
         
         if (data.today) {
-            const percentage = parseFloat(data.today.percentUsed) || 0;
+            // คำนวณเครดิตฟรีที่เหลือ
+            const used = parseFloat(data.today.used) || 0;
+            const limit = parseFloat(data.today.limit) || 5;
+            const remaining = Math.max(0, limit - used); // เครดิตฟรีที่เหลือ (ไม่ติดลบ)
+            
+            // คำนวณ percentage (100% = เหลือเต็ม, 0% = หมด)
+            const percentage = (remaining / limit) * 100;
+            
+            // อัพเดท progress bar
             const progressBar = document.getElementById('usageProgress');
             progressBar.style.width = percentage + '%';
             
-            document.getElementById('usageText').textContent = `💰${data.today.used}/${data.today.limit}`;
+            // อัพเดทข้อความ
+            document.getElementById('usageText').textContent = `💰${remaining.toFixed(2)}/${limit}`;
             
-            if (percentage >= 100) {
+            // เปลี่ยนสี progress bar ตามเครดิตที่เหลือ
+            if (percentage <= 0) {
+                // หมดแล้ว - สีแดง
                 progressBar.style.background = 'linear-gradient(90deg, #ef4444, #dc2626)';
-            } else if (percentage >= 80) {
+            } else if (percentage <= 20) {
+                // เหลือน้อย - สีส้ม
                 progressBar.style.background = 'linear-gradient(90deg, #f59e0b, #d97706)';
             } else {
+                // เหลือเยอะ - สีเขียว
                 progressBar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+            }
+            
+            // แสดง tooltip เมื่อ hover (ถ้าต้องการ)
+            const usageBar = document.querySelector('.usage-bar');
+            if (usageBar) {
+                usageBar.title = `เครดิตฟรีคงเหลือ: ${remaining.toFixed(2)} บาท จาก ${limit} บาท`;
             }
         }
     } catch (error) {
         console.error('Error updating usage:', error);
     }
-}
-
+} 
 // ========== IMAGE MANAGEMENT ==========
 function showImageUrlDialog() {
     document.getElementById('imageUrlDialog').style.display = 'flex';
@@ -1834,9 +1853,15 @@ function showUsageInfo(cost) {
         font-size: 14px;
         color: #a1a1aa;
     `;
+    
+    // คำนวณเครดิตฟรีที่เหลือ
+    const used = parseFloat(cost.today_total);
+    const limit = parseFloat(cost.daily_limit);
+    const remaining = Math.max(0, limit - used);
+    
     infoDiv.innerHTML = `
-        💰 ค่าใช้จ่าย: <strong style="color: #9333ea;">💰${cost.this_request}</strong> | 
-        วันนี้: <strong style="color: #9333ea;">💰${cost.today_total}/${cost.daily_limit}</strong>
+        💰 ค่าใช้จ่าย: <strong style="color: #9333ea;">฿${cost.this_request}</strong> | 
+        เครดิตฟรีคงเหลือ: <strong style="color: ${remaining > 0 ? '#10b981' : '#ef4444'};">฿${remaining.toFixed(2)}/${limit}</strong>
     `;
     messagesContainer.appendChild(infoDiv);
 }

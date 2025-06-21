@@ -251,55 +251,37 @@ while (retryCount < maxRetries) {
 
         // Save usage if database is available
         if (db) {
-            const currentUsage = await db.getTodayUsage(userId);
-            todayTotal = currentUsage + costTHB;
-            await db.saveUsage(
-                userId, 
-                result.usage.prompt_tokens, 
-                result.usage.completion_tokens, 
-                costTHB
-            );
-        }
-
-// หักเครดิตถ้าใช้เกิน daily limit
-if (db) {  // ลบ shouldUseCredits ออก เช็คทุกครั้ง
-    // ดึงการใช้งานล่าสุดหลังบันทึก
-    const latestUsage = await db.getTodayUsage(userId);
+    console.log(`💰 === PROMPT GENERATION COST ===`);
+    console.log(`💰 Mode: ${mode}`);
+    console.log(`💰 Cost: ฿${costTHB.toFixed(2)}`);
     
-    console.log(`💳 === CREDIT CHECK ===`);
-    console.log(`💳 Today's usage: ฿${latestUsage.toFixed(2)}`);
-    console.log(`💳 Daily limit: ฿${DAILY_LIMIT_THB}`);
-    console.log(`💳 User credits: ${await db.getUserCredits(userId)}`);
+    // ใช้ระบบเครดิตใหม่
+    const creditResult = await db.useCreditsNew(
+        userId,
+        costTHB,
+        `${mode} prompt generation`
+    );
     
-    // ถ้าใช้เกิน 5 บาท
-    if (latestUsage > DAILY_LIMIT_THB) {
-        // คำนวณส่วนที่เกิน
-        const overLimitAmount = latestUsage - DAILY_LIMIT_THB;
-        console.log(`💳 Over limit by: ฿${overLimitAmount.toFixed(2)}`);
+    if (creditResult.success) {
+        console.log(`✅ Used ฿${costTHB.toFixed(2)}:`);
+        console.log(`   - From free: ฿${creditResult.used_from_free.toFixed(2)}`);
+        console.log(`   - From paid: ฿${creditResult.used_from_paid.toFixed(2)}`);
+        console.log(`   - Free remaining: ฿${creditResult.free_remaining.toFixed(2)}`);
+        console.log(`   - Paid remaining: ฿${creditResult.paid_remaining.toFixed(2)}`);
         
-        // ตรวจสอบเครดิต
-        const userCredits = await db.getUserCredits(userId);
-        console.log(`💳 User has credits: ฿${userCredits.toFixed(2)}`);
-        
-        if (userCredits >= overLimitAmount) {
-            // มีเครดิตพอ - หักเครดิต
-            const deductResult = await db.useCredits(
-                userId,
-                overLimitAmount,
-                `${mode} prompt - exceeded daily limit by ฿${overLimitAmount.toFixed(2)}`
-            );
-            
-            if (deductResult.success) {
-                console.log(`✅ CREDIT DEDUCTED: ฿${overLimitAmount.toFixed(2)}`);
-                console.log(`💰 New balance: ฿${deductResult.newBalance.toFixed(2)}`);
-            } else {
-                console.error(`❌ CREDIT DEDUCTION FAILED:`, deductResult.error);
-            }
-        } else {
-            console.log(`⚠️ Insufficient credits: has ${userCredits}, needs ${overLimitAmount}`);
-        }
+        // เก็บค่าสำหรับแสดงผล
+        todayTotal = DAILY_LIMIT_THB - creditResult.free_remaining;
     } else {
-        console.log(`✅ Within daily limit, no credit deduction needed`);
+        console.error('❌ Failed to deduct credits:', creditResult.error);
+        // ถ้าหักเครดิตไม่สำเร็จ ให้หยุดทำงาน
+        return res.status(429).json({
+            error: 'Insufficient credits',
+            message: 'เครดิตไม่เพียงพอ',
+            credits: {
+                current: creditResult.paid_remaining || 0,
+                required: costTHB
+            }
+        });
     }
 }
 
@@ -488,16 +470,21 @@ app.get('/api/usage/:userId', async (req, res) => {
             });
         }
 
+        // ดึงเครดิตฟรีคงเหลือจากระบบใหม่
+        const freeCredits = await db.getFreeCredits(userId);
+        const usedToday = DAILY_LIMIT_THB - freeCredits; // คำนวณว่าใช้ไปเท่าไหร่
+        
+        // ดึงข้อมูลเก่าสำหรับ history
         const stats = await db.getUsageStats(userId);
         
         res.json({
             userId,
             today: {
-                used: stats.today.used.toFixed(2),
+                used: usedToday.toFixed(2),
                 limit: DAILY_LIMIT_THB.toFixed(2),
-                remaining: (DAILY_LIMIT_THB - stats.today.used).toFixed(2),
-                requests: stats.today.requests,
-                percentUsed: ((stats.today.used / DAILY_LIMIT_THB) * 100).toFixed(0)
+                remaining: freeCredits.toFixed(2), // เครดิตฟรีที่เหลือ
+                requests: stats.today.requests || 0,
+                percentUsed: ((usedToday / DAILY_LIMIT_THB) * 100).toFixed(0)
             },
             history: stats.week
         });
@@ -510,7 +497,7 @@ app.get('/api/usage/:userId', async (req, res) => {
 // ========== ENHANCE PROMPT ENDPOINT ==========
 app.post('/api/enhance-prompt', async (req, res) => {
     const { prompt, userId = 'guest' } = req.body;
-    const assistantId = process.env.ASSISTANT_ID || 'asst_fTpI5G9WTb9hUS165JsyDP94';
+    const assistantId = process.env.IMAGE_ENHANCE_ASSISTANT_ID || 'asst_fTpI5G9WTb9hUS165JsyDP94';
     
     if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });
@@ -690,16 +677,28 @@ app.post('/api/generate-image', async (req, res) => {
         const imageUrl = result.output[0] || result.output;
         console.log('Image URL:', imageUrl);
         
-        // Save usage
-        if (db) {
-            await db.saveUsage(userId, 0, 0, cost);
-            
-            const todayUsage = await db.getTodayUsage(userId);
-            if (todayUsage > 5) {
-                const creditsToUse = todayUsage - 5;
-                await db.useCredits(userId, creditsToUse, `Image generation - ${model}`);
-            }
-        }
+        // Save usage และหักเครดิต
+if (db) {
+    console.log(`💰 === NEW CREDIT SYSTEM ===`);
+    console.log(`💰 Image cost: ฿${cost}`);
+    
+    // ใช้ระบบใหม่
+    const creditResult = await db.useCreditsNew(
+        userId,
+        cost,
+        `Image generation - ${model}`
+    );
+    
+    if (creditResult.success) {
+        console.log(`✅ Used ฿${cost}:`);
+        console.log(`   - From free: ฿${creditResult.used_from_free.toFixed(2)}`);
+        console.log(`   - From paid: ฿${creditResult.used_from_paid.toFixed(2)}`);
+        console.log(`   - Free remaining: ฿${creditResult.free_remaining.toFixed(2)}`);
+        console.log(`   - Paid remaining: ฿${creditResult.paid_remaining.toFixed(2)}`);
+    } else {
+        console.error('❌ Failed to deduct credits:', creditResult.error);
+    }
+}
         
         res.json({
             success: true,

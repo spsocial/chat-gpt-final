@@ -21,12 +21,12 @@ pool.query('SELECT NOW()', (err, res) => {
 // Get today's usage for a user
 // เปลี่ยนจาก UTC เป็น Thailand Time
 async function getTodayUsage(userId) {
-    // ใช้ UTC date
     const today = new Date().toISOString().split('T')[0];
     
     try {
         console.log(`[getTodayUsage] Checking usage for ${userId} on ${today} (UTC)`);
         
+        // ⚠️ เพิ่ม FOR UPDATE เพื่อ lock row ขณะอ่าน
         const result = await pool.query(
             'SELECT total_cost_thb FROM daily_limits WHERE user_id = $1 AND date = $2',
             [userId, today]
@@ -37,7 +37,7 @@ async function getTodayUsage(userId) {
         
         return usage;
     } catch (error) {
-        console.error('Error getting today usage:', error);
+        console.error('[getTodayUsage] Error:', error);
         return 0;
     }
 }
@@ -45,8 +45,7 @@ async function getTodayUsage(userId) {
 
 // Save usage record
 async function saveUsage(userId, inputTokens, outputTokens, costTHB) {
-    // เปลี่ยนจาก Bangkok time เป็น UTC
-    const today = new Date().toISOString().split('T')[0];  // ← ต้องเป็น UTC
+    const today = new Date().toISOString().split('T')[0];
     
     console.log(`[saveUsage] Saving ฿${costTHB.toFixed(2)} for ${userId} on ${today} (UTC)`);
     
@@ -56,22 +55,28 @@ async function saveUsage(userId, inputTokens, outputTokens, costTHB) {
         await client.query('BEGIN');
         
         // 1. Insert usage log
-        await client.query(
+        const logResult = await client.query(
             `INSERT INTO usage_logs (user_id, input_tokens, output_tokens, cost_thb)
-             VALUES ($1, $2, $3, $4)`,
+             VALUES ($1, $2, $3, $4)
+             RETURNING id, timestamp`,
             [userId, inputTokens, outputTokens, costTHB]
         );
         
+        console.log(`[saveUsage] Log inserted with ID: ${logResult.rows[0].id}`);
+        
         // 2. Update daily total
-        await client.query(
+        const dailyResult = await client.query(
             `INSERT INTO daily_limits (user_id, date, total_cost_thb, request_count)
              VALUES ($1, $2, $3, 1)
              ON CONFLICT (user_id, date)
              DO UPDATE SET 
                  total_cost_thb = daily_limits.total_cost_thb + $3,
-                 request_count = daily_limits.request_count + 1`,
+                 request_count = daily_limits.request_count + 1
+             RETURNING total_cost_thb, request_count`,
             [userId, today, costTHB]
         );
+        
+        console.log(`[saveUsage] Daily total updated: ฿${dailyResult.rows[0].total_cost_thb}`);
         
         // 3. Create user if not exists
         await client.query(
@@ -81,12 +86,29 @@ async function saveUsage(userId, inputTokens, outputTokens, costTHB) {
             [userId]
         );
         
+        // ⚠️ Force commit และรอให้แน่ใจ
         await client.query('COMMIT');
-        return true;
+        
+        // รอ 100ms เพื่อให้แน่ใจว่า commit เสร็จ
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log(`[saveUsage] ✅ Transaction committed successfully`);
+        
+        return {
+            success: true,
+            logId: logResult.rows[0].id,
+            timestamp: logResult.rows[0].timestamp,
+            newTotal: parseFloat(dailyResult.rows[0].total_cost_thb),
+            requestCount: parseInt(dailyResult.rows[0].request_count)
+        };
+        
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error saving usage:', error);
-        return false;
+        console.error('[saveUsage] ❌ Error:', error);
+        return {
+            success: false,
+            error: error.message
+        };
     } finally {
         client.release();
     }
@@ -268,8 +290,15 @@ async function useCredits(userId, amount, description, referenceId = null) {
     try {
         await client.query('BEGIN');
         
-        // 1. ตรวจสอบเครดิตพอไหม
-        const currentCredits = await getUserCredits(userId);
+        // 1. ตรวจสอบเครดิตพอไหม (WITH LOCK)
+        const creditResult = await client.query(
+            'SELECT credits FROM user_credits WHERE user_id = $1 FOR UPDATE',
+            [userId]
+        );
+        
+        const currentCredits = parseFloat(creditResult.rows[0]?.credits || 0);
+        console.log(`[useCredits] Current credits: ${currentCredits}, deducting: ${amount}`);
+        
         if (currentCredits < amount) {
             throw new Error('Insufficient credits');
         }
@@ -277,10 +306,11 @@ async function useCredits(userId, amount, description, referenceId = null) {
         const newBalance = currentCredits - amount;
         
         // 2. บันทึก transaction
-        await client.query(
+        const transResult = await client.query(
             `INSERT INTO credit_transactions 
              (user_id, type, amount, balance_after, description, reference_id)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING id, created_at`,
             [userId, 'USE', amount, newBalance, description, referenceId]
         );
         
@@ -294,14 +324,58 @@ async function useCredits(userId, amount, description, referenceId = null) {
             [userId, amount]
         );
         
+         // Force commit
         await client.query('COMMIT');
-        return { success: true, newBalance };
+        
+        // รอให้แน่ใจ
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        console.log(`[useCredits] ✅ Deducted ${amount} credits, new balance: ${newBalance}`);
+        
+        return {
+            success: true,
+            newBalance: newBalance,
+            transactionId: transResult.rows[0].id,
+            timestamp: transResult.rows[0].created_at
+        };
+        
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error('Error using credits:', error);
-        return { success: false, error: error.message };
+        console.error('[useCredits] ❌ Error:', error);
+        return {
+            success: false,
+            error: error.message
+        };
     } finally {
         client.release();
+    }
+}
+
+// เพิ่มฟังก์ชันใหม่: Force refresh data
+async function forceRefreshUserData(userId) {
+    try {
+        // Query ข้อมูลใหม่โดยตรง
+        const today = new Date().toISOString().split('T')[0];
+        
+        const [usageResult, creditResult] = await Promise.all([
+            pool.query(
+                'SELECT total_cost_thb FROM daily_limits WHERE user_id = $1 AND date = $2',
+                [userId, today]
+            ),
+            pool.query(
+                'SELECT credits FROM user_credits WHERE user_id = $1',
+                [userId]
+            )
+        ]);
+        
+        return {
+            todayUsage: parseFloat(usageResult.rows[0]?.total_cost_thb || 0),
+            credits: parseFloat(creditResult.rows[0]?.credits || 0)
+        };
+        
+    } catch (error) {
+        console.error('[forceRefreshUserData] Error:', error);
+        return null;
     }
 }
 
@@ -406,6 +480,93 @@ async function getRatingStats(userId) {
     }
 }
 
+// ========== FREE CREDITS FUNCTIONS ==========
+// เพิ่มโค้ดนี้ก่อน module.exports ในไฟล์ database.js
+
+// ดึงเครดิตฟรีคงเหลือ
+async function getFreeCredits(userId) {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM get_or_create_daily_credits($1)',
+            [userId]
+        );
+        return parseFloat(result.rows[0].get_or_create_daily_credits || 0);
+    } catch (error) {
+        console.error('Error getting free credits:', error);
+        return 0;
+    }
+}
+
+// ========== FREE CREDITS FUNCTIONS ==========
+// ดึงเครดิตฟรีคงเหลือ
+async function getFreeCredits(userId) {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM get_or_create_daily_credits($1)',
+            [userId]
+        );
+        return parseFloat(result.rows[0].get_or_create_daily_credits || 0);
+    } catch (error) {
+        console.error('Error getting free credits:', error);
+        return 0;
+    }
+}
+
+// ใช้เครดิต (ฟรีก่อน แล้วค่อยหักจากที่เติม)
+async function useCreditsNew(userId, amount, description) {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // 1. เรียกใช้ function หักเครดิตฟรี
+        const freeResult = await client.query(
+            'SELECT * FROM use_free_credits($1, $2)',
+            [userId, amount]
+        );
+        
+        const creditUsage = freeResult.rows[0].use_free_credits;
+        console.log('💰 Credit usage:', creditUsage);
+        
+        // 2. ถ้าต้องหักจากเครดิตที่เติม
+        if (creditUsage.used_from_paid > 0) {
+            const paidResult = await useCredits(
+                userId, 
+                creditUsage.used_from_paid, 
+                description
+            );
+            
+            if (!paidResult.success) {
+                throw new Error('Insufficient paid credits');
+            }
+        }
+        
+        await client.query('COMMIT');
+        
+        // 3. ดึงข้อมูลล่าสุด
+        const freeRemaining = await getFreeCredits(userId);
+        const paidRemaining = await getUserCredits(userId);
+        
+        return {
+            success: true,
+            used_from_free: creditUsage.used_from_free,
+            used_from_paid: creditUsage.used_from_paid,
+            free_remaining: freeRemaining,
+            paid_remaining: paidRemaining
+        };
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error using credits:', error);
+        return {
+            success: false,
+            error: error.message
+        };
+    } finally {
+        client.release();
+    }
+}
+
 // อย่าลืม export!
 module.exports = {
     pool,
@@ -425,5 +586,8 @@ module.exports = {
     addCredits,
     useCredits,
     getCreditPackages,
-    getCreditHistory
+    getCreditHistory,
+    forceRefreshUserData,
+    getFreeCredits,
+    useCreditsNew
 };
