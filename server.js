@@ -488,6 +488,93 @@ app.get('/api/usage/:userId', async (req, res) => {
     }
 });
 
+// ========== ENHANCE PROMPT ENDPOINT ==========
+app.post('/api/enhance-prompt', async (req, res) => {
+    const { prompt, userId = 'guest' } = req.body;
+    const assistantId = 'asst_fTpI5G9WTb9hUS165JsyDP94'; // AI Prompt Enhancer Assistant
+    
+    if (!prompt) {
+        return res.status(400).json({ error: 'Prompt is required' });
+    }
+    
+    // Check API key
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'demo-key') {
+        return res.json({ 
+            enhancedPrompt: prompt + ' (Demo mode - no enhancement)',
+            isDemo: true 
+        });
+    }
+    
+    try {
+        // Check daily limit (เหมือนกับ chat)
+        let shouldUseCredits = false;
+        const estimatedCost = 0.05; // ประมาณการ
+        
+        if (db) {
+            const todayUsage = await db.getTodayUsage(userId);
+            const estimatedTotal = todayUsage + estimatedCost;
+            
+            if (estimatedTotal > DAILY_LIMIT_THB) {
+                const creditsNeeded = estimatedTotal - DAILY_LIMIT_THB;
+                const userCredits = await db.getUserCredits(userId);
+                
+                if (userCredits < creditsNeeded) {
+                    return res.status(429).json({
+                        error: 'Insufficient credits',
+                        message: 'เครดิตไม่เพียงพอ',
+                        credits: {
+                            current: userCredits.toFixed(2),
+                            required: estimatedCost.toFixed(2)
+                        }
+                    });
+                }
+                shouldUseCredits = true;
+            }
+        }
+        
+        // Create thread and run assistant
+        const threadId = await assistants.createThread();
+        await assistants.addMessage(threadId, prompt, []);
+        const result = await assistants.runAssistant(threadId, assistantId);
+        
+        // Clean up thread
+        await assistants.deleteThread(threadId);
+        
+        // Calculate cost and save usage
+        const costTHB = calculateCost(result.usage);
+        
+        if (db) {
+            await db.saveUsage(userId, result.usage.prompt_tokens, result.usage.completion_tokens, costTHB);
+            
+            // หักเครดิตถ้าใช้เกิน daily limit
+            if (shouldUseCredits) {
+                const latestUsage = await db.getTodayUsage(userId);
+                const overLimitAmount = Math.max(0, latestUsage - DAILY_LIMIT_THB);
+                
+                if (overLimitAmount > 0) {
+                    await db.useCredits(userId, overLimitAmount, 'Enhance prompt');
+                }
+            }
+        }
+        
+        // Send response
+        res.json({
+            enhancedPrompt: result.response,
+            usage: {
+                tokens: result.usage.total_tokens,
+                cost: costTHB.toFixed(2)
+            }
+        });
+        
+    } catch (error) {
+        console.error('Enhance prompt error:', error);
+        res.status(500).json({ 
+            error: 'Failed to enhance prompt',
+            details: error.message 
+        });
+    }
+});
+
 // ========== IMAGE GENERATION ENDPOINT ==========
 app.post('/api/generate-image', async (req, res) => {
     const { prompt, userId, model = 'flux-schnell', aspectRatio = '1:1' } = req.body;
