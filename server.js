@@ -510,7 +510,7 @@ app.get('/api/usage/:userId', async (req, res) => {
 // ========== ENHANCE PROMPT ENDPOINT ==========
 app.post('/api/enhance-prompt', async (req, res) => {
     const { prompt, userId = 'guest' } = req.body;
-    const assistantId = process.env.ASSISTANT_ID || 'asst_p1ZxkTa5US7Yn1GgUSy8sNy9';
+    const assistantId = process.env.ASSISTANT_ID || 'asst_fTpI5G9WTb9hUS165JsyDP94';
     
     if (!prompt) {
         return res.status(400).json({ error: 'Prompt is required' });

@@ -916,7 +916,7 @@ case 'image':
     document.getElementById('imageInfo').style.display = 'block';
     messageInput.placeholder = "พิมพ์ Prompt ภาษา English...";
     sendButton.innerHTML = 'สร้างภาพ 🎨';
-    modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> AI จะสร้างภาพจาก prompt ของคุณ';
+    modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> พิมพ์/พูดไทยได้ แต่ต้องกดปรับปรุง Prompt';
     modeNotice.classList.add('active');
     
     // ซ่อน upload section ทั้งหมด
@@ -1798,7 +1798,7 @@ function addLoadingMessage() {
     'กำลังสร้าง Character Profile แบบละเอียด...' :
     currentMode === 'image' ?
     'กำลังสร้างภาพตาม prompt ของคุณ...' :
-    'กำลังสร้าง Cinematic Prompt สำหรับ Veo 3...';
+    'กำลังสร้าง Cinematic Prompt สำหรับ Vdo ขั้นเทพ...';
     
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
