@@ -797,69 +797,100 @@ function switchMode(mode) {
     const uploadSection = document.getElementById('uploadSection');
     
     switch(mode) {
-        case 'general':
-            document.getElementById('generalInfo').style.display = 'block';
-            messageInput.placeholder = "อธิบายวิดีโอที่ต้องการ...";
-            sendButton.innerHTML = 'สร้าง Prompt ✨';
-            modeNotice.classList.remove('active');
-            uploadSection.style.display = 'flex';
-            loadChatHistory('general');
-            break;
-            
-        case 'character':
-            document.getElementById('characterInfo').style.display = 'block';
-            messageInput.placeholder = "บรรยายตัวละครที่ต้องการ...";
-            sendButton.innerHTML = 'สร้างตัวละคร 👤';
-            modeNotice.innerHTML = '💡 <strong>Character Mode:</strong> AI จะสร้าง Character Profile';
-            modeNotice.classList.add('active');
-            uploadSection.style.display = 'flex';
-            loadChatHistory('character');
-            break;
+        // ในแต่ละ case ให้แก้ไขดังนี้:
 
-        case 'multichar':
-            document.getElementById('multicharInfo').style.display = 'block';
-            messageInput.placeholder = "บรรยายฉากที่มีหลายตัวละคร...";
-            sendButton.innerHTML = 'สร้าง Prompt 🎭';
-            modeNotice.innerHTML = '💡 <strong>Multi-Character Mode:</strong> สร้างฉากหลายตัวละคร';
-            modeNotice.classList.add('active');
-            uploadSection.style.display = 'flex';
-            loadChatHistory('multichar');
-            break;
-            
-        case 'library':
-            const library = document.getElementById('characterLibrary');
-            library.classList.add('active');
-            
-            if (window.innerWidth <= 968) {
-                document.querySelector('.chat-panel').style.display = 'none';
-                library.style.cssText = `
-                    display: block !important;
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    z-index: 1000;
-                    background: var(--background);
-                    overflow-y: auto;
-                    padding: 20px;
-                `;
-            }
-            
-            modeNotice.classList.remove('active');
-            uploadSection.style.display = 'none';
-            break;
+case 'general':
+    document.getElementById('generalInfo').style.display = 'block';
+    messageInput.placeholder = "อธิบายวิดีโอที่ต้องการ...";
+    sendButton.innerHTML = 'สร้าง Prompt ✨';
+    modeNotice.classList.remove('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnGeneral = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnGeneral) uploadBtnGeneral.style.display = '';
+    
+    // เพิ่มบรรทัดนี้
+    const enhanceSection1 = document.getElementById('enhanceSection');
+    if (enhanceSection1) enhanceSection1.style.display = 'none';
+    
+    loadChatHistory('general');
+    break;
+    
+case 'character':
+    document.getElementById('characterInfo').style.display = 'block';
+    messageInput.placeholder = "บรรยายตัวละครที่ต้องการ...";
+    sendButton.innerHTML = 'สร้างตัวละคร 👤';
+    modeNotice.innerHTML = '💡 <strong>Character Mode:</strong> AI จะสร้าง Character Profile';
+    modeNotice.classList.add('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnChar = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnChar) uploadBtnChar.style.display = '';
+    
+    // เพิ่มบรรทัดนี้
+    const enhanceSection2 = document.getElementById('enhanceSection');
+    if (enhanceSection2) enhanceSection2.style.display = 'none';
+    
+    loadChatHistory('character');
+    break;
 
-        case 'image':
-            document.getElementById('imageInfo').style.display = 'block';
-            messageInput.placeholder = "Describe your image in English...";
-            sendButton.innerHTML = 'สร้างภาพ 🎨';
-            modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> AI จะสร้างภาพจาก prompt ของคุณ';
-            modeNotice.classList.add('active');
-            uploadSection.style.display = 'none';
-            loadChatHistory('image');
-            break;
+case 'multichar':
+    document.getElementById('multicharInfo').style.display = 'block';
+    messageInput.placeholder = "บรรยายฉากที่มีหลายตัวละคร...";
+    sendButton.innerHTML = 'สร้าง Prompt 🎭';
+    modeNotice.innerHTML = '💡 <strong>Multi-Character Mode:</strong> สร้างฉากหลายตัวละคร';
+    modeNotice.classList.add('active');
+    uploadSection.style.display = 'flex';
+    // แสดงปุ่ม URL กลับมา
+    const uploadBtnMulti = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnMulti) uploadBtnMulti.style.display = '';
+    const enhanceSectionHide = document.getElementById('enhanceSection');
+if (enhanceSectionHide) enhanceSectionHide.style.display = 'none';
+    loadChatHistory('multichar');
+    break;
+
+    case 'library':
+    const library = document.getElementById('characterLibrary');
+    library.classList.add('active');
+    
+    // เพิ่มส่วนนี้
+    uploadSection.style.display = 'none'; // ซ่อน upload section ใน library
+    modeNotice.classList.remove('active'); // ซ่อน mode notice
+    
+    if (window.innerWidth <= 968) {
+        document.querySelector('.chat-panel').style.display = 'none';
+        library.style.cssText = `
+            display: block !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background: var(--background);
+            overflow-y: auto;
+            padding: 20px;
+        `;
     }
+    
+    break;
+
+case 'image':
+    document.getElementById('imageInfo').style.display = 'block';
+    messageInput.placeholder = "พิมพ์ Prompt ภาษา English...";
+    sendButton.innerHTML = 'สร้างภาพ 🎨';
+    modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> AI จะสร้างภาพจาก prompt ของคุณ';
+    modeNotice.classList.add('active');
+    
+    // ซ่อน upload section ทั้งหมด
+    uploadSection.style.display = 'none';
+    
+    // แสดง enhance section  
+    const enhanceSection = document.getElementById('enhanceSection');
+    if (enhanceSection) enhanceSection.style.display = 'flex';
+    
+    loadChatHistory('image');
+    break;
+    }
+    
 }
 
 // ========== CHAT HISTORY MANAGEMENT ==========
@@ -2088,17 +2119,24 @@ function stopVoiceInput() {
 // Update Voice UI
 function updateVoiceUI(listening) {
     const voiceButton = document.getElementById('voiceButton');
-    const voiceStatus = document.getElementById('voiceStatus');
+    
+    // เลือก voice status ตาม mode
+    let voiceStatus;
+    if (currentMode === 'image') {
+        voiceStatus = document.getElementById('voiceStatusImage');
+    } else {
+        voiceStatus = document.getElementById('voiceStatus');
+    }
+    
+    if (!voiceStatus) return;
     
     if (listening) {
         voiceButton.classList.add('listening');
         voiceButton.innerHTML = '🔴 กำลังฟัง...';
-        voiceButton.disabled = true; // ปิดปุ่มไมค์ตอนกำลังฟัง
+        voiceButton.disabled = true;
         voiceStatus.style.display = 'flex';
         
-        // เพิ่ม hint
-        const voiceText = voiceStatus.querySelector('.voice-text');
-        voiceText.innerHTML = 'กำลังฟัง... พูดได้เรื่อยๆ นึกคำช้าก็ได้ 😊';
+        // ไม่ต้อง set voiceText เพราะใช้ข้อความที่มีอยู่แล้ว
     } else {
         voiceButton.classList.remove('listening');
         voiceButton.innerHTML = '🎤 พูดเลย';
@@ -2326,9 +2364,9 @@ function displayGeneratedImage(imageUrl, prompt, model, cost) {
                      onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23333%22 width=%22400%22 height=%22300%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23999%22>Image Load Error</text></svg>';">
             </div>
             <div class="image-actions">
-                <button class="download-btn" onclick="downloadImage('${escapedUrl}', '${escapedPrompt.substring(0, 50)}')">
-                    💾 Download
-                </button>
+                <button class="download-btn" onclick="downloadImage('${imageUrl.replace(/'/g, "\\'")}', '${prompt.substring(0, 50).replace(/'/g, "\\'")}')">
+    💾 Download
+</button>
                 <button class="retry-btn" onclick="retryGeneration('${escapedPrompt}')">
                     🔄 สร้างใหม่
                 </button>
@@ -2374,8 +2412,39 @@ function downloadImage(url, filename) {
 
 // เพิ่ม function นี้ถ้ายังไม่มี (ใส่ต่อจาก downloadImage)
 function retryGeneration(prompt) {
+    // แสดง popup ยืนยัน
+    const modal = document.createElement('div');
+    modal.className = 'confirmation-modal';
+    modal.innerHTML = `
+        <div class="confirmation-content">
+            <h3>⚠️ ยืนยันการสร้างภาพใหม่</h3>
+            <p>คุณต้องการสร้างภาพใหม่หรือไม่?</p>
+            <p style="color: #f59e0b; font-size: 14px;">
+                ⚡ จะใช้เครดิต ${getSelectedImageModel() === 'flux-schnell' ? '0.15' : '0.20'} เครดิต
+            </p>
+            <div class="confirmation-buttons">
+                <button onclick="confirmRetry('${encodeURIComponent(prompt)}')" class="confirm-btn">
+                    ✅ ยืนยัน
+                </button>
+                <button onclick="closeConfirmation()" class="cancel-btn">
+                    ❌ ยกเลิก
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function confirmRetry(encodedPrompt) {
+    closeConfirmation();
+    const prompt = decodeURIComponent(encodedPrompt);
     document.getElementById('messageInput').value = prompt;
     sendMessage();
+}
+
+function closeConfirmation() {
+    const modal = document.querySelector('.confirmation-modal');
+    if (modal) modal.remove();
 }
 
 // เพิ่ม function นี้ถ้ายังไม่มี
@@ -2399,11 +2468,6 @@ function closeImageModal(event) {
             document.body.style.overflow = '';
         }
     }
-}
-
-function retryGeneration(prompt) {
-    document.getElementById('messageInput').value = prompt;
-    sendMessage();
 }
 
 function favoriteImage(imageUrl, prompt) {
@@ -2480,6 +2544,9 @@ window.retryGeneration = retryGeneration;
 window.favoriteImage = favoriteImage;
 window.openImageModal = openImageModal;
 window.closeImageModal = closeImageModal;
+window.retryGeneration = retryGeneration;
+window.confirmRetry = confirmRetry;
+window.closeConfirmation = closeConfirmation;
 
 // 2. เพิ่มฟังก์ชัน Scene Builder
 function showSceneBuilder() {
@@ -3615,5 +3682,75 @@ function resetCurrentThread() {
 
 // Export function
 window.resetCurrentThread = resetCurrentThread;
+
+// ========== ENHANCE PROMPT FUNCTION ==========
+async function enhancePrompt() {
+    const input = document.getElementById('messageInput');
+    const enhanceBtn = document.getElementById('enhanceBtn');
+    const enhanceStatus = document.getElementById('enhanceStatus');
+    const prompt = input.value.trim();
+    
+    if (!prompt) {
+        showNotification('⚠️ กรุณาพิมพ์หรือพูด prompt ก่อน', 'warning');
+        return;
+    }
+    
+    // Disable button และแสดง loading
+    enhanceBtn.disabled = true;
+    enhanceBtn.style.display = 'none';
+    enhanceStatus.style.display = 'flex';
+    
+    try {
+        const response = await fetch(`${API_URL}/enhance-prompt`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                prompt: prompt,
+                userId: userId
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.enhancedPrompt) {
+            // แทนที่ prompt ด้วยที่ปรับปรุงแล้ว
+            input.value = data.enhancedPrompt;
+            
+            // Auto resize textarea
+            input.style.height = 'auto';
+            input.style.height = input.scrollHeight + 'px';
+            
+            showNotification('✨ ปรับปรุง prompt เรียบร้อย!', 'success');
+            
+            // Update usage และ credits ถ้ามี
+            if (data.usage) {
+                updateUsageDisplay();
+                loadUserCredits();
+            }
+            
+        } else if (response.status === 429) {
+            // เครดิตไม่พอ
+            if (data.error === 'Insufficient credits') {
+                showCreditRequiredMessage(data);
+            } else {
+                showNotification('❌ ใช้งานเกินโควต้าประจำวัน', 'error');
+            }
+        } else {
+            showNotification(`❌ ${data.error || 'เกิดข้อผิดพลาด'}`, 'error');
+        }
+        
+    } catch (error) {
+        console.error('Enhance error:', error);
+        showNotification('❌ ไม่สามารถเชื่อมต่อ server', 'error');
+    } finally {
+        // Enable button กลับ
+        enhanceBtn.disabled = false;
+        enhanceBtn.style.display = '';
+        enhanceStatus.style.display = 'none';
+    }
+}
+
+// Export function
+window.enhancePrompt = enhancePrompt;
 
 // END OF PROFESSIONAL SCRIPT

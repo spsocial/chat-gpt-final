@@ -544,6 +544,7 @@
             display: flex;
             gap: 12px;
             position: relative;
+            
         }
         /* ปุ่มขยาย */
 .expand-btn {
@@ -787,6 +788,58 @@
             text-decoration: underline;
             color: var(--secondary);
         }
+
+        /* Enhance Button */
+.enhance-section {
+    margin-bottom: 12px;
+}
+
+.enhance-btn {
+    background: var(--surface-light);  /* เปลี่ยนเป็นสีเทา */
+    color: var(--text);
+    border: 2px solid var(--primary);  /* ขอบสีม่วง */
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: 'Kanit', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;  /* ไม่ให้ขยายเต็มความกว้าง */
+}
+
+.enhance-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(147, 51, 234, 0.3);
+}
+
+/* จัด layout ของ enhance section */
+.enhance-section {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+.enhance-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.enhance-status {
+    background: var(--surface-light);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
 
         /* Status Bar */
         .status-bar {
@@ -3720,6 +3773,86 @@ line-clamp: 3;
     font-size: 18px !important;
 }
 
+/* Notification */
+.notification {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Confirmation Modal */
+.confirmation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+}
+
+.confirmation-content {
+    background: var(--surface);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    border: 2px solid var(--warning);
+}
+
+.confirmation-content h3 {
+    color: var(--warning);
+    margin-bottom: 16px;
+}
+
+.confirmation-content p {
+    margin-bottom: 12px;
+    color: var(--text);
+}
+
+.confirmation-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.confirm-btn, .cancel-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-family: 'Kanit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.confirm-btn {
+    background: var(--success);
+    color: white;
+}
+
+.confirm-btn:hover {
+    background: #059669;
+}
+
+.cancel-btn {
+    background: var(--surface-light);
+    color: var(--text);
+}
+
+.cancel-btn:hover {
+    background: var(--error);
+    color: white;
+}
+
     </style>  <!-- นี่คือ closing tag -->
 </head>
 <body>
@@ -3991,7 +4124,7 @@ line-clamp: 3;
                          <button class="voice-btn" id="voiceButton" onclick="toggleVoiceInput()">
         🎤 พูดเลย
     </button>
-                        <span class="upload-tip">
+                        <span class="upload-tip" id="uploadTip">
                             💡 ฝากรูปที่ 
                             <a href="https://postimages.org" target="_blank">postimages.org</a>, 
                             <a href="https://uppic.cc" target="_blank">uppic.cc</a> 
@@ -4000,12 +4133,36 @@ line-clamp: 3;
                         <div id="imagePreview" class="image-preview"></div>
                     </div>
 
+                    <!-- Enhance Section สำหรับ Image Mode -->
+<div class="enhance-section" id="enhanceSection" style="display: none;">
+    <button class="enhance-btn" onclick="enhancePrompt()" id="enhanceBtn">
+        ✨ ปรับปรุง Prompt
+    </button>
+    <button class="voice-btn" onclick="toggleVoiceInput()">
+        🎤 พูดเลย
+    </button>
+    <div class="enhance-status" id="enhanceStatus" style="display: none;">
+        <div class="loading-spinner" style="width: 20px; height: 20px;"></div>
+        <span>กำลังปรับปรุง prompt...</span>
+    </div>
+</div>
+
                     <!-- Mobile Quick Actions -->
     <div class="voice-status" id="voiceStatus" style="display: none;">
     <div class="voice-animation">
         <span></span><span></span><span></span>
     </div>
     <div class="voice-text">กำลังฟัง... พูดได้เรื่อยๆ</div>
+    <button class="stop-voice-btn" onclick="stopVoiceInput()">
+        ⏹️ หยุดฟัง
+    </button>
+</div>
+<!-- Voice Status for Image Mode -->
+<div class="voice-status" id="voiceStatusImage" style="display: none;">
+    <div class="voice-animation">
+        <span></span><span></span><span></span>
+    </div>
+    <div class="voice-text">กำลังฟัง... พูด prompt ภาษาไทยได้เลย 🎨</div>
     <button class="stop-voice-btn" onclick="stopVoiceInput()">
         ⏹️ หยุดฟัง
     </button>
