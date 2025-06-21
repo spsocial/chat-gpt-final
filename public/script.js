@@ -771,9 +771,9 @@ function getSelectedRatio() {
 // ========== MODE MANAGEMENT ==========
 function switchMode(mode) {
     // Save current chat history before switching
-if (currentMode === 'general' || currentMode === 'character' || currentMode === 'multichar') {
-    saveChatHistory(currentMode);
-}
+    if (currentMode === 'general' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image') {
+        saveChatHistory(currentMode);
+    }
     
     currentMode = mode;
     
@@ -784,11 +784,11 @@ if (currentMode === 'general' || currentMode === 'character' || currentMode === 
     document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
     
     // Hide all info panels
-document.getElementById('generalInfo').style.display = 'none';
-document.getElementById('characterInfo').style.display = 'none';
-document.getElementById('multicharInfo').style.display = 'none';
-document.getElementById('imageInfo').style.display = 'none';  // ← ต้องมีบรรทัดนี้
-document.getElementById('characterLibrary').classList.remove('active');
+    document.getElementById('generalInfo').style.display = 'none';
+    document.getElementById('characterInfo').style.display = 'none';
+    document.getElementById('multicharInfo').style.display = 'none';
+    document.getElementById('imageInfo').style.display = 'none';
+    document.getElementById('characterLibrary').classList.remove('active');
     
     // Update UI based on mode
     const messageInput = document.getElementById('messageInput');
@@ -799,7 +799,7 @@ document.getElementById('characterLibrary').classList.remove('active');
     switch(mode) {
         case 'general':
             document.getElementById('generalInfo').style.display = 'block';
-            messageInput.placeholder = "อธิบายวิดีโอที่ต้องการ เช่น 'ภาพถ่ายทางอากาศของเมืองยามค่ำคืน แสงนีออนสว่างไสว คล้ายฉาก Blade Runner'...";
+            messageInput.placeholder = "อธิบายวิดีโอที่ต้องการ...";
             sendButton.innerHTML = 'สร้าง Prompt ✨';
             modeNotice.classList.remove('active');
             uploadSection.style.display = 'flex';
@@ -808,74 +808,57 @@ document.getElementById('characterLibrary').classList.remove('active');
             
         case 'character':
             document.getElementById('characterInfo').style.display = 'block';
-            messageInput.placeholder = "บรรยายตัวละครที่ต้องการ เช่น 'นักสืบหญิงสไตล์ cyberpunk อายุ 30 ปี' หรือ 'หุ่นยนต์ที่มีความรู้สึก'...";
+            messageInput.placeholder = "บรรยายตัวละครที่ต้องการ...";
             sendButton.innerHTML = 'สร้างตัวละคร 👤';
-            modeNotice.innerHTML = '💡 <strong>Character Mode:</strong> AI จะสร้าง Character Profile ภาษาอังกฤษ สำหรับใช้กับ Veo 3';
+            modeNotice.innerHTML = '💡 <strong>Character Mode:</strong> AI จะสร้าง Character Profile';
             modeNotice.classList.add('active');
             uploadSection.style.display = 'flex';
             loadChatHistory('character');
-             
             break;
 
-            case 'multichar':
-    document.getElementById('multicharInfo').style.display = 'block';
-    messageInput.placeholder = "บรรยายฉากที่มีหลายตัวละคร หรือคลิก 'สร้างฉากง่ายๆ' ด้านซ้าย...";
-    sendButton.innerHTML = 'สร้าง Prompt 🎭';
-    modeNotice.innerHTML = '💡 <strong>Multi-Character Mode:</strong> สร้างฉากที่มี 2-5 ตัวละคร พร้อมบทพูดและการเคลื่อนไหว';
-    modeNotice.classList.add('active');
-    uploadSection.style.display = 'flex';
-    loadChatHistory('multichar');
-    break;
+        case 'multichar':
+            document.getElementById('multicharInfo').style.display = 'block';
+            messageInput.placeholder = "บรรยายฉากที่มีหลายตัวละคร...";
+            sendButton.innerHTML = 'สร้าง Prompt 🎭';
+            modeNotice.innerHTML = '💡 <strong>Multi-Character Mode:</strong> สร้างฉากหลายตัวละคร';
+            modeNotice.classList.add('active');
+            uploadSection.style.display = 'flex';
+            loadChatHistory('multichar');
+            break;
             
         case 'library':
-    const library = document.getElementById('characterLibrary');
-    library.classList.add('active');
-    
-    // เพิ่มส่วนนี้เพื่อให้ทำงานบนมือถือ
-    if (window.innerWidth <= 968) {
-        // ซ่อน chat panel
-        document.querySelector('.chat-panel').style.display = 'none';
-        // ทำให้ library แสดงเต็มหน้าจอ
-        library.style.cssText = `
-            display: block !important;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            background: var(--background);
-            overflow-y: auto;
-            padding: 20px;
-        `;
-    }
-    
-    modeNotice.classList.remove('active');
-    uploadSection.style.display = 'none';
-    break;
+            const library = document.getElementById('characterLibrary');
+            library.classList.add('active');
+            
+            if (window.innerWidth <= 968) {
+                document.querySelector('.chat-panel').style.display = 'none';
+                library.style.cssText = `
+                    display: block !important;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 1000;
+                    background: var(--background);
+                    overflow-y: auto;
+                    padding: 20px;
+                `;
+            }
+            
+            modeNotice.classList.remove('active');
+            uploadSection.style.display = 'none';
+            break;
 
-    // ใน script.js ตรวจสอบว่ามีส่วนนี้ไหม
-case 'image':
-    document.getElementById('generalInfo').style.display = 'none';
-    document.getElementById('characterInfo').style.display = 'none';
-    document.getElementById('multicharInfo').style.display = 'none';
-    document.getElementById('characterLibrary').classList.remove('active');
-    
-    // Force show image panel
-    const imagePanel = document.getElementById('imageInfo');
-    if (imagePanel) {
-        imagePanel.style.display = 'block';
-        imagePanel.style.visibility = 'visible';
-        imagePanel.style.opacity = '1';
-    }
-    
-    messageInput.placeholder = "พิมพ์ช่องนี้!! Prompt ต้องเป็นภาษา English...";
-    sendButton.innerHTML = 'สร้างภาพ 🎨';
-    modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> AI จะสร้างภาพจาก prompt ของคุณ';
-    modeNotice.classList.add('active');
-    uploadSection.style.display = 'none';
-    loadChatHistory('image');
-    break;
+        case 'image':
+            document.getElementById('imageInfo').style.display = 'block';
+            messageInput.placeholder = "Describe your image in English...";
+            sendButton.innerHTML = 'สร้างภาพ 🎨';
+            modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> AI จะสร้างภาพจาก prompt ของคุณ';
+            modeNotice.classList.add('active');
+            uploadSection.style.display = 'none';
+            loadChatHistory('image');
+            break;
     }
 }
 
@@ -2325,52 +2308,97 @@ function displayGeneratedImage(imageUrl, prompt, model, cost) {
     const messagesContainer = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     
+    // Escape quotes สำหรับใช้ใน HTML attributes
+    const escapedUrl = imageUrl.replace(/'/g, "\\'");
+    const escapedPrompt = prompt.replace(/'/g, "\\'");
+    const altText = prompt.replace(/"/g, '&quot;');
+    
     messageDiv.className = 'message assistant';
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
         <div class="message-content">
             <div>✨ สร้างภาพเสร็จแล้ว!</div>
             <div class="generated-image" style="margin-top: 16px;">
-    <img src="${imageUrl}" 
-         alt="${prompt}" 
-         style="width: 100%; max-width: 512px; height: auto; border-radius: 12px; display: block;"
-         onclick="openImageModal('${imageUrl}')"
-         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23333%22 width=%22400%22 height=%22300%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23999%22>Image Load Error</text></svg>'; console.error('Image failed to load:', '${imageUrl}');">
-</div>
+                <img src="${imageUrl}" 
+                     alt="${altText}" 
+                     style="width: 100%; max-width: 512px; height: auto; border-radius: 12px; display: block; cursor: zoom-in;"
+                     onclick="openImageModal('${escapedUrl}')"
+                     onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23333%22 width=%22400%22 height=%22300%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23999%22>Image Load Error</text></svg>';">
+            </div>
             <div class="image-actions">
-                <button class="download-btn" onclick="downloadImage('${imageUrl}', '${prompt.substring(0, 50)}')">
+                <button class="download-btn" onclick="downloadImage('${escapedUrl}', '${escapedPrompt.substring(0, 50)}')">
                     💾 Download
                 </button>
-                <button class="retry-btn" onclick="retryGeneration('${prompt}')">
+                <button class="retry-btn" onclick="retryGeneration('${escapedPrompt}')">
                     🔄 สร้างใหม่
                 </button>
             </div>
             
             <div style="margin-top: 12px; font-size: 14px; color: var(--text-secondary);">
-    📊 Model: ${getModelDisplayName(model)} | 💰 ใช้เครดิต: ${cost}
-</div>
+                📊 Model: ${getModelDisplayName(model)} | 💰 ใช้เครดิต: ${cost}
+            </div>
         </div>
     `;
     
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
-    // Debug
+    // Debug log (เก็บไว้ได้ ไม่เป็นปัญหา)
     console.log('Image URL:', imageUrl);
 }
 
 // Helper functions
+// แทนที่ function downloadImage เดิม
 function downloadImage(url, filename) {
+    // Clean filename - ลบอักขระพิเศษ
+    const cleanFilename = filename
+        .replace(/[^a-z0-9\u0E00-\u0E7F]/gi, '-') // รวมภาษาไทยด้วย
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '') // ลบ - หน้าหลัง
+        .toLowerCase()
+        .substring(0, 50); // จำกัดความยาว
+    
+    // สร้าง link element
     const a = document.createElement('a');
     a.href = url;
-    // ใช้ชื่อที่สวยงามแทน
-    const cleanFilename = filename.replace(/flux-schnell|flux-dev|sdxl-lightning/gi, 'ai-image');
-    a.download = `veo-${cleanFilename}.png`;
+    a.download = `veo-${cleanFilename || 'image'}.png`;
     a.target = '_blank';
+    
+    // เพิ่ม link ชั่วคราวและคลิก
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    
     showNotification('💾 กำลังดาวน์โหลด...', 'success');
+}
+
+// เพิ่ม function นี้ถ้ายังไม่มี (ใส่ต่อจาก downloadImage)
+function retryGeneration(prompt) {
+    document.getElementById('messageInput').value = prompt;
+    sendMessage();
+}
+
+// เพิ่ม function นี้ถ้ายังไม่มี
+function openImageModal(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImg = document.getElementById('modalImage');
+    
+    if (modal && modalImg) {
+        modal.style.display = 'flex';
+        modalImg.src = imageUrl;
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// เพิ่ม function นี้ถ้ายังไม่มี
+function closeImageModal(event) {
+    if (!event || event.target.id === 'imageModal' || event.target.className === 'image-modal-close') {
+        const modal = document.getElementById('imageModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
 }
 
 function retryGeneration(prompt) {

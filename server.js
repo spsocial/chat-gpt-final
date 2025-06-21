@@ -142,12 +142,15 @@ app.post('/api/chat', async (req, res) => {
         if (db) {
             const todayUsage = await db.getTodayUsage(userId);
             
-            const estimatedTotal = todayUsage + 0.05; // ประมาณการค่าใช้จ่าย
+            const estimatedCost = 0.10; // เพิ่มบรรทัดนี้
+const estimatedTotal = todayUsage + estimatedCost; // แก้จาก 0.05 เป็น estimatedCost
+
 if (estimatedTotal > DAILY_LIMIT_THB) {
-    // ถ้าเกิน daily limit ให้เช็คเครดิต
+    // คำนวณว่าต้องใช้เครดิตเท่าไหร่ (เฉพาะส่วนที่เกิน 5 บาท)
+    const creditsNeeded = estimatedTotal - DAILY_LIMIT_THB;
     const userCredits = await db.getUserCredits(userId);
     
-    if (userCredits < estimatedCost) {
+    if (userCredits < creditsNeeded) {  // แก้จาก estimatedCost เป็น creditsNeeded
         // ไม่มีเครดิตพอ
         return res.status(429).json({
             error: 'Insufficient credits',
@@ -258,13 +261,27 @@ while (retryCount < maxRetries) {
             );
         }
 
-        // หักเครดิตถ้าใช้เครดิต
-if (shouldUseCredits) {
-    await db.useCredits(
-        userId,
-        costTHB,
-        `${mode} prompt generation`
-    );
+// หักเครดิตถ้าใช้เกิน daily limit
+if (shouldUseCredits && db) {
+    // ดึงการใช้งานล่าสุดหลังบันทึก
+    const latestUsage = await db.getTodayUsage(userId);
+    
+    // คำนวณว่าเกิน daily limit เท่าไหร่
+    const overLimitAmount = Math.max(0, latestUsage - DAILY_LIMIT_THB);
+    
+    console.log(`💳 Credit check: Today ฿${latestUsage.toFixed(2)}, Over limit: ฿${overLimitAmount.toFixed(2)}`);
+    
+    if (overLimitAmount > 0) {
+        const deductResult = await db.useCredits(
+            userId,
+            overLimitAmount,  // ← หักเฉพาะส่วนที่เกิน 5 บาท
+            `${mode} prompt - exceeded daily limit`
+        );
+        
+        if (deductResult.success) {
+            console.log(`✅ Deducted ${overLimitAmount.toFixed(2)} credits from ${userId}`);
+        }
+    }
 }
 
         // Send response
