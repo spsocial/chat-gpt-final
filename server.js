@@ -262,25 +262,44 @@ while (retryCount < maxRetries) {
         }
 
 // หักเครดิตถ้าใช้เกิน daily limit
-if (shouldUseCredits && db) {
+if (db) {  // ลบ shouldUseCredits ออก เช็คทุกครั้ง
     // ดึงการใช้งานล่าสุดหลังบันทึก
     const latestUsage = await db.getTodayUsage(userId);
     
-    // คำนวณว่าเกิน daily limit เท่าไหร่
-    const overLimitAmount = Math.max(0, latestUsage - DAILY_LIMIT_THB);
+    console.log(`💳 === CREDIT CHECK ===`);
+    console.log(`💳 Today's usage: ฿${latestUsage.toFixed(2)}`);
+    console.log(`💳 Daily limit: ฿${DAILY_LIMIT_THB}`);
+    console.log(`💳 User credits: ${await db.getUserCredits(userId)}`);
     
-    console.log(`💳 Credit check: Today ฿${latestUsage.toFixed(2)}, Over limit: ฿${overLimitAmount.toFixed(2)}`);
-    
-    if (overLimitAmount > 0) {
-        const deductResult = await db.useCredits(
-            userId,
-            overLimitAmount,  // ← หักเฉพาะส่วนที่เกิน 5 บาท
-            `${mode} prompt - exceeded daily limit`
-        );
+    // ถ้าใช้เกิน 5 บาท
+    if (latestUsage > DAILY_LIMIT_THB) {
+        // คำนวณส่วนที่เกิน
+        const overLimitAmount = latestUsage - DAILY_LIMIT_THB;
+        console.log(`💳 Over limit by: ฿${overLimitAmount.toFixed(2)}`);
         
-        if (deductResult.success) {
-            console.log(`✅ Deducted ${overLimitAmount.toFixed(2)} credits from ${userId}`);
+        // ตรวจสอบเครดิต
+        const userCredits = await db.getUserCredits(userId);
+        console.log(`💳 User has credits: ฿${userCredits.toFixed(2)}`);
+        
+        if (userCredits >= overLimitAmount) {
+            // มีเครดิตพอ - หักเครดิต
+            const deductResult = await db.useCredits(
+                userId,
+                overLimitAmount,
+                `${mode} prompt - exceeded daily limit by ฿${overLimitAmount.toFixed(2)}`
+            );
+            
+            if (deductResult.success) {
+                console.log(`✅ CREDIT DEDUCTED: ฿${overLimitAmount.toFixed(2)}`);
+                console.log(`💰 New balance: ฿${deductResult.newBalance.toFixed(2)}`);
+            } else {
+                console.error(`❌ CREDIT DEDUCTION FAILED:`, deductResult.error);
+            }
+        } else {
+            console.log(`⚠️ Insufficient credits: has ${userCredits}, needs ${overLimitAmount}`);
         }
+    } else {
+        console.log(`✅ Within daily limit, no credit deduction needed`);
     }
 }
 
@@ -543,19 +562,53 @@ app.post('/api/enhance-prompt', async (req, res) => {
         // Calculate cost and save usage
         const costTHB = calculateCost(result.usage);
         
-        if (db) {
-            await db.saveUsage(userId, result.usage.prompt_tokens, result.usage.completion_tokens, costTHB);
+        // Save usage และหักเครดิตในที่เดียว
+if (db) {
+    // บันทึกการใช้งาน
+    await db.saveUsage(
+        userId, 
+        result.usage.prompt_tokens, 
+        result.usage.completion_tokens, 
+        costTHB
+    );
+    
+    // ตรวจสอบการใช้งานทันทีหลังบันทึก
+    const todayUsage = await db.getTodayUsage(userId);
+    console.log(`\n💳 ========== CREDIT CHECK ==========`);
+    console.log(`💳 วันนี้ใช้ไป: ฿${todayUsage.toFixed(2)}/5.00`);
+    
+    // ถ้าใช้เกิน 5 บาท ให้หักเครดิตทันที
+    if (todayUsage > 5.0) {
+        const overAmount = todayUsage - 5.0;
+        const userCredits = await db.getUserCredits(userId);
+        
+        console.log(`💳 เกินโควต้า: ฿${overAmount.toFixed(2)}`);
+        console.log(`💳 เครดิตคงเหลือ: ฿${userCredits.toFixed(2)}`);
+        
+        // หักเครดิต
+        if (userCredits > 0) {
+            const amountToDeduct = Math.min(overAmount, userCredits);
             
-            // หักเครดิตถ้าใช้เกิน daily limit
-            if (shouldUseCredits) {
-                const latestUsage = await db.getTodayUsage(userId);
-                const overLimitAmount = Math.max(0, latestUsage - DAILY_LIMIT_THB);
-                
-                if (overLimitAmount > 0) {
-                    await db.useCredits(userId, overLimitAmount, 'Enhance prompt');
-                }
+            const deductResult = await db.useCredits(
+                userId,
+                amountToDeduct,
+                `Prompt ${mode} - ใช้เกินโควต้าประจำวัน`
+            );
+            
+            if (deductResult.success) {
+                console.log(`✅ หักเครดิต: ฿${amountToDeduct.toFixed(2)}`);
+                console.log(`💰 เครดิตคงเหลือใหม่: ฿${deductResult.newBalance.toFixed(2)}`);
+            } else {
+                console.error(`❌ หักเครดิตไม่สำเร็จ:`, deductResult.error);
             }
         }
+    }
+    console.log(`💳 ===================================\n`);
+}
+
+// อัพเดท display
+updateUsageDisplay();
+loadUserCredits();
         
         // Send response
         res.json({
