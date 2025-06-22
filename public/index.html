@@ -3853,6 +3853,76 @@ line-clamp: 3;
     color: white;
 }
 
+/* AI Chat Styles */
+.message-content pre {
+    background: var(--surface-light);
+    border-radius: 8px;
+    padding: 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.message-content code {
+    background: var(--surface-light);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.chat-model-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* Chat Model Select */
+#chatModelSelect {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Kanit', sans-serif;
+    cursor: pointer;
+}
+
+#chatModelSelect:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+#chatModelSelect optgroup {
+    background: var(--surface);
+    color: var(--text-secondary);
+}
+
+#chatModelSelect option {
+    background: var(--surface-light);
+    color: var(--text);
+    padding: 8px;
+}
+
+/* Chat model info style */
+.chat-model-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    opacity: 0.5;
+    transition: opacity 0.2s;
+}
+
+.message:hover .chat-model-info {
+    opacity: 0.8;
+}
+
     </style>  <!-- นี่คือ closing tag -->
 </head>
 <body>
@@ -3896,6 +3966,11 @@ line-clamp: 3;
         <span class="mode-text">Image Gen</span>
         <span class="new-badge">NEW!</span>
     </button>
+     <!-- เพิ่มปุ่ม AI Chat ตรงนี้ -->
+    <button class="mode-btn" data-mode="chat" onclick="switchMode('chat')">
+        <span class="mode-icon">💬</span>
+        <span class="mode-text">AI Chat</span>
+    </button>
     <button class="mode-btn" data-mode="character" onclick="switchMode('character')">
         <span class="mode-icon">🧙</span>
         <span class="mode-text">Character Creator</span>
@@ -3912,6 +3987,7 @@ line-clamp: 3;
     <option value="general">🎬 General Prompt</option>
     <option value="multichar">🎭 Prompt Master</option>
     <option value="image">🎨 Image Gen ✨NEW!</option>
+    <option value="chat">💬 AI Chat</option>
     <option value="character">🧙 Character Creator</option>
     <option value="library">🗂️ My Characters</option>
 </select>
@@ -3926,88 +4002,71 @@ line-clamp: 3;
 
         <!-- Main Content -->
         <div class="main-content">
+
             <!-- Info Panel - General Mode -->
-            <div class="info-panel" id="generalInfo">
-                <div class="info-section">
-                    <h3>✨ ข้อดีสำหรับมือใหม่</h3>
-                    <div class="tip-card">
-                        <h4>🎬 เล่าเรื่องง่ายๆ ได้ผลเทพ</h4>
-                        <p>แค่บอกว่าอยากได้อะไร เช่น "ขอมุมกล้องแบบเทพๆ" AI จะสร้าง prompt ระดับมืออาชีพให้อัตโนมัติ</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4>💡 ไอเดียน้อยก็สร้างได้</h4>
-                        <p>มีไอเดียแค่นิดเดียว AI จะช่วยเติมเต็มรายละเอียดให้ครบถ้วน พร้อมเทคนิคการถ่ายระดับโปร</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4>🖼️ แนบรูปเป็น Reference</h4>
-                        <p>หารูปที่ชอบมาแนบ AI จะวิเคราะห์สไตล์และช่วยสร้าง prompt ให้ได้ผลคล้ายๆ กัน</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4>🎯 ไม่ต้องรู้ศัพท์เทคนิค</h4>
-                        <p>ไม่ต้องจำคำศัพท์ยากๆ พิมพ์ภาษาง่ายๆ AI จะแปลงเป็นภาษาเทคนิคให้เอง</p>
-                    </div>
-                </div>
+<div class="info-panel" id="generalInfo">
+    <div class="info-section">
+        <h3>✨ ข้อดีสำหรับมือใหม่</h3>
+        <div class="tip-card">
+            <h4>🎬 เล่าเรื่องง่ายๆ ได้ผลเทพ</h4>
+            <p>แค่บอกว่าอยากได้อะไร เช่น "ขอมุมกล้องแบบเทพๆ" AI จะสร้าง prompt ระดับมืออาชีพให้อัตโนมัติ</p>
+        </div>
+        <div class="tip-card">
+            <h4>💡 ไอเดียน้อยก็สร้างได้</h4>
+            <p>มีไอเดียแค่นิดเดียว AI จะช่วยเติมเต็มรายละเอียดให้ครบถ้วน พร้อมเทคนิคการถ่ายระดับโปร</p>
+        </div>
+        <div class="tip-card">
+            <h4>🖼️ แนบรูปเป็น Reference</h4>
+            <p>หารูปที่ชอบมาแนบ AI จะวิเคราะห์สไตล์และช่วยสร้าง prompt ให้ได้ผลคล้ายๆ กัน</p>
+        </div>
+        <div class="tip-card">
+            <h4>🎯 ไม่ต้องรู้ศัพท์เทคนิค</h4>
+            <p>ไม่ต้องจำคำศัพท์ยากๆ พิมพ์ภาษาง่ายๆ AI จะแปลงเป็นภาษาเทคนิคให้เอง</p>
+        </div>
+    </div>
 
-                <div class="info-section">
-                    <h3>⚡ คำสั่งพิเศษ</h3>
-                    <div class="tip-card">
-                        <p><strong>ศัพท์พิเศษ:</strong> สมจริงตามกฏฟิสิกส์ , มุมกล้องระดับมืออาชีพ , มุมกล้องน่าตื่นเต้นระดับเทพ , พูดแบบสมูทเหมือนคนจริง</p>
-                    </div>
-                    <div class="tip-card">
-                        <p><strong>ระยะเวลา:</strong> ระบุความยาวต่อคลิป หรือจำนวนฉากต่อเนื่อง เพื่อให้ AI จดจำลักษณะบุคคลและต่อฉากได้ดี</p>
-                    </div>
-                </div>
-            </div>
+    <div class="info-section">
+        <h3>⚡ คำสั่งพิเศษ</h3>
+        <div class="tip-card">
+            <p><strong>ศัพท์พิเศษ:</strong> สมจริงตามกฏฟิสิกส์ , มุมกล้องระดับมืออาชีพ , มุมกล้องน่าตื่นเต้นระดับเทพ , พูดแบบสมูทเหมือนคนจริง</p>
+        </div>
+        <div class="tip-card">
+            <p><strong>ระยะเวลา:</strong> ระบุความยาวต่อคลิป หรือจำนวนฉากต่อเนื่อง เพื่อให้ AI จดจำลักษณะบุคคลและต่อฉากได้ดี</p>
+        </div>
+    </div>
+</div>
 
-            <!-- Info Panel - Character Mode -->
-            <div class="info-panel" id="characterInfo" style="display: none;">
-                <div class="info-section">
-                    <h3>👤 Character Creator</h3>
-                    <div class="tip-card">
-                        <h4>✨ สร้างตัวละครแบบละเอียด</h4>
-                        <p>AI จะช่วยสร้าง Character Profile ที่ละเอียดครบถ้วน พร้อมใช้กับ Veo 3 ได้ทันที</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4>🎯 บอกแค่ไอเดีย</h4>
-                        <p>ไม่ต้องคิดเยอะ แค่บอกว่าอยากได้ตัวละครแบบไหน AI จะช่วยเติมรายละเอียดให้</p>
-                    </div>
-                    <div class="tip-card">
-                        <h4>💾 บันทึกไว้ใช้ซ้ำ</h4>
-                        <p>สามารถบันทึก Character Profile ไว้ใน Library แล้วเรียกใช้ซ้ำได้ทุกเมื่อ</p>
-                    </div>
-                </div>
+<!-- Info Panel - Character Mode -->
+<div class="info-panel" id="characterInfo" style="display: none;">
+    <div class="info-section">
+        <h3>👤 Character Creator</h3>
+        <div class="tip-card">
+            <h4>✨ สร้างตัวละครแบบละเอียด</h4>
+            <p>AI จะช่วยสร้าง Character Profile ที่ละเอียดครบถ้วน พร้อมใช้กับ Veo 3 ได้ทันที</p>
+        </div>
+        <div class="tip-card">
+            <h4>🎯 บอกแค่ไอเดีย</h4>
+            <p>ไม่ต้องคิดเยอะ แค่บอกว่าอยากได้ตัวละครแบบไหน AI จะช่วยเติมรายละเอียดให้</p>
+        </div>
+        <div class="tip-card">
+            <h4>💾 บันทึกไว้ใช้ซ้ำ</h4>
+            <p>สามารถบันทึก Character Profile ไว้ใน Library แล้วเรียกใช้ซ้ำได้ทุกเมื่อ</p>
+        </div>
+    </div>
 
-                <div class="info-section">
-                    <h3>💡 ตัวอย่างคำสั่ง</h3>
-                    <div class="tip-card">
-                        <p>• "สร้างนักสืบหญิงสไตล์ cyberpunk"</p>
-                        <p>• "ทหารอวกาศจากอนาคต"</p>
-                        <p>• "เด็กผู้หญิงที่มีพลังวิเศษ"</p>
-                        <p>• "หุ่นยนต์ที่มีความรู้สึก"</p>
-                    </div>
-                </div>
-            </div>
+    <div class="info-section">
+        <h3>💡 ตัวอย่างคำสั่ง</h3>
+        <div class="tip-card">
+            <p>• "สร้างนักสืบหญิงสไตล์ cyberpunk"</p>
+            <p>• "ทหารอวกาศจากอนาคต"</p>
+            <p>• "เด็กผู้หญิงที่มีพลังวิเศษ"</p>
+            <p>• "หุ่นยนต์ที่มีความรู้สึก"</p>
+        </div>
+    </div>
+</div>
 
-            <!-- Character Library Panel -->
-            <div class="character-library" id="characterLibrary">
-                <div class="library-header">
-    <button onclick="backToChat()" style="background:none;border:none;color:var(--primary);font-size:18px;padding:10px 0;cursor:pointer;display:none;" class="mobile-back-btn">
-        ← กลับ
-    </button>
-    <h3>📚 My Character Library</h3>
-                    <button class="mode-btn" onclick="switchMode('character')" style="background: var(--primary); color: white;">
-                        + สร้างตัวละครใหม่
-                    </button>
-                </div>
-                <div class="character-list" id="characterList">
-                    <div class="empty-library">
-                        <p>ยังไม่มีตัวละครที่บันทึกไว้</p>
-                        <p style="margin-top: 8px;">สร้างตัวละครใหม่ในโหมด Character Creator</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="info-panel" id="multicharInfo" style="display: none;">
+<!-- Info Panel - Multichar Mode -->
+<div class="info-panel" id="multicharInfo" style="display: none;">
     <div class="info-section">
         <h3>🎭 Prompt Master</h3>
         <div class="tip-card">
@@ -4030,7 +4089,6 @@ line-clamp: 3;
                • "ครอบครัว 4 คนกินข้าวด้วยกัน"</p>
         </div>
     </div>
-    
     
     <!-- Quick Scene Builder Button -->
     <button class="scene-builder-btn" onclick="showSceneBuilder()">
@@ -4064,18 +4122,6 @@ line-clamp: 3;
                         <div class="model-desc">✨ คุณภาพสูง รายละเอียดดี</div>
                     </div>
                 </label>
-
-                <!-- Model 3: Ultra Mode (เปลี่ยนจาก Basic) -->
-<!-- 
-<label class="model-option">
-    <input type="radio" name="imageModel" value="playground-v2.5">
-    <div class="model-card">
-        <div class="model-name">🔥 Ultra Mode</div>
-        <div class="model-price">💰 0.50 เครดิต</div>
-        <div class="model-desc">🌟 Playground v2.5 - ดีที่สุด!</div>
-    </div>
-</label>
--->
             </div>
         </div>
         
@@ -4096,6 +4142,68 @@ line-clamp: 3;
             <p>• ยิ่งบรรยายละเอียด ภาพยิ่งตรงใจ</p>
             <p>• ใช้คำอย่าง "realistic", "detailed", "8k"</p>
             <p>• กด "ปรับปรุง Prompt" เพื่อ prompt ที่ดีขึ้น</p>
+        </div>
+    </div>
+</div>
+
+<!-- Info Panel - Chat Mode -->
+<div class="info-panel" id="chatInfo" style="display: none;">
+    <div class="info-section">
+        <h3>💬 AI Chat Assistant</h3>
+        <div class="tip-card">
+            <h4>✨ เลือก Model</h4>
+            <!-- Model Selector แบบ Dropdown -->
+            <select id="chatModelSelect" class="scene-input" onchange="updateChatModel(this.value)">
+                <optgroup label="OpenAI Models">
+                    <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo (0.06 เครดิต/1K tokens)</option>
+<option value="gpt-4o-mini">GPT-4o Mini (0.02 เครดิต/1K tokens)</option>
+<option value="gpt-4o">GPT-4o (0.40 เครดิต/1K tokens)</option>
+                </optgroup>
+                <optgroup label="Google Models">
+                    <option value="gemini-1.5-flash">Gemini Flash (0.03 เครดิต/1K tokens)</option>
+<option value="gemini-1.5-pro">Gemini Pro (0.20 เครดิต/1K tokens)</option>
+                </optgroup>
+            </select>
+            
+            <!-- Model Description -->
+            <div id="modelDescription" style="margin-top: 12px; padding: 12px; background: rgba(147, 51, 234, 0.1); border-radius: 8px; font-size: 13px;">
+                <strong>GPT-3.5 Turbo:</strong> เร็ว ประหยัด เหมาะกับงานทั่วไป
+            </div>
+        </div>
+        
+        <div class="tip-card">
+            <h4>💡 วิธีใช้</h4>
+            <p>• พิมพ์หรือพูดถามอะไรก็ได้</p>
+            <p>• แนบรูปเพื่อให้ AI วิเคราะห์</p>
+            <p>• ประวัติการสนทนาจะถูกบันทึก</p>
+            <p>• หักเครดิตตาม token ที่ใช้จริง</p>
+        </div>
+
+        <div class="tip-card">
+            <h4>🎯 เหมาะกับ</h4>
+            <p>• ถาม-ตอบทั่วไป</p>
+            <p>• วิเคราะห์รูปภาพ</p>
+            <p>• ช่วยเขียนโค้ด</p>
+            <p>• แปลภาษา</p>
+        </div>
+    </div>
+</div>
+
+<!-- Character Library Panel -->
+<div class="character-library" id="characterLibrary">
+    <div class="library-header">
+        <button onclick="backToChat()" style="background:none;border:none;color:var(--primary);font-size:18px;padding:10px 0;cursor:pointer;display:none;" class="mobile-back-btn">
+            ← กลับ
+        </button>
+        <h3>📚 My Character Library</h3>
+        <button class="mode-btn" onclick="switchMode('character')" style="background: var(--primary); color: white;">
+            + สร้างตัวละครใหม่
+        </button>
+    </div>
+    <div class="character-list" id="characterList">
+        <div class="empty-library">
+            <p>ยังไม่มีตัวละครที่บันทึกไว้</p>
+            <p style="margin-top: 8px;">สร้างตัวละครใหม่ในโหมด Character Creator</p>
         </div>
     </div>
 </div>
@@ -4167,6 +4275,18 @@ line-clamp: 3;
         ⏹️ หยุดฟัง
     </button>
 </div>
+
+<!-- Voice Status for Chat Mode -->
+<div class="voice-status" id="voiceStatusChat" style="display: none;">
+    <div class="voice-animation">
+        <span></span><span></span><span></span>
+    </div>
+    <div class="voice-text">กำลังฟัง... ถามอะไรก็ได้เลย 💬</div>
+    <button class="stop-voice-btn" onclick="stopVoiceInput()">
+        ⏹️ หยุดฟัง
+    </button>
+</div>
+
  <!-- Quick Edit Bar -->
     <div class="quick-edit-bar" id="quickEditBar" style="display: none;">
         <button onclick="openFullEditor()">📝 Editor เต็มจอ</button>
@@ -4212,6 +4332,23 @@ line-clamp: 3;
         " onmouseover="this.style.background='#dc2626'" 
            onmouseout="this.style.background='#f59e0b'">
             🔄 Reset
+        </button>
+
+        <!-- เพิ่มปุ่ม Clear Chat (แสดงเฉพาะ chat mode) -->
+    <div class="status-item" id="clearChatBtn" style="display: none;">
+        <button onclick="clearChatHistory()" style="
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'Kanit', sans-serif;
+            transition: all 0.2s ease;
+        " onmouseover="this.style.background='#4f46e5'" 
+           onmouseout="this.style.background='#6366f1'">
+            🗑️ Clear Chat
         </button>
     </div>
 </div>

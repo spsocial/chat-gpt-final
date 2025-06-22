@@ -1,3 +1,9 @@
+// Suppress WM Failed warning
+if (typeof window !== 'undefined') {
+    window.WM = window.WM || {};
+    window.wb_service = window.wb_service || {};
+}
+
 // PROFESSIONAL VERSION - NO ERRORS
 console.log("Script loaded - Professional Version 5.0");
 
@@ -5,6 +11,7 @@ console.log("Script loaded - Professional Version 5.0");
 const API_URL = window.location.origin + '/api';
 const MAX_IMAGE_SIZE = 800;
 let isProcessing = false;
+let processingMode = null;
 
 // ========== GLOBAL VARIABLES ==========
 let currentMode = 'general';
@@ -14,6 +21,7 @@ let currentCharacterProfile = null;
 let userId = '';
 let userCredits = 0;
 let lastPromptData = null;
+
 
 // ========== TEMPLATES DATA ==========
 const promptTemplates = {
@@ -480,8 +488,9 @@ document.addEventListener('DOMContentLoaded', () => {
 const chatHistory = {
     general: '',
     character: '',
-    multichar: '',   // ✅ เพิ่ม comma
-    image: ''
+    multichar: '',   
+    image: '',
+    chat: ''  // เพิ่มบรรทัดนี้
 };
 
 // Initialize image URLs array globally
@@ -810,6 +819,24 @@ function getSelectedRatio() {
 
 // ========== MODE MANAGEMENT ==========
 function switchMode(mode) {
+
+      // ถ้ากำลังประมวลผลอยู่ ไม่ให้เปลี่ยน mode
+    if (isProcessing) {
+        showNotification('⏳ กรุณารอให้ AI ตอบก่อนค่อยเปลี่ยนโหมด', 'warning');
+        
+        // คืนค่าปุ่มกลับ
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-mode="${currentMode}"]`).classList.add('active');
+        
+        // คืนค่า dropdown (mobile)
+        const dropdown = document.getElementById('mobileModeDrop');
+        if (dropdown) dropdown.value = currentMode;
+        
+        return; // หยุดการเปลี่ยน mode
+    }
+    
     // Save current chat history before switching
     if (currentMode === 'general' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image') {
         saveChatHistory(currentMode);
@@ -851,6 +878,8 @@ case 'general':
     // เพิ่มบรรทัดนี้
     const enhanceSection1 = document.getElementById('enhanceSection');
     if (enhanceSection1) enhanceSection1.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('general');
     break;
@@ -868,6 +897,8 @@ case 'character':
     // เพิ่มบรรทัดนี้
     const enhanceSection2 = document.getElementById('enhanceSection');
     if (enhanceSection2) enhanceSection2.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('character');
     break;
@@ -884,6 +915,9 @@ case 'multichar':
     if (uploadBtnMulti) uploadBtnMulti.style.display = '';
     const enhanceSectionHide = document.getElementById('enhanceSection');
 if (enhanceSectionHide) enhanceSectionHide.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('chatInfo').style.display = 'none';
+
     loadChatHistory('multichar');
     break;
 
@@ -894,7 +928,8 @@ if (enhanceSectionHide) enhanceSectionHide.style.display = 'none';
     // เพิ่มส่วนนี้
     uploadSection.style.display = 'none'; // ซ่อน upload section ใน library
     modeNotice.classList.remove('active'); // ซ่อน mode notice
-    
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('chatInfo').style.display = 'none';
     if (window.innerWidth <= 968) {
         document.querySelector('.chat-panel').style.display = 'none';
         library.style.cssText = `
@@ -926,8 +961,27 @@ case 'image':
     // แสดง enhance section  
     const enhanceSection = document.getElementById('enhanceSection');
     if (enhanceSection) enhanceSection.style.display = 'flex';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('image');
+    break;
+
+    case 'chat':
+    document.getElementById('chatInfo').style.display = 'block';
+    messageInput.placeholder = "พิมพ์ถามอะไรก็ได้ หรือแนบรูปมาวิเคราะห์...";
+    sendButton.innerHTML = 'ส่งข้อความ 💬';
+    modeNotice.innerHTML = '💡 <strong>AI Chat Mode:</strong> สนทนากับ AI ได้ทุกเรื่อง';
+    modeNotice.classList.add('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnChat = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnChat) uploadBtnChat.style.display = '';
+    const enhanceSectionChat = document.getElementById('enhanceSection');
+    if (enhanceSectionChat) enhanceSectionChat.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'block';
+    
+    // เพิ่มเฉพาะบรรทัดนี้
+    loadChatHistory('chat');
     break;
     }
     
@@ -986,21 +1040,29 @@ function addWelcomeMessage(mode) {
             break;
             
         case 'multichar':
-    message = `สวัสดีครับ! ผมคือ Prompt D Master 🎭<br><br>
-              โหมดสร้าง Prompt ระดับสูง สำหรับฉากที่ซับซ้อน<br>
-              ✨ รองรับตัวละคร 2-5 คน<br>
-              ✨ บทพูดพร้อม timing แม่นยำ<br>
-              ✨ มุมกล้องและ audio หลายชั้น<br><br>
-              💡 <strong>เหมาะกับ:</strong> งานที่ต้องการความละเอียดสูง, ฉากสนทนา, หนังสั้น`;
-    break;
+            message = `สวัสดีครับ! ผมคือ Prompt D Master 🎭<br><br>
+                      โหมดสร้าง Prompt ระดับสูง สำหรับฉากที่ซับซ้อน<br>
+                      ✨ รองรับตัวละคร 2-5 คน<br>
+                      ✨ บทพูดพร้อม timing แม่นยำ<br>
+                      ✨ มุมกล้องและ audio หลายชั้น<br><br>
+                      💡 <strong>เหมาะกับ:</strong> งานที่ต้องการความละเอียดสูง, ฉากสนทนา, หนังสั้น`;
+            break;
 
-    case 'image':
-    message = `สวัสดีครับ! ผมคือ AI Image Generator 🎨<br><br>
-              เลือก Model และพิมพ์คำอธิบายภาพที่ต้องการเป็นภาษาอังกฤษ<br><br>
-              💡 <strong>ตัวอย่าง:</strong> "A cute cat wearing sunglasses, digital art style"`;
-    break;
+        case 'image':
+            message = `สวัสดีครับ! ผมคือ AI Image Generator 🎨<br><br>
+                      เลือก Model และพิมพ์คำอธิบายภาพที่ต้องการเป็นภาษาอังกฤษ<br><br>
+                      💡 <strong>ตัวอย่าง:</strong> "A cute cat wearing sunglasses, digital art style"`;
+            break;
+
+        case 'chat':
+            message = `สวัสดีครับ! ผมคือ AI Assistant 💬<br><br>
+                      เลือก Model ที่ต้องการใช้ แล้วถามอะไรก็ได้ครับ<br>
+                      📎 แนบรูปได้ | 🎤 พูดได้ | 💰 หักเครดิตตามการใช้งานจริง<br><br>
+                      💡 <strong>ลองถาม:</strong> "ช่วยอธิบาย quantum computing หน่อย" หรือ "Write Python code to..."`;
+            break;
     }
     
+    // ใช้ addMessage ธรรมดา ไม่ใช้ displayChatResponse
     addMessage(message, 'assistant');
 }
 
@@ -1344,6 +1406,7 @@ async function sendMessage() {
     input.value = '';
     
     const loadingId = addLoadingMessage();
+
     
     try {
         const response = await fetch(`${API_URL}/chat`, {
@@ -1366,6 +1429,12 @@ async function sendMessage() {
         // ส่งไปสร้างภาพแทน
         removeMessage(loadingId);
         generateImage(message);
+        return;
+    }
+    if (currentMode === 'chat') {
+        // AI Chat mode
+        removeMessage(loadingId);
+        sendChatMessage(message);
         return;
     }
             if (currentMode === 'character') {
@@ -1813,11 +1882,21 @@ function addLoadingMessage() {
     messageDiv.id = id;
     messageDiv.className = 'message assistant';
     
-    const loadingText = currentMode === 'character' ? 
-    'กำลังสร้าง Character Profile แบบละเอียด...' :
-    currentMode === 'image' ?
-    'กำลังสร้างภาพตาม prompt ของคุณ...' :
-    'กำลังสร้าง Cinematic Prompt สำหรับ Vdo ขั้นเทพ...';
+    // เพิ่มการเช็ค mode
+    let loadingText;
+    switch(currentMode) {
+        case 'chat':
+            loadingText = 'กำลังคิด...';
+            break;
+        case 'character':
+            loadingText = 'กำลังสร้าง Character Profile แบบละเอียด...';
+            break;
+        case 'image':
+            loadingText = 'กำลังสร้างภาพตาม prompt ของคุณ...';
+            break;
+        default:
+            loadingText = 'กำลังสร้าง Cinematic Prompt สำหรับ Vdo ขั้นเทพ...';
+    }
     
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
@@ -1833,7 +1912,6 @@ function addLoadingMessage() {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
     return id;
-    
 }
 
 function removeMessage(msgId) {
@@ -2188,7 +2266,7 @@ function updateVoiceUI(listening) {
     let voiceStatus;
     if (currentMode === 'image') {
         voiceStatus = document.getElementById('voiceStatusImage');
-    } else {
+    } else if (currentMode === 'chat') {
         voiceStatus = document.getElementById('voiceStatus');
     }
     
@@ -2551,6 +2629,166 @@ function favoriteImage(imageUrl, prompt) {
     
     localStorage.setItem('veoImageHistory', JSON.stringify(imageHistory));
     showNotification('⭐ บันทึกเรียบร้อย!', 'success');
+}
+
+// ========== AI CHAT FUNCTIONS ==========
+async function sendChatMessage(message) {
+    const model = getSelectedChatModel();
+    
+    // ถ้ามีรูปแต่ไม่มีข้อความ
+    if (!message && window.imageUrls.length > 0) {
+        message = "วิเคราะห์รูปนี้ให้หน่อย";
+    }
+    
+    // แสดง loading พร้อมบอกว่ากำลังทำอะไร
+    let loadingText = '💭 กำลังคิด...';
+    if (window.imageUrls.length > 0) {
+        loadingText = '🖼️ กำลังวิเคราะห์รูป...';
+    }
+    const loadingId = addMessage(loadingText, 'assistant');
+    
+    try {
+        const response = await fetch(`${API_URL}/ai-chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: message,
+                userId: userId,
+                model: model,
+                images: window.imageUrls, // ส่งรูปไปด้วย
+                history: getChatModeHistory()
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove loading
+        removeMessage(loadingId);
+        
+        if (response.ok && data.success) {
+            // แสดงข้อความตอบกลับ
+            displayChatResponse(data.response, data.model, data.cost);
+            
+            // Update usage และ credits
+            updateUsageDisplay();
+            loadUserCredits();
+            
+            // Clear images
+            window.imageUrls = [];
+            displayImagePreview();
+            
+        } else if (response.status === 429) {
+            // เครดิตไม่พอ
+            if (data.error === 'Insufficient credits') {
+                showCreditRequiredMessage(data);
+            } else {
+                addMessage(`❌ ${data.message || 'Daily limit exceeded'}`, 'assistant');
+            }
+        } else {
+            // Error อื่นๆ
+            addMessage(`❌ เกิดข้อผิดพลาด: ${data.error || 'Failed to send message'}`, 'assistant');
+        }
+        
+    } catch (error) {
+        removeMessage(loadingId);
+        console.error('Chat error:', error);
+        addMessage('❌ ไม่สามารถเชื่อมต่อกับ server ได้', 'assistant');
+    }
+}
+
+// Get selected chat model
+function getSelectedChatModel() {
+    const selected = document.querySelector('input[name="chatModel"]:checked');
+    return selected ? selected.value : 'gpt-3.5-turbo';
+}
+
+// Get chat history for current conversation
+function getChatModeHistory() {
+    const messages = [];
+    const chatElements = document.querySelectorAll('#chatMessages .message');
+    
+    // เก็บแค่ 10 ข้อความล่าสุด (5 คู่)
+    const recentMessages = Array.from(chatElements).slice(-10);
+    
+    recentMessages.forEach(elem => {
+        const isUser = elem.classList.contains('user');
+        const content = elem.querySelector('.message-content').textContent;
+        
+        // ไม่เอา welcome message และ error messages
+        if (!content.includes('สวัสดีครับ') && !content.includes('❌')) {
+            messages.push({
+                role: isUser ? 'user' : 'assistant',
+                content: content
+            });
+        }
+    });
+    
+    return messages;
+}
+
+// Update chat model and description
+function updateChatModel(model) {
+    const descriptions = {
+        'gpt-3.5-turbo': '<strong>GPT-3.5 Turbo:</strong> เร็ว ประหยัด เหมาะกับงานทั่วไป',
+        'gpt-4o-mini': '<strong>GPT-4o Mini:</strong> ฉลาดกว่า คุ้มค่า ตอบได้ละเอียด',
+        'gpt-4o': '<strong>GPT-4o:</strong> ฉลาดที่สุด เหมาะกับงานซับซ้อน',
+        'gemini-1.5-flash': '<strong>Gemini Flash:</strong> เร็วมาก ราคาถูก by Google',
+        'gemini-1.5-pro': '<strong>Gemini Pro:</strong> แม่นยำ เหมาะกับงานที่ต้องการความละเอียด'
+    };
+    
+    const descElement = document.getElementById('modelDescription');
+    if (descElement && descriptions[model]) {
+        descElement.innerHTML = descriptions[model];
+    }
+}
+
+// แก้ไขฟังก์ชัน getSelectedChatModel
+function getSelectedChatModel() {
+    const select = document.getElementById('chatModelSelect');
+    return select ? select.value : 'gpt-3.5-turbo';
+}
+
+// Export function
+window.updateChatModel = updateChatModel;
+
+// Display chat response
+function displayChatResponse(response, model, cost) {
+    const messageId = `chat-${Date.now()}`;
+    const messagesContainer = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    
+    messageDiv.className = 'message assistant';
+    messageDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div>${response}</div>
+            
+            <!-- แสดงข้อมูลเล็กๆ ด้านล่าง -->
+            <div class="chat-model-info">
+                <span style="font-size: 11px; color: #64748b;">
+                    ${getModelDisplayName(model)}
+                </span>
+                <span style="font-size: 11px; color: #64748b;">
+                    ${cost.toFixed(3)} เครดิต
+                </span>
+            </div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Get model display name
+function getModelDisplayName(modelId) {
+    const modelNames = {
+        'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+        'gpt-4o-mini': 'GPT-4o Mini',
+        'gpt-4o': 'GPT-4o',
+        'gemini-1.5-flash': 'Gemini Flash',
+        'gemini-1.5-pro': 'Gemini Pro'
+    };
+    return modelNames[modelId] || modelId;
 }
 
 // ========== GLOBAL FUNCTION EXPORTS ==========
@@ -3816,5 +4054,261 @@ async function enhancePrompt() {
 
 // Export function
 window.enhancePrompt = enhancePrompt;
+
+// Clear chat history
+function clearChatHistory() {
+    if (currentMode === 'chat') {
+        if (confirm('ต้องการล้างประวัติการสนทนาหรือไม่?')) {
+            chatHistory.chat = '';
+            clearChat();
+            addWelcomeMessage('chat');
+            showNotification('🗑️ ล้างประวัติแล้ว', 'success');
+        }
+    }
+}
+
+// Export function
+window.clearChatHistory = clearChatHistory;
+
+// ========== CHAT LOCALSTORAGE SYSTEM ==========
+
+// ระบบจัดการประวัติ Chat
+const ChatStorage = {
+    MAX_MESSAGES: 100,  // เก็บสูงสุด 100 ข้อความ
+    STORAGE_KEY: `veo_chat_history`,
+    
+    // บันทึกประวัติ
+    save: function() {
+        if (currentMode !== 'chat') return;
+        
+        try {
+            const messages = [];
+            const chatElements = document.querySelectorAll('#chatMessages .message');
+            
+            chatElements.forEach(elem => {
+                const isUser = elem.classList.contains('user');
+                const contentElem = elem.querySelector('.message-content');
+                if (!contentElem) return;
+                
+                const content = contentElem.textContent.trim();
+                
+                // ไม่เก็บ loading, error, หรือ welcome message
+                if (content.includes('กำลังคิด...') || 
+                    content.includes('❌') || 
+                    content.includes('สวัสดีครับ! ผมคือ AI Assistant')) {
+                    return;
+                }
+                
+                messages.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: content,
+                    timestamp: new Date().toISOString()
+                });
+            });
+            
+            // เก็บแค่ข้อความล่าสุดตามจำนวนที่กำหนด
+            const recentMessages = messages.slice(-this.MAX_MESSAGES);
+            
+            // บันทึกลง localStorage
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            localStorage.setItem(key, JSON.stringify({
+                messages: recentMessages,
+                lastUpdated: new Date().toISOString(),
+                model: getSelectedChatModel()
+            }));
+            
+            console.log(`💾 Saved ${recentMessages.length} messages to LocalStorage`);
+            
+        } catch (error) {
+            console.error('Failed to save chat:', error);
+            if (error.name === 'QuotaExceededError') {
+                // localStorage เต็ม - ลบข้อมูลเก่า
+                this.cleanup();
+            }
+        }
+    },
+    
+    // โหลดประวัติ
+    load: function() {
+        try {
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            const saved = localStorage.getItem(key);
+            
+            if (!saved) return [];
+            
+            const data = JSON.parse(saved);
+            console.log(`📂 Loaded ${data.messages.length} messages from LocalStorage`);
+            
+            return data.messages || [];
+            
+        } catch (error) {
+            console.error('Failed to load chat:', error);
+            return [];
+        }
+    },
+    
+    // แสดงประวัติใน UI
+display: function() {
+    const messages = this.load();
+    
+    // Clear current chat ก่อนเสมอ
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = '';
+    
+    if (messages.length === 0) {
+        // ไม่มีประวัติ แสดง welcome message
+        addWelcomeMessage('chat');
+        return;
+    }
+    
+    // แสดงประวัติ (ไม่ต้องเรียก addWelcomeMessage)
+    messages.forEach(msg => {
+        addMessage(msg.content, msg.role);
+    });
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // แสดงข้อความว่าโหลดจาก local
+    const infoDiv = document.createElement('div');
+    infoDiv.style.cssText = `
+        text-align: center;
+        padding: 8px;
+        margin: 8px auto;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 8px;
+        font-size: 12px;
+        color: #64748b;
+    `;
+    infoDiv.innerHTML = `📂 โหลดประวัติ ${messages.length} ข้อความจากเครื่องของคุณ`;
+    chatMessages.insertBefore(infoDiv, chatMessages.firstChild);
+},
+    
+    // ลบประวัติ
+    clear: function() {
+        try {
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            localStorage.removeItem(key);
+            console.log('🗑️ Chat history cleared');
+        } catch (error) {
+            console.error('Failed to clear chat:', error);
+        }
+    },
+    
+    // ทำความสะอาด localStorage (ลบข้อมูลเก่า)
+    cleanup: function() {
+        try {
+            const allKeys = Object.keys(localStorage);
+            const chatKeys = allKeys.filter(key => key.startsWith(this.STORAGE_KEY));
+            
+            // เรียงตาม lastUpdated แล้วลบเก่าสุด
+            const items = chatKeys.map(key => ({
+                key,
+                data: JSON.parse(localStorage.getItem(key))
+            })).sort((a, b) => 
+                new Date(b.data.lastUpdated) - new Date(a.data.lastUpdated)
+            );
+            
+            // ลบครึ่งหนึ่งที่เก่าที่สุด
+            const toDelete = items.slice(Math.floor(items.length / 2));
+            toDelete.forEach(item => {
+                localStorage.removeItem(item.key);
+            });
+            
+            console.log(`🧹 Cleaned up ${toDelete.length} old chat histories`);
+            
+        } catch (error) {
+            console.error('Cleanup failed:', error);
+        }
+    },
+    
+    // ดูขนาดที่ใช้
+    getSize: function() {
+        try {
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            const data = localStorage.getItem(key) || '';
+            const sizeInBytes = new Blob([data]).size;
+            const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+            return `${sizeInKB} KB`;
+        } catch (error) {
+            return '0 KB';
+        }
+    }
+};
+
+// ========== UPDATE EXISTING FUNCTIONS ==========
+
+// แก้ไข sendChatMessage - เพิ่มการบันทึก
+const originalSendChatMessage = window.sendChatMessage;
+window.sendChatMessage = async function(message) {
+    // เรียก function เดิม
+    await originalSendChatMessage(message);
+    
+    // บันทึกหลังส่งข้อความ
+    setTimeout(() => {
+        ChatStorage.save();
+    }, 500);
+};
+
+// แก้ไข clearChatHistory - ลบ localStorage ด้วย
+const originalClearChatHistory = window.clearChatHistory;
+window.clearChatHistory = function() {
+    if (currentMode === 'chat') {
+        if (confirm('ต้องการล้างประวัติการสนทนาหรือไม่?')) {
+            chatHistory.chat = '';
+            clearChat();
+            addWelcomeMessage('chat');
+            ChatStorage.clear(); // เพิ่มบรรทัดนี้
+            showNotification('🗑️ ล้างประวัติแล้ว', 'success');
+        }
+    }
+};
+
+// แก้ไข switchMode - โหลดประวัติเมื่อเข้า chat mode
+const originalSwitchMode2 = window.switchMode;
+window.switchMode = function(mode) {
+    // เรียก function เดิม
+    originalSwitchMode2(mode);
+    
+    // ถ้าเป็น chat mode ให้โหลดประวัติ
+    if (mode === 'chat') {
+        setTimeout(() => {
+            ChatStorage.display();
+        }, 100);
+    }
+};
+
+// ========== AUTO SAVE ==========
+
+// บันทึกอัตโนมัติทุก 30 วินาที
+setInterval(() => {
+    if (currentMode === 'chat') {
+        ChatStorage.save();
+    }
+}, 30000);
+
+// บันทึกก่อนปิดหน้า
+window.addEventListener('beforeunload', () => {
+    if (currentMode === 'chat') {
+        ChatStorage.save();
+    }
+});
+
+// ========== UTILITY FUNCTIONS ==========
+
+// แสดงข้อมูลการใช้ storage (สำหรับ debug)
+window.showChatStorageInfo = function() {
+    const size = ChatStorage.getSize();
+    const messages = ChatStorage.load();
+    console.log(`
+📊 Chat Storage Info:
+- User: ${userId}
+- Messages: ${messages.length}
+- Size: ${size}
+- Max allowed: ~5-10 MB
+    `);
+};
+
+console.log('✅ Chat LocalStorage System loaded');
 
 // END OF PROFESSIONAL SCRIPT

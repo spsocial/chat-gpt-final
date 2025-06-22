@@ -14,6 +14,7 @@ console.log('ASSISTANT_ID:', process.env.ASSISTANT_ID);
 
 // Import modules
 const assistants = require('./assistants');
+const chatAI = require('./chat-ai');
 let db = null;
 try {
     db = require('./database');
@@ -581,6 +582,109 @@ app.post('/api/enhance-prompt', async (req, res) => {
         console.error('Enhance prompt error:', error);
         res.status(500).json({ 
             error: 'Failed to enhance prompt',
+            details: error.message 
+        });
+    }
+});
+
+// ========== AI CHAT ENDPOINT ==========
+app.post('/api/ai-chat', async (req, res) => {
+    const { message, userId = 'guest', model = 'gpt-3.5-turbo', images = [], history = [] } = req.body;
+    
+    console.log('🤖 AI Chat request:', { userId, model, hasImages: images.length > 0 });
+    
+    // Validate input
+    if (!message && images.length === 0) {
+        return res.status(400).json({ 
+            error: 'Message or image is required' 
+        });
+    }
+    
+    try {
+        // 1. ตรวจสอบเครดิต
+        if (db) {
+            // ประมาณการใช้ tokens (คร่าวๆ)
+            const estimatedTokens = 500; // ประมาณ 500 tokens ต่อครั้ง
+            const estimatedCost = chatAI.calculateCostTHB(
+                estimatedTokens / 2,  // input
+                estimatedTokens / 2,  // output
+                model
+            );
+            
+            console.log(`💰 Estimated cost: ฿${estimatedCost.toFixed(2)}`);
+            
+            // ใช้ระบบเครดิตใหม่
+            const creditCheck = await db.getUserCredits(userId);
+            const freeCredits = await db.getFreeCredits(userId);
+            const totalAvailable = creditCheck + freeCredits;
+            
+            if (totalAvailable < estimatedCost) {
+                return res.status(429).json({
+                    error: 'Insufficient credits',
+                    message: 'เครดิตไม่เพียงพอ',
+                    credits: {
+                        current: totalAvailable.toFixed(2),
+                        required: estimatedCost.toFixed(2)
+                    }
+                });
+            }
+        }
+        
+        // 2. เตรียม messages array
+        const messages = [
+            {
+                role: 'system',
+                content: 'You are a helpful AI assistant. คุณเป็น AI ผู้ช่วยที่พูดภาษาไทยได้ ตอบคำถามแบบเป็นกันเอง'
+            }
+        ];
+        
+        // เพิ่ม history (ถ้ามี)
+        if (history.length > 0) {
+            // เอาแค่ 10 ข้อความล่าสุด
+            const recentHistory = history.slice(-10);
+            messages.push(...recentHistory);
+        }
+        
+        // เพิ่ม message ปัจจุบัน
+        messages.push({
+            role: 'user',
+            content: message || 'วิเคราะห์รูปนี้ให้หน่อย'
+        });
+        
+        // 3. เรียกใช้ AI
+        console.log('📨 Sending to AI...');
+        const result = await chatAI.chat(model, messages, images);
+        
+        // 4. หักเครดิต
+        if (db) {
+            const actualCost = result.costTHB;
+            console.log(`💰 Actual cost: ฿${actualCost.toFixed(4)}`);
+            
+            // ใช้ระบบเครดิตใหม่
+            const creditResult = await db.useCreditsNew(
+                userId,
+                actualCost,
+                `AI Chat - ${model}`
+            );
+            
+            if (!creditResult.success) {
+                console.error('Failed to deduct credits:', creditResult.error);
+            }
+        }
+        
+        // 5. ส่งผลลัพธ์กลับ
+        res.json({
+            success: true,
+            response: result.content,
+            model: result.model,
+            usage: result.usage,
+            cost: result.costTHB
+        });
+        
+    } catch (error) {
+        console.error('AI Chat error:', error);
+        res.status(500).json({ 
+            error: 'Failed to process chat',
             details: error.message 
         });
     }
