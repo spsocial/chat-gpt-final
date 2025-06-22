@@ -123,14 +123,19 @@
             gap: 8px;
         }
 
-        .mode-btn:hover {
-            color: var(--text);
-        }
+        /* Simple hover effect */
+.mode-btn:hover {
+    background: rgba(147, 51, 234, 0.1);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(147, 51, 234, 0.2);
+}
 
-        .mode-btn.active {
-            background: var(--primary);
-            color: white;
-        }
+/* Active state */
+.mode-btn:active {
+    transform: translateY(0);
+}
 
         .mode-icon {
             font-size: 18px;
@@ -3533,10 +3538,16 @@ line-clamp: 3;
 /* Image Gen Button - Special Style */
 .mode-btn.new-feature {
     position: relative;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%);
-    border: 2px solid #ff4757;
+    /* ใช้สีปกติเหมือนปุ่มอื่น */
+    background: transparent;
+    border: none;
+    color: var(--text-secondary) !important;
+}
+
+/* เมื่อ active */
+.mode-btn.new-feature.active {
+    background: var(--primary);
     color: white !important;
-    animation: pulse-glow 2s infinite;
 }
 
 .mode-btn.new-feature:hover {
@@ -3556,15 +3567,6 @@ line-clamp: 3;
     padding: 2px 6px;
     border-radius: 10px;
     animation: blink 1s infinite;
-}
-
-@keyframes pulse-glow {
-    0%, 100% {
-        box-shadow: 0 0 20px rgba(255, 71, 87, 0.4);
-    }
-    50% {
-        box-shadow: 0 0 30px rgba(255, 71, 87, 0.6);
-    }
 }
 
 @keyframes blink {
@@ -3923,6 +3925,35 @@ line-clamp: 3;
     opacity: 0.8;
 }
 
+/* แก้ไขปุ่ม FAB หาย */
+.fab-announcement,
+.fab-course,
+.fab-tools {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 999 !important;
+}
+
+/* AI Chat NEW Badge */
+.mode-btn.new-feature-chat {
+    position: relative;
+}
+
+/* ปรับ NEW Badge ให้เหมือนกันทั้งหมด */
+.new-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: #00ff00;
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 10px;
+    animation: blink 1s infinite;
+}
+
     </style>  <!-- นี่คือ closing tag -->
 </head>
 <body>
@@ -3967,10 +3998,11 @@ line-clamp: 3;
         <span class="new-badge">NEW!</span>
     </button>
      <!-- เพิ่มปุ่ม AI Chat ตรงนี้ -->
-    <button class="mode-btn" data-mode="chat" onclick="switchMode('chat')">
-        <span class="mode-icon">💬</span>
-        <span class="mode-text">AI Chat</span>
-    </button>
+    <button class="mode-btn new-feature-chat" data-mode="chat" onclick="switchMode('chat')">
+    <span class="mode-icon">💬</span>
+    <span class="mode-text">AI Chat</span>
+    <span class="new-badge">NEW!</span>
+</button>
     <button class="mode-btn" data-mode="character" onclick="switchMode('character')">
         <span class="mode-icon">🧙</span>
         <span class="mode-text">Character Creator</span>
@@ -3987,7 +4019,7 @@ line-clamp: 3;
     <option value="general">🎬 General Prompt</option>
     <option value="multichar">🎭 Prompt Master</option>
     <option value="image">🎨 Image Gen ✨NEW!</option>
-    <option value="chat">💬 AI Chat</option>
+    <option value="chat">💬 AI Chat ✨NEW!</option>
     <option value="character">🧙 Character Creator</option>
     <option value="library">🗂️ My Characters</option>
 </select>
@@ -4154,16 +4186,16 @@ line-clamp: 3;
             <h4>✨ เลือก Model</h4>
             <!-- Model Selector แบบ Dropdown -->
             <select id="chatModelSelect" class="scene-input" onchange="updateChatModel(this.value)">
-                <optgroup label="OpenAI Models">
-                    <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo (0.06 เครดิต/1K tokens)</option>
-<option value="gpt-4o-mini">GPT-4o Mini (0.02 เครดิต/1K tokens)</option>
-<option value="gpt-4o">GPT-4o (0.40 เครดิต/1K tokens)</option>
-                </optgroup>
-                <optgroup label="Google Models">
-                    <option value="gemini-1.5-flash">Gemini Flash (0.03 เครดิต/1K tokens)</option>
-<option value="gemini-1.5-pro">Gemini Pro (0.20 เครดิต/1K tokens)</option>
-                </optgroup>
-            </select>
+    <optgroup label="OpenAI Models">
+        <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo</option>
+        <option value="gpt-4o-mini">GPT-4o Mini</option>
+        <option value="gpt-4o">GPT-4o</option>
+    </optgroup>
+    <optgroup label="Google Models">
+        <option value="gemini-1.5-flash">Gemini Flash</option>
+        <option value="gemini-1.5-pro">Gemini Pro</option>
+    </optgroup>
+</select>
             
             <!-- Model Description -->
             <div id="modelDescription" style="margin-top: 12px; padding: 12px; background: rgba(147, 51, 234, 0.1); border-radius: 8px; font-size: 13px;">
@@ -4441,8 +4473,34 @@ line-clamp: 3;
             <h2>ข่าวสารและอัพเดท</h2>
         </div>
         
-        <div class="announcement-body">
-    <!-- ข่าวใหม่อันแรก - Image Gen -->
+<div class="announcement-body">
+    <!-- เพิ่มข่าว AI Chat ใหม่นี้ไว้บนสุด -->
+    <div class="announcement-item" style="border: 3px solid #3b82f6; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);">
+        <span class="announcement-badge new" style="background: #3b82f6;">ใหม่ล่าสุด!</span>
+        <h3>💬 AI Chat - คุยกับ AI ได้ทุกเรื่อง!</h3>
+        <p><strong>ฟีเจอร์ใหม่สุดเจ๋ง! คุยกับ AI ระดับโลก ได้ทั้ง OpenAI และ Google</strong></p>
+        <ul>
+            <li>🤖 <strong>5 โมเดลให้เลือก:</strong>
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• GPT-3.5 Turbo - เร็ว ประหยัด
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• GPT-4o Mini - คุ้มสุด ฉลาด! 
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• GPT-4o - ฉลาดที่สุด
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• Gemini Flash - คุ้ม ฉลาด by Google
+                <br>&nbsp;&nbsp;&nbsp;&nbsp;• Gemini Pro - แม่นยำ ฉลาด
+            </li>
+            <li>📎 <strong>แนบรูปวิเคราะห์ได้</strong> - ถามอะไรเกี่ยวกับรูปก็ได้!</li>
+            <li>💾 <strong>บันทึกประวัติอัตโนมัติ</strong> - ปิดเปิดแล้วยังคุยต่อได้</li>
+            <li>🎤 <strong>พูดแทนพิมพ์ได้</strong> - สะดวกสุดๆ</li>
+            <li>🎨 <strong>ขอ Prompt รูปภาพได้ เลือกโมเดลฉลาดๆ</strong> - ครบจบ ในเว็บเดียว</li>
+        </ul>
+        <div style="background: rgba(59, 130, 246, 0.2); padding: 12px; border-radius: 8px; margin-top: 12px;">
+            <p style="margin: 0; font-size: 13px; text-align: center;">
+                🎉 <strong>ลองเลย!</strong> คลิกที่แท็บ <strong style="color: #3b82f6;">"AI Chat"</strong> ด้านบน
+                <br>💡 <strong>แนะนำ:</strong> เลือกโมเดลที่ต้องการ เครดิตใช้เพียงเล็กน้อย
+            </p>
+        </div>
+    </div>
+
+    <!-- ข่าวใหม่ 2 - Image Gen -->
     <div class="announcement-item" style="border: 3px solid #ff4757; background: linear-gradient(135deg, rgba(255, 71, 87, 0.1) 0%, rgba(238, 90, 111, 0.1) 100%);">
         <span class="announcement-badge new" style="background: #ff4757;">ใหม่ล่าสุด!</span>
         <h3>🎨 Image Gen - สร้างภาพด้วย AI ได้แล้ว!</h3>
@@ -4526,6 +4584,7 @@ line-clamp: 3;
             </button>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Floating Announcement Button -->

@@ -13,42 +13,46 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 const MODEL_CONFIG = {
     // OpenAI Models
     'gpt-3.5-turbo': {
-    api: 'openai',
-    name: 'GPT-3.5 Turbo',
-    inputCost: 0.0015,
-    outputCost: 0.002,
-    description: 'เร็ว ประหยัด เหมาะกับงานทั่วไป',
-    displayPrice: '0.06 เครดิต/1K tokens'  // เพิ่มบรรทัดนี้
-},
+        api: 'openai',
+        name: 'GPT-3.5 Turbo',
+        inputCost: 0.0015,
+        outputCost: 0.002,
+        description: 'เร็ว ประหยัด เหมาะกับงานทั่วไป',
+        displayPrice: '0.07 เครดิต/1K tokens'
+    },
     'gpt-4o-mini': {
         api: 'openai',
         name: 'GPT-4o Mini',
         inputCost: 0.00015,
         outputCost: 0.0006,
-        description: 'ฉลาดกว่า คุ้มค่า'
+        description: 'ฉลาดกว่า คุ้มค่า',
+        displayPrice: '0.015 เครดิต/1K tokens'
     },
     'gpt-4o': {
         api: 'openai',
         name: 'GPT-4o',
         inputCost: 0.0025,
         outputCost: 0.01,
-        description: 'ฉลาดที่สุด เหมาะกับงานซับซ้อน'
+        description: 'ฉลาดที่สุด เหมาะกับงานซับซ้อน',
+        displayPrice: '0.25 เครดิต/1K tokens'
     },
     
     // Google Models
     'gemini-1.5-flash': {
         api: 'google',
         name: 'Gemini 1.5 Flash',
-        inputCost: 0.00001875,  // Very cheap!
+        inputCost: 0.00001875,
         outputCost: 0.000075,
-        description: 'เร็วมาก ราคาถูก'
+        description: 'เร็วมาก ราคาถูก',
+        displayPrice: '0.002 เครดิต/1K tokens'
     },
     'gemini-1.5-pro': {
         api: 'google',
         name: 'Gemini 1.5 Pro',
         inputCost: 0.00125,
         outputCost: 0.005,
-        description: 'ฉลาด เหมาะกับงานที่ต้องการความแม่นยำ'
+        description: 'ฉลาด เหมาะกับงานที่ต้องการความแม่นยำ',
+        displayPrice: '0.12 เครดิต/1K tokens'
     }
 };
 

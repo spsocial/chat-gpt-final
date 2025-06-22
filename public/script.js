@@ -328,7 +328,7 @@ const THREE_HOURS = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Current announcement version (change this when you have new announcements)
-const CURRENT_ANNOUNCEMENT_VERSION = '1.3.0';
+const CURRENT_ANNOUNCEMENT_VERSION = '1.4.0';
 
 function shouldShowAnnouncement() {
     const now = new Date().getTime();
@@ -399,6 +399,19 @@ function closeAnnouncement(updateVersion = false) {
             
             // Restore body scroll
             document.body.style.overflow = '';
+            // เรียกฟังก์ชันแสดงปุ่ม FAB
+showAllFABButtons();
+            
+            // ✅ แก้ไขปุ่ม FAB หายหลังปิด popup
+            const fabButtons = document.querySelectorAll('.fab-announcement, .fab-course, .fab-tools');
+            fabButtons.forEach(btn => {
+                if (btn) {
+                    btn.style.display = 'flex';
+                    btn.style.visibility = 'visible';
+                    btn.style.opacity = '1';
+                }
+            });
+            
         }, 300);
     }
     
@@ -793,6 +806,7 @@ setInterval(loadUserCredits, 30000);
     
     // Initialize mode
     switchMode('general');
+setTimeout(showAllFABButtons, 500);
 });
 
 // Ratio button handlers
@@ -2779,6 +2793,33 @@ function displayChatResponse(response, model, cost) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// Display chat response from history (with saved model data)
+function displayChatResponseFromHistory(content, modelData) {
+    const messageId = `chat-history-${Date.now()}`;
+    const messagesContainer = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    
+    messageDiv.className = 'message assistant';
+    messageDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div>${content}</div>
+            
+            <!-- แสดงข้อมูลเล็กๆ ด้านล่าง -->
+            <div class="chat-model-info">
+                <span style="font-size: 11px; color: #64748b;">
+                    ${modelData.model}
+                </span>
+                <span style="font-size: 11px; color: #64748b;">
+                    ${modelData.cost.toFixed(3)} เครดิต
+                </span>
+            </div>
+        </div>
+    `;
+    
+    messagesContainer.appendChild(messageDiv);
+}
+
 // Get model display name
 function getModelDisplayName(modelId) {
     const modelNames = {
@@ -2849,6 +2890,7 @@ window.closeImageModal = closeImageModal;
 window.retryGeneration = retryGeneration;
 window.confirmRetry = confirmRetry;
 window.closeConfirmation = closeConfirmation;
+window.displayChatResponseFromHistory = displayChatResponseFromHistory;
 
 // 2. เพิ่มฟังก์ชัน Scene Builder
 function showSceneBuilder() {
@@ -4090,19 +4132,46 @@ const ChatStorage = {
                 const contentElem = elem.querySelector('.message-content');
                 if (!contentElem) return;
                 
-                const content = contentElem.textContent.trim();
+                // ดึงข้อความหลัก (ไม่รวม model info)
+                let mainContent = '';
+                const contentDiv = contentElem.querySelector('div:first-child');
+                if (contentDiv) {
+                    mainContent = contentDiv.textContent.trim();
+                } else {
+                    mainContent = contentElem.textContent.trim();
+                }
                 
                 // ไม่เก็บ loading, error, หรือ welcome message
-                if (content.includes('กำลังคิด...') || 
-                    content.includes('❌') || 
-                    content.includes('สวัสดีครับ! ผมคือ AI Assistant')) {
+                if (mainContent.includes('กำลังคิด...') || 
+                    mainContent.includes('❌') || 
+                    mainContent.includes('สวัสดีครับ! ผมคือ AI Assistant')) {
                     return;
                 }
                 
+                // ดึงข้อมูล model และ cost จาก chat-model-info (ถ้ามี)
+let modelData = null;
+const modelInfo = contentElem.querySelector('.chat-model-info');
+if (modelInfo && !isUser) {
+    const spans = modelInfo.querySelectorAll('span');
+    if (spans.length >= 2) {
+        const modelText = spans[0].textContent.trim();
+        const costText = spans[1].textContent.trim();
+        
+        // เก็บข้อมูลเฉพาะถ้าไม่ใช่ข้อความเก่า
+        if (!modelText.includes('undefined') && !costText.includes('undefined')) {
+            modelData = {
+                model: modelText,
+                cost: parseFloat(costText.replace(' เครดิต', ''))
+            };
+        }
+    }
+}
+                
                 messages.push({
                     role: isUser ? 'user' : 'assistant',
-                    content: content,
-                    timestamp: new Date().toISOString()
+                    content: mainContent,
+                    timestamp: new Date().toISOString(),
+                    modelData: modelData  // เพิ่มข้อมูล model
                 });
             });
             
@@ -4148,41 +4217,47 @@ const ChatStorage = {
     },
     
     // แสดงประวัติใน UI
-display: function() {
-    const messages = this.load();
-    
-    // Clear current chat ก่อนเสมอ
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.innerHTML = '';
-    
-    if (messages.length === 0) {
-        // ไม่มีประวัติ แสดง welcome message
-        addWelcomeMessage('chat');
-        return;
-    }
-    
-    // แสดงประวัติ (ไม่ต้องเรียก addWelcomeMessage)
-    messages.forEach(msg => {
-        addMessage(msg.content, msg.role);
-    });
-    
-    // Scroll to bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-    
-    // แสดงข้อความว่าโหลดจาก local
-    const infoDiv = document.createElement('div');
-    infoDiv.style.cssText = `
-        text-align: center;
-        padding: 8px;
-        margin: 8px auto;
-        background: rgba(59, 130, 246, 0.1);
-        border-radius: 8px;
-        font-size: 12px;
-        color: #64748b;
-    `;
-    infoDiv.innerHTML = `📂 โหลดประวัติ ${messages.length} ข้อความจากเครื่องของคุณ`;
-    chatMessages.insertBefore(infoDiv, chatMessages.firstChild);
-},
+    display: function() {
+        const messages = this.load();
+        
+        // Clear current chat ก่อนเสมอ
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+        
+        if (messages.length === 0) {
+            // ไม่มีประวัติ แสดง welcome message
+            addWelcomeMessage('chat');
+            return;
+        }
+        
+        // แสดงประวัติ
+        messages.forEach(msg => {
+            if (msg.role === 'assistant' && msg.modelData) {
+                // ถ้ามีข้อมูล model ให้แสดงแบบพิเศษ
+                displayChatResponseFromHistory(msg.content, msg.modelData);
+            } else {
+                // ถ้าไม่มีข้อมูล model ให้แสดงแบบปกติ
+                addMessage(msg.content, msg.role);
+            }
+        });
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // แสดงข้อความว่าโหลดจาก local
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            text-align: center;
+            padding: 8px;
+            margin: 8px auto;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #64748b;
+        `;
+        infoDiv.innerHTML = `📂 โหลดประวัติ ${messages.length} ข้อความจากเครื่องของคุณ`;
+        chatMessages.insertBefore(infoDiv, chatMessages.firstChild);
+    },
     
     // ลบประวัติ
     clear: function() {
@@ -4272,10 +4347,13 @@ window.switchMode = function(mode) {
     
     // ถ้าเป็น chat mode ให้โหลดประวัติ
     if (mode === 'chat') {
-        setTimeout(() => {
-            ChatStorage.display();
-        }, 100);
-    }
+    setTimeout(() => {
+        // เคลียร์ก่อนแสดงใหม่
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+        ChatStorage.display();
+    }, 100);
+}
 };
 
 // ========== AUTO SAVE ==========
@@ -4310,5 +4388,56 @@ window.showChatStorageInfo = function() {
 };
 
 console.log('✅ Chat LocalStorage System loaded');
+
+// ========== FIX FAB BUTTONS ==========
+// ฟังก์ชันแสดงปุ่ม FAB ทั้งหมด
+function showAllFABButtons() {
+    const fabAnnouncement = document.querySelector('.fab-announcement');
+    const fabCourse = document.querySelector('.fab-course');
+    const fabTools = document.querySelector('.fab-tools');
+    const fabToolsMenu = document.getElementById('fabToolsMenu');
+    
+    // แสดงปุ่มข่าวสาร
+    if (fabAnnouncement) {
+        fabAnnouncement.style.display = 'flex';
+        fabAnnouncement.style.visibility = 'visible';
+        fabAnnouncement.style.opacity = '1';
+        fabAnnouncement.style.position = 'fixed';
+        fabAnnouncement.style.bottom = '20px';
+        fabAnnouncement.style.right = '20px';
+        fabAnnouncement.style.zIndex = '999';
+    }
+    
+    // แสดงปุ่มคอร์ส
+    if (fabCourse) {
+        fabCourse.style.display = 'flex';
+        fabCourse.style.visibility = 'visible';
+        fabCourse.style.opacity = '1';
+        fabCourse.style.position = 'fixed';
+        fabCourse.style.bottom = '90px';
+        fabCourse.style.right = '20px';
+        fabCourse.style.zIndex = '999';
+    }
+    
+    // แสดงปุ่ม Tools
+    if (fabTools) {
+        fabTools.style.display = 'flex';
+        fabTools.style.visibility = 'visible';
+        fabTools.style.opacity = '1';
+        fabTools.style.position = 'fixed';
+        fabTools.style.bottom = '160px';
+        fabTools.style.right = '20px';
+        fabTools.style.zIndex = '999';
+    }
+    
+    // ซ่อนเมนู tools ถ้าเปิดอยู่
+    if (fabToolsMenu) {
+        fabToolsMenu.style.display = 'none';
+    }
+}
+
+// Export function
+window.showAllFABButtons = showAllFABButtons;
+// ========== END FIX FAB BUTTONS ==========
 
 // END OF PROFESSIONAL SCRIPT
