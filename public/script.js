@@ -2278,9 +2278,15 @@ function updateVoiceUI(listening) {
     
     // เลือก voice status ตาม mode
     let voiceStatus;
-    if (currentMode === 'image') {
+    
+    if (currentMode === 'chat') {
+        // Chat mode ใช้ voiceStatusChat (ถ้ามี) หรือไม่แสดง
+        voiceStatus = document.getElementById('voiceStatusChat');
+    } else if (currentMode === 'image') {
+        // Image mode ใช้ voiceStatusImage
         voiceStatus = document.getElementById('voiceStatusImage');
-    } else if (currentMode === 'chat') {
+    } else {
+        // โหมดอื่นๆ (general, character, multichar) ใช้ voiceStatus ทั่วไป
         voiceStatus = document.getElementById('voiceStatus');
     }
     
@@ -2291,8 +2297,6 @@ function updateVoiceUI(listening) {
         voiceButton.innerHTML = '🔴 กำลังฟัง...';
         voiceButton.disabled = true;
         voiceStatus.style.display = 'flex';
-        
-        // ไม่ต้อง set voiceText เพราะใช้ข้อความที่มีอยู่แล้ว
     } else {
         voiceButton.classList.remove('listening');
         voiceButton.innerHTML = '🎤 พูดเลย';
