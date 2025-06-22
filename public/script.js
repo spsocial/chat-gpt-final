@@ -3901,6 +3901,46 @@ function loadMobileInfo(mode) {
                 <p>• ลบตัวละครที่ไม่ใช้แล้ว</p>
             `;
             break;
+
+            case 'chat':
+    infoHTML = quickActionsHTML + `
+        <h4>💬 AI Chat Assistant</h4>
+        
+        <div style="margin: 16px 0;">
+            <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
+                ✨ เลือก Model:
+            </label>
+            <select id="mobileChatModelSelect" onchange="updateChatModel(this.value)" style="
+                width: 100%;
+                padding: 12px 16px;
+                background: #262626;
+                border: 1px solid #404040;
+                border-radius: 8px;
+                color: white;
+                font-size: 16px;
+                font-family: 'Kanit', sans-serif;
+            ">
+                <optgroup label="OpenAI Models">
+                    <option value="gpt-3.5-turbo" ${getSelectedChatModel() === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo - เร็ว ประหยัด</option>
+                    <option value="gpt-4o-mini" ${getSelectedChatModel() === 'gpt-4o-mini' ? 'selected' : ''}>GPT-4o Mini - คุ้มค่า ฉลาด</option>
+                    <option value="gpt-4o" ${getSelectedChatModel() === 'gpt-4o' ? 'selected' : ''}>GPT-4o - ฉลาดที่สุด</option>
+                </optgroup>
+                <optgroup label="Google Models">
+                    <option value="gemini-1.5-flash" ${getSelectedChatModel() === 'gemini-1.5-flash' ? 'selected' : ''}>Gemini Flash - เร็วมาก</option>
+                    <option value="gemini-1.5-pro" ${getSelectedChatModel() === 'gemini-1.5-pro' ? 'selected' : ''}>Gemini Pro - แม่นยำ</option>
+                </optgroup>
+            </select>
+        </div>
+        
+        <div style="margin-top: 16px;">
+            <h5 style="color: #9333ea; margin-bottom: 8px;">💡 วิธีใช้:</h5>
+            <p style="font-size: 13px;">• พิมพ์หรือพูดถามอะไรก็ได้</p>
+            <p style="font-size: 13px;">• แนบรูปเพื่อให้ AI วิเคราะห์</p>
+            <p style="font-size: 13px;">• ประวัติการสนทนาจะถูกบันทึก</p>
+            <p style="font-size: 13px;">• หักเครดิตตาม token ที่ใช้จริง</p>
+        </div>
+    `;
+    break;
     }
     
     content.innerHTML = infoHTML;
