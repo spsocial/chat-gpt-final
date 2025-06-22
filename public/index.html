@@ -3678,10 +3678,11 @@ line-clamp: 3;
 }
 
 /* ซ่อนใน mobile ถ้าต้องการ */
-@media (max-width: 768px) {
+@media (max-width: 968px) {
     .fab-tools,
     .fab-tools-menu {
         display: none !important;
+        visibility: hidden !important;
     }
 }
 .fab-tools-menu {
@@ -3952,6 +3953,18 @@ line-clamp: 3;
     padding: 2px 6px;
     border-radius: 10px;
     animation: blink 1s infinite;
+}
+
+/* Force hide FAB Tools on all mobile */
+@media screen and (max-width: 968px) {
+    .fab-tools,
+    #fabToolsMenu,
+    .fab-tools-menu {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 }
 
     </style>  <!-- นี่คือ closing tag -->
