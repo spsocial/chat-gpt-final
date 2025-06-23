@@ -2757,13 +2757,36 @@ function updateChatModel(model) {
     const descElement = document.getElementById('modelDescription');
     if (descElement && descriptions[model]) {
         descElement.innerHTML = descriptions[model];
+
+        syncChatModelSelection(model);
     }
 }
 
-// แก้ไขฟังก์ชัน getSelectedChatModel
 function getSelectedChatModel() {
-    const select = document.getElementById('chatModelSelect');
-    return select ? select.value : 'gpt-3.5-turbo';
+    // ตรวจสอบ mobile dropdown ในส่วน info ก่อน
+    const mobileSelectInInfo = document.getElementById('mobileChatModelSelect');
+    if (mobileSelectInInfo && window.innerWidth <= 968) {
+        return mobileSelectInInfo.value;
+    }
+    
+    // ถ้าไม่มี ให้ใช้ desktop dropdown
+    const desktopSelect = document.getElementById('chatModelSelect');
+    return desktopSelect ? desktopSelect.value : 'gpt-3.5-turbo';
+}
+
+// Sync desktop และ mobile model selection
+function syncChatModelSelection(model) {
+    // Update desktop dropdown
+    const desktopSelect = document.getElementById('chatModelSelect');
+    if (desktopSelect && desktopSelect.value !== model) {
+        desktopSelect.value = model;
+    }
+    
+    // Update mobile dropdown in info
+    const mobileSelect = document.getElementById('mobileChatModelSelect');
+    if (mobileSelect && mobileSelect.value !== model) {
+        mobileSelect.value = model;
+    }
 }
 
 // Export function
@@ -4483,5 +4506,5 @@ function showAllFABButtons() {
 // Export function
 window.showAllFABButtons = showAllFABButtons;
 // ========== END FIX FAB BUTTONS ==========
-
+window.syncChatModelSelection = syncChatModelSelection;
 // END OF PROFESSIONAL SCRIPT
