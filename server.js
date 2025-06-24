@@ -1045,12 +1045,14 @@ console.log('Warning: Skipping receiver validation - ESY cannot read receiver in
         }
         
         // Calculate credits (including bonus)
-        const totalCredits = selectedPackage.credits + (selectedPackage.bonus_credits || 0);
+        const baseCredits = parseFloat(selectedPackage.credits) || 0;
+const bonusCredits = parseFloat(selectedPackage.bonus_credits) || 0;
+const totalCredits = baseCredits + bonusCredits;
         console.log('💰 Credits to add:', {
-            base: selectedPackage.credits,
-            bonus: selectedPackage.bonus_credits || 0,
-            total: totalCredits
-        });
+    base: baseCredits,      // ใช้ตัวที่แปลงแล้ว
+    bonus: bonusCredits,    // ใช้ตัวที่แปลงแล้ว
+    total: totalCredits
+});
         
         // Save payment and add credits
         console.log('💾 Saving payment verification...');
