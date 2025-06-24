@@ -658,47 +658,68 @@ async function showCreditPackages() {
                     `).join('')}
                 </div>
                 
-                <div class="payment-info">
+                   <div class="payment-info">
                     <h3>📱 วิธีชำระเงิน</h3>
+                    
+                    <!-- QR Code Section -->
+                    <div class="qr-section" id="qrSection" style="display: none;">
+                        <h4>สแกน QR Code เพื่อโอนเงิน</h4>
+                        <div class="qr-code" id="qrCodeDisplay"></div>
+                        <p style="color: #f59e0b; font-size: 14px; margin-top: 12px;">
+                            ⚠️ โอนให้ตรงจำนวน เพื่อยืนยันอัตโนมัติได้ทันที
+                        </p>
+                    </div>
+                    
                     <div class="payment-methods">
                         <div class="payment-method">
                             <div style="font-size: 48px;">📲</div>
                             <div>
                                 <strong>PromptPay</strong><br>
-                                เบอร์: 090-246-2826<br>
-                                <small>หลังโอนแล้ว แจ้งสลิปทาง Line: 
-                                    <a href="https://lin.ee/KWn4Otg" target="_blank" style="color: #00ff00; text-decoration: underline;">
-                                        @social24
-                                    </a>
+                                เบอร์: ${window.PROMPTPAY_ID || '090-246-2826'}<br>
+                                <small style="color: #a1a1aa;">
+                                    อัพโหลดสลิปด้านล่างเพื่อรับเครดิตทันที!
                                 </small>
                             </div>
                         </div>
                     </div>
-                    <div style="margin-top: 20px; padding: 16px; background: rgba(147, 51, 234, 0.1); border-radius: 8px;">
-                        <p style="color: var(--text-secondary); font-size: 14px;">
-                            <strong>วิธีการชำระเงิน:</strong><br>
-                            1. โอนเงินตามจำนวนที่เลือก<br>
-                            2. แคปหน้าจอสลิป<br>
-                            3. ส่งสลิปพร้อม User ID: <strong style="color: #9333ea;">${userId}</strong> ทาง 
-                               <a href="https://lin.ee/KWn4Otg" target="_blank" style="color: #00ff00;">Line</a><br>
-                            4. รอแอดมินตรวจสอบ (ภายใน 30 นาที)<br>
-                            5. เครดิตจะเข้าอัตโนมัติ
-                        </p>
+                    
+                    <!-- Upload Section -->
+                    <div class="upload-slip-section">
+                        <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
+                            <div class="upload-icon">📤</div>
+                            <div class="upload-text">คลิกเพื่ออัพโหลดสลิป</div>
+                            <div class="upload-hint">หรือลากไฟล์มาวางที่นี่</div>
+                        </div>
+                        
+                        <div id="slipPreview" style="display: none;">
+                            <div class="slip-preview">
+                                <img id="slipImage" src="" alt="Slip preview">
+                            </div>
+                            <button onclick="uploadSlip()" style="
+                                margin-top: 16px;
+                                padding: 12px 32px;
+                                background: var(--primary);
+                                color: white;
+                                border: none;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-size: 16px;
+                                font-weight: 600;
+                            ">
+                                ✅ ยืนยันการชำระเงิน
+                            </button>
+                        </div>
+                        
+                        <div id="uploadStatus" class="upload-status" style="display: none;">
+                            <!-- Status จะแสดงที่นี่ -->
+                        </div>
                     </div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="https://lin.ee/KWn4Otg" target="_blank" style="
-                            display: inline-block;
-                            background: #00B900;
-                            color: white;
-                            padding: 12px 32px;
-                            border-radius: 25px;
-                            text-decoration: none;
-                            font-weight: 600;
-                            font-size: 16px;
-                            transition: all 0.3s ease;
-                        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            <span style="margin-right: 8px;">💬</span> แจ้งโอนเงินทาง Line
-                        </a>
+                    
+                    <div style="margin-top: 20px; padding: 16px; background: rgba(147, 51, 234, 0.1); border-radius: 8px;">
+                        <p style="color: var(--text-secondary); font-size: 14px; text-align: center;">
+                            💡 <strong>ระบบอัตโนมัติ:</strong> อัพโหลดสลิปแล้วรับเครดิตทันที!<br>
+                            ✅ ตรวจสอบด้วย AI ภายใน 5 วินาที
+                        </p>
                     </div>
                 </div>
         `;
@@ -716,8 +737,38 @@ function closeCreditModal() {
 }
 
 function selectPackage(packageId, price) {
-    alert(`กรุณาโอนเงิน ${price} บาท\nแล้วแจ้งสลิปทาง Line พร้อมระบุ User ID: ${userId}`);
-    closeCreditModal();
+    console.log('Package selected:', packageId, price);
+    
+    // Store selected package data
+    selectedPackageData = {
+        id: packageId,
+        price: price
+    };
+    
+    // Generate QR Code
+    generateQRCode(price);
+    
+    // Show upload section
+    const uploadSection = document.querySelector('.upload-slip-section');
+    if (uploadSection) {
+        uploadSection.style.display = 'block';
+        uploadSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    // Update UI to show selected
+    document.querySelectorAll('.package-card').forEach(card => {
+        card.style.borderColor = '#404040';
+        card.style.boxShadow = 'none';
+    });
+    
+    // Find the clicked button's package card
+    const clickedCard = event.target.closest('.package-card');
+    if (clickedCard) {
+        clickedCard.style.borderColor = '#9333ea';
+        clickedCard.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.3)';
+    }
+    
+    // DON'T close modal - ลบ alert และ closeCreditModal ออก
 }
 
 function showCreditRequiredMessage(data) {
@@ -2318,6 +2369,14 @@ function processVoiceCommands(text) {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
+    // Slip upload handler
+    const slipInput = document.getElementById('slipFileInput');
+    if (slipInput) {
+        slipInput.addEventListener('change', handleSlipSelect);
+    }
+    
+    // Store PromptPay ID globally
+    window.PROMPTPAY_ID = '090-246-2826'; // เปลี่ยนเป็นเบอร์คุณ
     // Check if browser supports voice
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         console.log('Voice recognition supported');
@@ -2800,6 +2859,153 @@ function getModelDisplayName(modelId) {
     return modelNames[modelId] || modelId;
 }
 
+// ========== SLIP UPLOAD FUNCTIONS ==========
+
+let selectedSlipFile = null;
+let selectedPackageData = null;
+
+// Handle slip file selection
+function handleSlipSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+        showNotification('❌ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+        return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showNotification('❌ ไฟล์ใหญ่เกิน 5MB', 'error');
+        return;
+    }
+    
+    selectedSlipFile = file;
+    
+    // Preview image
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('slipImage').src = e.target.result;
+        document.getElementById('slipPreview').style.display = 'block';
+        document.querySelector('.upload-area').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+// Upload slip function
+async function uploadSlip() {
+    if (!selectedSlipFile) {
+        showNotification('❌ กรุณาเลือกไฟล์สลิป', 'error');
+        return;
+    }
+    
+    if (!selectedPackageData) {
+        showNotification('❌ กรุณาเลือกแพ็คเกจก่อน', 'error');
+        return;
+    }
+    
+    // Show loading status
+    const statusDiv = document.getElementById('uploadStatus');
+    statusDiv.className = 'upload-status checking';
+    statusDiv.innerHTML = '🔍 กำลังตรวจสอบสลิป...';
+    statusDiv.style.display = 'block';
+    
+    // Hide preview
+    document.getElementById('slipPreview').style.display = 'none';
+    
+    try {
+        // Create FormData
+        const formData = new FormData();
+        formData.append('slip', selectedSlipFile);
+        formData.append('userId', userId);
+        formData.append('packageId', selectedPackageData.id);
+        formData.append('expectedAmount', selectedPackageData.price);
+        
+        // Upload to server
+        const response = await fetch('/api/verify-slip', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            // Success!
+            statusDiv.className = 'upload-status success';
+            statusDiv.innerHTML = `
+                ✅ ยืนยันการชำระเงินสำเร็จ!<br>
+                💰 เครดิตใหม่: ${data.newBalance} เครดิต<br>
+                📋 Ref: ${data.transactionRef}
+            `;
+            
+            // Update credit display
+            userCredits = data.newBalance;
+            updateCreditDisplay();
+            
+            // Close modal after 3 seconds
+            setTimeout(() => {
+                closeCreditModal();
+                showNotification('✅ เติมเครดิตสำเร็จ!', 'success');
+            }, 3000);
+            
+        } else {
+            // Error
+            statusDiv.className = 'upload-status error';
+            statusDiv.innerHTML = `❌ ${data.error || 'ตรวจสอบสลิปไม่สำเร็จ'}`;
+            
+            // Reset upload area
+            setTimeout(() => {
+                resetUploadArea();
+            }, 3000);
+        }
+        
+    } catch (error) {
+        console.error('Upload error:', error);
+        statusDiv.className = 'upload-status error';
+        statusDiv.innerHTML = '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
+        
+        setTimeout(() => {
+            resetUploadArea();
+        }, 3000);
+    }
+}
+
+// Reset upload area
+function resetUploadArea() {
+    document.getElementById('slipPreview').style.display = 'none';
+    document.querySelector('.upload-area').style.display = 'block';
+    document.getElementById('uploadStatus').style.display = 'none';
+    document.getElementById('slipFileInput').value = '';
+    selectedSlipFile = null;
+}
+
+// Generate QR Code
+async function generateQRCode(amount) {
+    try {
+        const response = await fetch('/api/generate-qr', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: amount,
+                promptpayId: window.PROMPTPAY_ID
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.qrCode) {
+            const qrSection = document.getElementById('qrSection');
+            const qrDisplay = document.getElementById('qrCodeDisplay');
+            
+            qrDisplay.innerHTML = `<img src="${data.qrCode}" alt="QR Code" style="max-width: 300px;">`;
+            qrSection.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('QR Code error:', error);
+    }
+}
+
 // ========== GLOBAL FUNCTION EXPORTS ==========
 window.switchMode = switchMode;
 window.removeImage = removeImage;
@@ -2820,6 +3026,9 @@ window.stopVoiceInput = stopVoiceInput;
 window.backToChat = backToChat;
 window.showCreditPackages = showCreditPackages;
 window.closeCreditModal = closeCreditModal;
+window.uploadSlip = uploadSlip;
+window.resetUploadArea = resetUploadArea;
+window.generateQRCode = generateQRCode;
 window.selectPackage = selectPackage;
 window.showTemplates = showTemplates;
 window.closeTemplates = closeTemplates;

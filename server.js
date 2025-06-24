@@ -3,6 +3,26 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 
+const multer = require('multer');
+const QRCode = require('qrcode');
+const generatePayload = require('promptpay-qr');
+const ESYSlipService = require('./esy-slip');
+
+// Setup multer for file upload
+const upload = multer({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'));
+        }
+    }
+});
+
+// Initialize ESY Slip service
+const esySlip = new ESYSlipService(process.env.ESY_SLIP_API_KEY);
+
 // เพิ่ม debug log
 console.log('ENV Check:');
 console.log('REPLICATE_API_TOKEN:', process.env.REPLICATE_API_TOKEN ? 'Found ✓' : 'Not found ✗');
@@ -891,6 +911,177 @@ app.post('/api/credits/manual-add', async (req, res) => {
     }
 });
 
+// ========== SLIP VERIFICATION ENDPOINT ==========
+app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
+    console.log('📤 Slip verification request received');
+    
+    try {
+        // Check if file was uploaded
+        if (!req.file) {
+            return res.status(400).json({ 
+                error: 'กรุณาอัพโหลดไฟล์สลิป' 
+            });
+        }
+        
+        const { userId, packageId, expectedAmount } = req.body;
+        
+        // Validate inputs
+        if (!userId || !packageId || !expectedAmount) {
+            return res.status(400).json({ 
+                error: 'ข้อมูลไม่ครบถ้วน' 
+            });
+        }
+        
+        console.log('📋 Verification details:', {
+            userId,
+            packageId,
+            expectedAmount,
+            fileSize: req.file.size
+        });
+        
+        // Convert file to base64
+        const slipData = req.file.buffer.toString('base64');
+        
+        // Verify with ESY Slip
+        const verificationResult = await esySlip.verifySlip(slipData);
+        
+        if (!verificationResult.success) {
+            console.log('❌ ESY verification failed:', verificationResult.error);
+            return res.status(400).json({ 
+                error: verificationResult.error || 'ไม่สามารถตรวจสอบสลิปได้' 
+            });
+        }
+        
+        console.log('✅ ESY verification success:', {
+            amount: verificationResult.amount,
+            ref: verificationResult.transactionRef
+        });
+        
+        // Check if amount matches
+        const tolerance = 1; // Allow 1 baht difference
+        if (Math.abs(verificationResult.amount - parseFloat(expectedAmount)) > tolerance) {
+            return res.status(400).json({ 
+                error: `จำนวนเงินไม่ตรงกัน (ต้องการ ${expectedAmount} บาท, แต่โอนมา ${verificationResult.amount} บาท)` 
+            });
+        }
+        
+        // Check if receiver is correct
+        if (!esySlip.validateReceiver(verificationResult, process.env.PROMPTPAY_ID)) {
+            return res.status(400).json({ 
+                error: 'ผู้รับเงินไม่ถูกต้อง' 
+            });
+        }
+        
+        // Check duplicate payment
+        const isDuplicate = await db.checkDuplicatePayment(verificationResult.transactionRef);
+        if (isDuplicate) {
+            // Get existing payment info
+            const existingPayment = await db.getPaymentByRef(verificationResult.transactionRef);
+            if (existingPayment) {
+                return res.json({
+                    success: true,
+                    isDuplicate: true,
+                    message: 'สลิปนี้ถูกใช้แล้ว',
+                    transactionRef: verificationResult.transactionRef,
+                    newBalance: existingPayment.current_balance,
+                    verifiedAt: existingPayment.verified_at
+                });
+            }
+        }
+        
+        // Get package info
+        const packages = await db.getCreditPackages();
+        const selectedPackage = packages.find(p => p.id === parseInt(packageId));
+        
+        if (!selectedPackage) {
+            return res.status(400).json({ 
+                error: 'ไม่พบแพ็คเกจที่เลือก' 
+            });
+        }
+        
+        // Calculate credits (including bonus)
+        const totalCredits = selectedPackage.credits + (selectedPackage.bonus_credits || 0);
+        
+        // Save payment and add credits
+        const result = await db.savePaymentVerification(
+            userId,
+            verificationResult.transactionRef,
+            totalCredits,
+            packageId,
+            verificationResult.rawData
+        );
+        
+        if (result.success) {
+            console.log('💰 Credits added successfully:', {
+                userId,
+                credits: totalCredits,
+                newBalance: result.newBalance
+            });
+            
+            res.json({
+                success: true,
+                message: 'ยืนยันการชำระเงินสำเร็จ',
+                transactionRef: verificationResult.transactionRef,
+                creditsAdded: totalCredits,
+                newBalance: result.newBalance,
+                packageName: selectedPackage.name
+            });
+        } else {
+            throw new Error('Failed to save payment');
+        }
+        
+    } catch (error) {
+        console.error('❌ Slip verification error:', error);
+        res.status(500).json({ 
+            error: 'เกิดข้อผิดพลาดในการตรวจสอบ กรุณาลองใหม่' 
+        });
+    }
+});
+
+// ========== QR CODE GENERATION ENDPOINT ==========
+app.post('/api/generate-qr', async (req, res) => {
+    try {
+        const { amount, promptpayId } = req.body;
+        
+        if (!amount || !promptpayId) {
+            return res.status(400).json({ 
+                error: 'Missing required parameters' 
+            });
+        }
+        
+        // Format PromptPay ID (remove dashes and spaces)
+        const cleanId = promptpayId.replace(/-|\s/g, '');
+        
+        // Generate PromptPay payload using promptpay-qr library
+        const payload = generatePayload(cleanId, { amount: parseFloat(amount) });
+        
+        // Generate QR Code image from payload
+        const qrCodeDataUrl = await QRCode.toDataURL(payload, {
+            width: 300,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        });
+        
+        console.log('✅ QR Code generated for amount:', amount);
+        
+        res.json({
+            success: true,
+            qrCode: qrCodeDataUrl,
+            amount: amount,
+            promptpayId: cleanId
+        });
+        
+    } catch (error) {
+        console.error('QR Code generation error:', error);
+        res.status(500).json({ 
+            error: 'Failed to generate QR code' 
+        });
+    }
+});
+
 // Health check endpoint for Railway
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy' });
@@ -950,6 +1141,7 @@ app.post('/api/admin/add-credits', checkAdminAuth, async (req, res) => {
 // Start server
 app.listen(PORT, () => {
     console.log(`
+        
 ╔═══════════════════════════════════════╗
 ║     Veo 3 Prompt Generator Server     ║
 ║        with Character Support         ║
@@ -961,11 +1153,15 @@ app.listen(PORT, () => {
 📌 Character Assistant: ${process.env.CHARACTER_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
 📌 Database: ${db ? 'Connected ✓' : 'Not connected ✗'}
 💰 Daily Limit: ${DAILY_LIMIT_THB} THB per user
+📱 PromptPay: ${process.env.PROMPTPAY_ID || 'Not configured'}
+💳 ESY Slip API: ${process.env.ESY_SLIP_API_KEY ? 'Configured ✓' : 'Not configured ✗'}
 🌐 URL: http://localhost:${PORT}
 
+
 Available Modes:
-• General Prompt Generator
-• Character Creator
-• Character Library
+- General Prompt Generator
+- Character Creator
+- Character Library
+- Auto Payment Verification ✨ NEW!
     `);
 });

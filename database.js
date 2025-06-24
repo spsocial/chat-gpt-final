@@ -567,6 +567,91 @@ async function useCreditsNew(userId, amount, description) {
     }
 }
 
+// ========== PAYMENT VERIFICATION FUNCTIONS ==========
+
+// บันทึกการยืนยันการชำระเงิน
+async function savePaymentVerification(userId, transactionRef, amount, packageId, slipData) {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // 1. บันทึกข้อมูลการยืนยัน
+        const verifyResult = await client.query(
+            `INSERT INTO payment_verifications 
+             (user_id, transaction_ref, amount, package_id, slip_data, status, verified_at)
+             VALUES ($1, $2, $3, $4, $5, 'verified', NOW())
+             RETURNING id`,
+            [userId, transactionRef, amount, packageId, JSON.stringify(slipData)]
+        );
+        
+        // 2. เติมเครดิต
+        const creditResult = await addCredits(
+            userId,
+            amount,
+            `ชำระผ่าน PromptPay - Ref: ${transactionRef}`,
+            verifyResult.rows[0].id,
+            'Auto-verified by ESY Slip'
+        );
+        
+        // 3. อัพเดท payment_logs
+        await client.query(
+            `INSERT INTO payment_logs 
+             (user_id, package_id, amount, credits_received, payment_method, payment_status, payment_reference, transaction_ref, processed_at)
+             VALUES ($1, $2, $3, $4, 'promptpay', 'completed', $5, $6, NOW())`,
+            [userId, packageId, amount, amount, `SLIP-${verifyResult.rows[0].id}`, transactionRef]
+        );
+        
+        await client.query('COMMIT');
+        
+        return {
+            success: true,
+            verificationId: verifyResult.rows[0].id,
+            newBalance: creditResult.newBalance
+        };
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error saving payment verification:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+// ตรวจสอบว่ามี transaction ref นี้แล้วหรือยัง
+async function checkDuplicatePayment(transactionRef) {
+    try {
+        const result = await pool.query(
+            'SELECT id FROM payment_verifications WHERE transaction_ref = $1',
+            [transactionRef]
+        );
+        
+        return result.rows.length > 0;
+    } catch (error) {
+        console.error('Error checking duplicate:', error);
+        return false;
+    }
+}
+
+// ดึงข้อมูลการชำระเงินจาก ref
+async function getPaymentByRef(transactionRef) {
+    try {
+        const result = await pool.query(
+            `SELECT pv.*, uc.credits as current_balance
+             FROM payment_verifications pv
+             JOIN user_credits uc ON pv.user_id = uc.user_id
+             WHERE pv.transaction_ref = $1`,
+            [transactionRef]
+        );
+        
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error('Error getting payment:', error);
+        return null;
+    }
+}
+
 // อย่าลืม export!
 module.exports = {
     pool,
@@ -589,5 +674,9 @@ module.exports = {
     getCreditHistory,
     forceRefreshUserData,
     getFreeCredits,
-    useCreditsNew
+    useCreditsNew,
+    // เพิ่ม payment verification functions
+    savePaymentVerification,
+    checkDuplicatePayment,
+    getPaymentByRef
 };

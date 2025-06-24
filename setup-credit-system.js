@@ -81,6 +81,31 @@ async function setupCreditSystem() {
         `);
         console.log('✅ payment_logs table created\n');
 
+        // 4.5 Create payment_verifications table
+        console.log('Creating payment_verifications table...');
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS payment_verifications (
+                id SERIAL PRIMARY KEY,
+                user_id VARCHAR(255) NOT NULL,
+                transaction_ref VARCHAR(255) UNIQUE NOT NULL,
+                amount DECIMAL(10, 2) NOT NULL,
+                package_id INTEGER,
+                status VARCHAR(50) DEFAULT 'pending',
+                slip_data JSONB,
+                verified_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
+        console.log('✅ payment_verifications table created\n');
+
+        // เพิ่ม column transaction_ref ใน payment_logs
+        console.log('Adding transaction_ref column to payment_logs...');
+        await client.query(`
+            ALTER TABLE payment_logs 
+            ADD COLUMN IF NOT EXISTS transaction_ref VARCHAR(255)
+        `);
+        console.log('✅ transaction_ref column added\n');
+
         // 5. Create indexes
         console.log('Creating indexes...');
         await client.query(`
