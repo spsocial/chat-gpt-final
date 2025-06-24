@@ -157,6 +157,24 @@ function isFavorited(promptText) {
 // ========== TEMPLATES UI ==========
 function showTemplates() {
     document.getElementById('templatesModal').style.display = 'flex';
+    const grid = document.getElementById('templatesGrid');
+    if (!document.getElementById('musicVideoCard')) {
+        const musicCard = document.createElement('div');
+        musicCard.id = 'musicVideoCard';
+        musicCard.className = 'template-card';
+        musicCard.style.background = 'linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(220, 38, 38, 0.2))';
+        musicCard.style.border = '2px solid #f59e0b';
+        musicCard.innerHTML = `
+            <div class="template-emoji">🎵</div>
+            <div class="template-title">Music Video Template</div>
+            <div class="template-preview">สร้าง MV แบบมืออาชีพ พร้อมฟอร์มกรอกข้อมูล</div>
+        `;
+        musicCard.onclick = () => {
+            closeTemplates();
+            showMusicVideoForm();
+        };
+        grid.insertBefore(musicCard, grid.firstChild);
+    }
     filterTemplates('all');
 }
 
@@ -1734,125 +1752,48 @@ function copyPrompt(button) {
         .replace(/• /g, '* ')
         .replace(/<[^>]*>/g, '');
     
-    // ========== กรองเอาเฉพาะ prompt ภาษาอังกฤษ ==========
+    let finalPrompt = '';
     
-    // ========== กรองเอาเฉพาะ prompt ภาษาอังกฤษ ==========
-
-let finalPrompt = '';
-
-// Method 1: หา prompt ที่ขึ้นต้นด้วย "Veo 3 Prompt:" และจบที่ emoji หรือคำว่าสรุป
-// หา prompt ที่ขึ้นต้นด้วย "Veo 3 Prompt:" และจบก่อน emoji หรือคำว่าสรุป
-const veoPromptRegex = /Veo 3 Prompt:[\s\S]*?(?=\n{1,2}(?:📽️|🎬|⏱️|📌|\*\*สรุป|สรุป))/;
-const veoPromptMatch = fullText.match(veoPromptRegex);
-
-if (veoPromptMatch && veoPromptMatch[0]) {
-    // ถ้าเจอ pattern "Veo 3 Prompt:..."
-    finalPrompt = veoPromptMatch[0].trim();
-    console.log('Found Veo prompt pattern, length:', finalPrompt.length);
-} else {
-    // Method 2: ถ้าไม่เจอ pattern ข้างบน ให้ตัดที่ emoji หรือภาษาไทย
-    console.log('No Veo prompt pattern found, using fallback');
-    
-    const stopPatterns = [
-        /📽️/,
-        /🎬/,
-        /⏱️/,
-        /📌/,
-        /📸/,
-        /\*\*สรุป/,
-        /สรุป Prompt/,
-        /ประเภท:/,
-        /ความยาว:/,
-        /เนื้อเรื่อง/,
-        /เทคนิคกล้อง/,
-        /saying in Thai:/i,
-        /พูดเป็นภาษาไทย:/i,
-        /[ก-๙]/
-    ];
-    
-    let cutoffIndex = fullText.length;
-    
-    for (const pattern of stopPatterns) {
-        const match = fullText.search(pattern);
-        if (match !== -1 && match < cutoffIndex) {
-            cutoffIndex = match;
+    // ตรวจสอบว่าเป็น Music Video prompt หรือไม่
+    if (fullText.includes('Professional Music Video Prompt') || fullText.includes('[Visual Style]')) {
+        // สำหรับ Music Video - เอาทั้งหมดจนถึง [Visual Style] จบ
+        const visualStyleEnd = fullText.lastIndexOf('[Visual Style]');
+        if (visualStyleEnd !== -1) {
+            // หาจุดสิ้นสุดของ Visual Style section
+            const nextSectionStart = fullText.indexOf('\n\n', visualStyleEnd + 100);
+            finalPrompt = fullText.substring(0, nextSectionStart > 0 ? nextSectionStart : fullText.length).trim();
+        } else {
+            // ถ้าหาไม่เจอให้ตัดที่ภาษาไทย
+            const thaiIndex = fullText.search(/[ก-๙]/);
+            finalPrompt = thaiIndex > 0 ? fullText.substring(0, thaiIndex).trim() : fullText;
         }
-    }
-    
-    finalPrompt = fullText.substring(0, cutoffIndex).trim();
-}
-    
-    // Method 2: ถ้าไม่เจออะไรเลย หรือสั้นเกินไป ลองวิธีอื่น
-    if (!finalPrompt || finalPrompt.length < 50) {
-        // หาบล็อกข้อความภาษาอังกฤษที่ต่อเนื่องกันยาวที่สุด
-        const lines = fullText.split('\n');
-        const englishBlocks = [];
-        let currentBlock = [];
-        
-        for (const line of lines) {
-            const trimmed = line.trim();
+    } else {
+        // Prompt ปกติ - ใช้วิธีเดิม
+        const veoPromptMatch = fullText.match(/Veo 3 Prompt:[\s\S]*?(?=\n{1,2}(?:📽️|🎬|⏱️|📌|\*\*สรุป|สรุป))/);
+        if (veoPromptMatch) {
+            finalPrompt = veoPromptMatch[0].trim();
+        } else {
+            // ตัดที่ภาษาไทยหรือ emoji
+            const stopPatterns = [/📽️/, /🎬/, /⏱️/, /📌/, /[ก-๙]/];
+            let cutoffIndex = fullText.length;
             
-            // ถ้าเป็นบรรทัดว่าง reset block
-            if (!trimmed) {
-                if (currentBlock.length > 0) {
-                    englishBlocks.push(currentBlock.join('\n'));
-                    currentBlock = [];
-                }
-                continue;
-            }
-            
-            // เช็คว่าเป็นภาษาอังกฤษเป็นหลักไหม
-            const hasEnglish = /[a-zA-Z]/.test(trimmed);
-            const hasThai = /[ก-๙]/.test(trimmed);
-            const hasEmoji = /[\u{1F300}-\u{1F9FF}]/u.test(trimmed);
-            
-            if (hasEnglish && !hasThai && !hasEmoji) {
-                currentBlock.push(trimmed);
-            } else {
-                // ถ้าเจอภาษาไทยหรือ emoji จบ block
-                if (currentBlock.length > 0) {
-                    englishBlocks.push(currentBlock.join('\n'));
-                    currentBlock = [];
+            for (const pattern of stopPatterns) {
+                const match = fullText.search(pattern);
+                if (match !== -1 && match < cutoffIndex) {
+                    cutoffIndex = match;
                 }
             }
-        }
-        
-        // เอา block สุดท้าย
-        if (currentBlock.length > 0) {
-            englishBlocks.push(currentBlock.join('\n'));
-        }
-        
-        // เลือก block ที่ยาวที่สุด
-        if (englishBlocks.length > 0) {
-            finalPrompt = englishBlocks.reduce((a, b) => a.length > b.length ? a : b);
+            
+            finalPrompt = fullText.substring(0, cutoffIndex).trim();
         }
     }
-    
-    // ทำความสะอาดขั้นสุดท้าย
-    finalPrompt = finalPrompt
-        .replace(/```/g, '')  // ลบ markdown code block
-        .replace(/\*\*/g, '')  // ลบ bold markdown
-        .replace(/\s+/g, ' ')  // ลบช่องว่างซ้ำ
-        .replace(/^[-•*]\s*/gm, '')  // ลบ bullet points
-        .trim();
-    
-    // ถ้ายังไม่ได้อะไรเลย
-    if (!finalPrompt) {
-        finalPrompt = fullText;
-        console.warn('Could not extract English prompt, using full text');
-    }
-    
-    // Debug
-    console.log('Extracted prompt length:', finalPrompt.length);
-    console.log('First 100 chars:', finalPrompt.substring(0, 100) + '...');
     
     // Copy to clipboard
     navigator.clipboard.writeText(finalPrompt).then(() => {
         const originalText = button.innerHTML;
         button.innerHTML = '✅ Copied!';
         
-        // แสดง notification พร้อมจำนวนตัวอักษร
-        showNotification(`📋 Copied English prompt (${finalPrompt.length} chars)`, 'success');
+        showNotification(`📋 Copied prompt (${finalPrompt.length} chars)`, 'success');
         
         setTimeout(() => {
             button.innerHTML = originalText;
@@ -1874,7 +1815,7 @@ if (veoPromptMatch && veoPromptMatch[0]) {
             const originalText = button.innerHTML;
             button.innerHTML = '✅ Copied!';
             
-            showNotification(`📋 Copied English prompt (${finalPrompt.length} chars)`, 'success');
+            showNotification(`📋 Copied prompt (${finalPrompt.length} chars)`, 'success');
             
             setTimeout(() => {
                 button.innerHTML = originalText;
@@ -4507,4 +4448,246 @@ function showAllFABButtons() {
 window.showAllFABButtons = showAllFABButtons;
 // ========== END FIX FAB BUTTONS ==========
 window.syncChatModelSelection = syncChatModelSelection;
+
+// ========== MUSIC VIDEO TEMPLATE SYSTEM ==========
+
+// เพิ่ม template ใน promptTemplates
+const musicVideoTemplates = {
+    isaanTrap: {
+        emoji: "🎤",
+        title: "Isaan Trap Music Video", 
+        category: "musicvideo",
+        defaultValues: {
+            singer: `A man in his late 50s from Isaan, Thailand. He has a warm, kind, and heavily wrinkled face from years of working in the sun, with tan to dark skin and high cheekbones. His face and arms are smudged with a bit of dried mud and dust. His most defining feature is a chipped or broken upper front tooth (the right incisor), visible when he smiles.
+
+Outfit: A heavily worn, faded indigo-blue mor hom cotton farmer's shirt, unbuttoned at the top with rolled-up sleeves. Three-quarter length dark brown wrap-around fisherman pants (kang-keng le). A worn woven cloth shoulder bag (yaam) across his chest and a simple fishing net over one shoulder.`,
+            
+            lyrics: "Yo! Woke up at dawn, sun on my face! King of this field, ain't no other place. Sticky rice power, that's the morning grace. Me and my dog, we runnin' this space!",
+            
+            musicStyle: "LOUD, energetic Isaan Trap music with prominent Phin (lute) melody and heavy hip-hop beat",
+            
+            background: "A vast, green rice paddy field in Isaan, Thailand during early morning. Soft, diffused sunrise light with gentle mist. The sun is low and partially hidden by morning haze, creating a subtle warm glow. Water-filled paddies reflect the soft sky. A few water buffalo visible in the distance",
+            
+            tone: "Vibrant, warm, golden hour tones. High contrast. Ultra realistic, cinematic music video with gritty, authentic feel"
+        }
+    }
+};
+
+// ฟังก์ชันแสดง Music Video Form
+function showMusicVideoForm() {
+    const template = musicVideoTemplates.isaanTrap;
+    
+    const modal = document.createElement('div');
+    modal.className = 'music-template-modal';
+    modal.innerHTML = `
+        <div class="music-template-content">
+            <button class="close-btn" onclick="closeMusicVideoForm()">✕</button>
+            
+            <h2>🎵 สร้าง Music Video Prompt</h2>
+            <p class="template-subtitle">สร้าง prompt สำหรับ MV แบบมืออาชีพ - กรอกเฉพาะที่ต้องการเปลี่ยน ใช้ภาษาไทยได้</p>
+            
+            <div class="template-form">
+                <div class="form-group">
+                    <label>🎤 ลักษณะนักร้อง/ตัวละคร:</label>
+                    <textarea id="mvSinger" rows="4" placeholder="บรรยายหน้าตา อายุ การแต่งตัว ลักษณะเด่น...">${template.defaultValues.singer}</textarea>
+                    <small>💡 ยิ่งละเอียดยิ่งดี เช่น สีผิว ทรงผม เครื่องประดับ</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>📝 เนื้อร้อง (ภาษาอะไรก็ได้):</label>
+                    <textarea id="mvLyrics" rows="3" placeholder="Yo! Check it out...">${template.defaultValues.lyrics}</textarea>
+                    <small>💡 ใช้ภาษาไทยได้ เดี๋ยว bot จัดการให้</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>🎵 แนวเพลง/ดนตรี:</label>
+                    <input type="text" id="mvMusicStyle" value="${template.defaultValues.musicStyle}">
+                    <small>💡 ระบุแนวเพลง เครื่องดนตรีหลัก จังหวะ</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>🌄 สถานที่/บรรยากาศ:</label>
+                    <textarea id="mvBackground" rows="3" placeholder="บรรยายสถานที่ เวลา แสง บรรยากาศ...">${template.defaultValues.background}</textarea>
+                    <small>💡 เช่น ทุ่งนา ตอนเช้า มีหมอก แสงทอง</small>
+                </div>
+                
+                <div class="form-group">
+                    <label>🎨 โทนสี/สไตล์ภาพ:</label>
+                    <input type="text" id="mvTone" value="${template.defaultValues.tone}">
+                    <small>💡 เช่น warm tone, high contrast, cinematic</small>
+                </div>
+                
+                <div class="advanced-options">
+                    <button class="toggle-advanced" onclick="toggleAdvancedOptions()">
+                        ⚙️ ตัวเลือกขั้นสูง ▼
+                    </button>
+                    
+                    <div class="advanced-fields" style="display: none;">
+                        <div class="form-group">
+                            <label>📹 มุมกล้อง/การเคลื่อนไหว:</label>
+                            <input type="text" id="mvCamera" value="Low-angle, slow-motion dolly shot following the performer">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>🐕 ตัวประกอบ/Props:</label>
+                            <input type="text" id="mvProps" value="A loyal brown dog trotting alongside">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="generate-btn" onclick="generateMusicVideoPrompt()">
+                        ✨ สร้าง Music Video Prompt
+                    </button>
+                    <button class="cancel-btn" onclick="closeMusicVideoForm()">
+                        ยกเลิก
+                    </button>
+                </div>
+                
+                <div class="template-tips">
+                    <h4>💡 Tips for Best Results:</h4>
+                    <ul>
+                        <li>ใช้ภาษาอะไรก็ได้ในเนื้อร้อง แต่อย่ายาวเกิน 8 วิ</li>
+                        <li>บรรยายลักษณะเด่นที่ต้องการให้เห็นในทุกฉาก</li>
+                        <li>ระบุแนวเพลงให้ชัดเจนเพื่อให้ท่าเต้นเข้ากัน</li>
+                        <li>กรอกเฉพาะส่วนที่ต้องการเปลี่ยน ที่เหลือจะใช้ค่า default</li>
+                        <li>ใช้ภาษาไทยได้ทุกหัวข้อ!!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// ฟังก์ชันสร้าง Prompt
+// ฟังก์ชันสร้าง Prompt (แบบใหม่ที่รองรับภาษาไทย)
+function generateMusicVideoPrompt() {
+    const template = musicVideoTemplates.isaanTrap;
+    
+    // ดึงค่าจาก form
+    const singer = document.getElementById('mvSinger').value.trim() || template.defaultValues.singer;
+    const lyrics = document.getElementById('mvLyrics').value.trim() || template.defaultValues.lyrics;
+    const musicStyle = document.getElementById('mvMusicStyle').value.trim() || template.defaultValues.musicStyle;
+    const background = document.getElementById('mvBackground').value.trim() || template.defaultValues.background;
+    const tone = document.getElementById('mvTone').value.trim() || template.defaultValues.tone;
+    
+    // ดึงค่า advanced options
+    const advancedFields = document.querySelector('.advanced-fields');
+    let camera = "Low-angle, slow-motion dolly shot that follows the performer";
+    let props = "";
+    
+    if (advancedFields && advancedFields.style.display !== 'none') {
+        camera = document.getElementById('mvCamera').value.trim() || camera;
+        props = document.getElementById('mvProps').value.trim();
+    }
+    
+    // สร้าง prompt คำสั่งสำหรับ AI
+    const aiPrompt = `สร้าง Music Video Prompt แบบ Professional จากข้อมูลนี้:
+
+🎤 นักร้อง/ตัวละคร: ${singer}
+📝 เนื้อร้อง: ${lyrics}
+🎵 แนวเพลง: ${musicStyle}
+🌄 สถานที่/บรรยากาศ: ${background}
+🎨 โทนสี/สไตล์: ${tone}
+${camera !== "Low-angle, slow-motion dolly shot that follows the performer" ? `📹 มุมกล้อง: ${camera}` : ''}
+${props ? `🎭 Props/ตัวประกอบ: ${props}` : ''}
+
+กรุณาสร้าง prompt ภาษาอังกฤษในรูปแบบ Professional Music Video:
+[Settings / Atmosphere]
+[Characters + Appearance + Emotion] 
+[Action / Pose]
+[Dialogue – with Lipsync]
+[Audio & Effects]
+[Visual Style]
+
+⚠️ สำคัญ:
+- แปลงทุกอย่างเป็นภาษาอังกฤษ
+- เนื้อร้องใน [Dialogue] ให้คงภาษาเดิมของผู้ใช้ไว้ ห้ามแปล!
+- ถ้าเนื้อร้องเป็นภาษาไทย ให้ใส่เป็นภาษาไทยพร้อมหมายเหตุ "Lipsync to lyrics:"
+- ถ้าเนื้อร้องเป็นภาษาอังกฤษ ให้ใส่เป็นภาษาอังกฤษ
+- รักษาโครงสร้างตามต้นแบบ Music Video  
+- เพิ่มรายละเอียดให้ cinematic และ professional
+- Audio ต้องเน้นว่าเสียงเพลงเป็นหลัก ambient sounds เบามาก`;
+    
+    // ใส่ prompt ใน textarea
+    document.getElementById('messageInput').value = aiPrompt;
+    
+    // Auto resize textarea
+    const textarea = document.getElementById('messageInput');
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 400) + 'px';
+    
+    // ปิด modal
+    closeMusicVideoForm();
+    if (document.getElementById('templatesModal').style.display === 'flex') {
+        closeTemplates();
+    }
+    
+    // Scroll to input
+    textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // แจ้งให้ user รู้ว่าต้องกดส่ง
+    showNotification('📝 ข้อมูลพร้อมแล้ว! กด "สร้าง Prompt" เพื่อให้ AI แปลงเป็นภาษาอังกฤษ', 'success');
+    
+    // เปลี่ยนข้อความปุ่มชั่วคราว
+    const sendButton = document.getElementById('sendButton');
+    const originalText = sendButton.innerHTML;
+    sendButton.innerHTML = '🎵 สร้าง MV Prompt';
+    
+    // คืนค่าเดิมหลัง 5 วินาที
+    setTimeout(() => {
+        sendButton.innerHTML = originalText;
+    }, 5000);
+}
+
+// ฟังก์ชันปิด Modal
+function closeMusicVideoForm() {
+    const modal = document.querySelector('.music-template-modal');
+    if (modal) modal.remove();
+}
+
+// Toggle Advanced Options
+function toggleAdvancedOptions() {
+    const advancedFields = document.querySelector('.advanced-fields');
+    const toggleBtn = document.querySelector('.toggle-advanced');
+    
+    if (advancedFields.style.display === 'none') {
+        advancedFields.style.display = 'block';
+        toggleBtn.innerHTML = '⚙️ ตัวเลือกขั้นสูง ▲';
+    } else {
+        advancedFields.style.display = 'none';
+        toggleBtn.innerHTML = '⚙️ ตัวเลือกขั้นสูง ▼';
+    }
+}
+
+// เพิ่มปุ่มใน Quick Actions Bar
+function addMusicVideoButton() {
+    // หา Quick Actions Bar
+    const quickActionsBar = document.querySelector('.quick-actions-bar');
+    if (quickActionsBar && !document.getElementById('musicVideoBtn')) {
+        const musicBtn = document.createElement('button');
+        musicBtn.id = 'musicVideoBtn';
+        musicBtn.className = 'action-btn';
+        musicBtn.onclick = showMusicVideoForm;
+        musicBtn.innerHTML = `
+            <span class="action-icon">🎵</span>
+            <span class="action-text">Music Video</span>
+        `;
+        quickActionsBar.appendChild(musicBtn);
+    }
+}
+
+// เพิ่มใน initialization
+document.addEventListener('DOMContentLoaded', () => {
+    // เพิ่มปุ่ม Music Video
+    setTimeout(addMusicVideoButton, 1000);
+});
+
+// Export functions
+window.showMusicVideoForm = showMusicVideoForm;
+window.closeMusicVideoForm = closeMusicVideoForm;
+window.generateMusicVideoPrompt = generateMusicVideoPrompt;
+window.toggleAdvancedOptions = toggleAdvancedOptions;
+
 // END OF PROFESSIONAL SCRIPT
