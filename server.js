@@ -912,8 +912,14 @@ app.post('/api/credits/manual-add', async (req, res) => {
 });
 
 // ========== SLIP VERIFICATION ENDPOINT ==========
+// แทนที่โค้ดเดิมทั้งหมดของ endpoint นี้ (บรรทัด 1193-1318)
 app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
     console.log('📤 Slip verification request received');
+    
+    // Debug: ตรวจสอบ API Key
+    console.log('🔑 ESY API Key exists:', !!process.env.ESY_SLIP_API_KEY);
+    console.log('🔑 ESY API Key length:', process.env.ESY_SLIP_API_KEY?.length);
+    console.log('🔑 ESY API Key first 10 chars:', process.env.ESY_SLIP_API_KEY?.substring(0, 10) + '...');
     
     try {
         // Check if file was uploaded
@@ -936,45 +942,76 @@ app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
             userId,
             packageId,
             expectedAmount,
-            fileSize: req.file.size
+            fileSize: req.file.size,
+            fileType: req.file.mimetype,
+            fileName: req.file.originalname
         });
         
         // Convert file to base64
-        const slipData = req.file.buffer.toString('base64');
+        const slipData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+        
+        console.log('📄 Base64 data info:', {
+            length: slipData.length,
+            firstChars: slipData.substring(0, 50) + '...',
+            isValidBase64: /^[A-Za-z0-9+/]*={0,2}$/.test(slipData)
+        });
         
         // Verify with ESY Slip
+        console.log('🔄 Calling ESY Slip API...');
         const verificationResult = await esySlip.verifySlip(slipData);
+        
+        console.log('📊 ESY Verification Result:', JSON.stringify(verificationResult, null, 2));
         
         if (!verificationResult.success) {
             console.log('❌ ESY verification failed:', verificationResult.error);
             return res.status(400).json({ 
-                error: verificationResult.error || 'ไม่สามารถตรวจสอบสลิปได้' 
+                error: verificationResult.error || 'ไม่สามารถตรวจสอบสลิปได้',
+                details: 'กรุณาตรวจสอบว่าเป็นสลิปที่ถูกต้องและชัดเจน',
+                debug: {
+                    apiKeyExists: !!process.env.ESY_SLIP_API_KEY,
+                    fileSize: req.file.size,
+                    fileType: req.file.mimetype
+                }
             });
         }
         
         console.log('✅ ESY verification success:', {
             amount: verificationResult.amount,
-            ref: verificationResult.transactionRef
+            ref: verificationResult.transactionRef,
+            receiver: verificationResult.receiver,
+            sender: verificationResult.sender
         });
         
         // Check if amount matches
         const tolerance = 1; // Allow 1 baht difference
         if (Math.abs(verificationResult.amount - parseFloat(expectedAmount)) > tolerance) {
+            console.log('❌ Amount mismatch:', {
+                expected: expectedAmount,
+                received: verificationResult.amount
+            });
             return res.status(400).json({ 
                 error: `จำนวนเงินไม่ตรงกัน (ต้องการ ${expectedAmount} บาท, แต่โอนมา ${verificationResult.amount} บาท)` 
             });
         }
         
         // Check if receiver is correct
+        console.log('🔍 Validating receiver:', {
+            slipReceiver: verificationResult.receiver,
+            expectedReceiver: process.env.PROMPTPAY_ID
+        });
+        
         if (!esySlip.validateReceiver(verificationResult, process.env.PROMPTPAY_ID)) {
+            console.log('❌ Invalid receiver');
             return res.status(400).json({ 
                 error: 'ผู้รับเงินไม่ถูกต้อง' 
             });
         }
         
         // Check duplicate payment
+        console.log('🔍 Checking duplicate payment...');
         const isDuplicate = await db.checkDuplicatePayment(verificationResult.transactionRef);
         if (isDuplicate) {
+            console.log('⚠️ Duplicate payment detected');
             // Get existing payment info
             const existingPayment = await db.getPaymentByRef(verificationResult.transactionRef);
             if (existingPayment) {
@@ -990,10 +1027,12 @@ app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
         }
         
         // Get package info
+        console.log('📦 Getting package info...');
         const packages = await db.getCreditPackages();
         const selectedPackage = packages.find(p => p.id === parseInt(packageId));
         
         if (!selectedPackage) {
+            console.log('❌ Package not found:', packageId);
             return res.status(400).json({ 
                 error: 'ไม่พบแพ็คเกจที่เลือก' 
             });
@@ -1001,8 +1040,14 @@ app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
         
         // Calculate credits (including bonus)
         const totalCredits = selectedPackage.credits + (selectedPackage.bonus_credits || 0);
+        console.log('💰 Credits to add:', {
+            base: selectedPackage.credits,
+            bonus: selectedPackage.bonus_credits || 0,
+            total: totalCredits
+        });
         
         // Save payment and add credits
+        console.log('💾 Saving payment verification...');
         const result = await db.savePaymentVerification(
             userId,
             verificationResult.transactionRef,
@@ -1032,8 +1077,11 @@ app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
         
     } catch (error) {
         console.error('❌ Slip verification error:', error);
+        console.error('Error stack:', error.stack);
+        
         res.status(500).json({ 
-            error: 'เกิดข้อผิดพลาดในการตรวจสอบ กรุณาลองใหม่' 
+            error: 'เกิดข้อผิดพลาดในการตรวจสอบ กรุณาลองใหม่',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 });
