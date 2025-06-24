@@ -76,12 +76,17 @@ class ESYSlipService {
 
     // ตรวจสอบว่าเป็นการโอนมาที่เราหรือไม่
     validateReceiver(slipData, expectedReceiver) {
-        // ลบขีดและช่องว่างออก
-        const cleanReceiver = (slipData.receiver || '').replace(/-|\s/g, '');
-        const cleanExpected = expectedReceiver.replace(/-|\s/g, '');
-        
-        return cleanReceiver === cleanExpected;
+    // ถ้าอ่านผู้รับไม่ได้ ให้ผ่าน
+    if (!slipData.receiver || slipData.receiver === 'Unknown') {
+        console.log('⚠️ Cannot read receiver - skipping validation');
+        return true;  // ให้ผ่าน
     }
+    
+    const cleanReceiver = (slipData.receiver || '').replace(/-|\s/g, '');
+    const cleanExpected = expectedReceiver.replace(/-|\s/g, '');
+    
+    return cleanReceiver === cleanExpected;
+}
 }
 
 module.exports = ESYSlipService;
