@@ -960,7 +960,9 @@ app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
         console.log('🔄 Calling ESY Slip API...');
         const verificationResult = await esySlip.verifySlip(slipData);
         
-        console.log('📊 ESY Verification Result:', JSON.stringify(verificationResult, null, 2));
+        console.log('📊 ESY Full Response:', JSON.stringify(verificationResult, null, 2));
+console.log('💰 Raw amount:', verificationResult.amount, typeof verificationResult.amount);
+console.log('📱 Raw data:', verificationResult.rawData);
         
         if (!verificationResult.success) {
             console.log('❌ ESY verification failed:', verificationResult.error);

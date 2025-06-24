@@ -26,24 +26,32 @@ class ESYSlipService {
             
             // ตรวจสอบผลลัพธ์ตาม response structure จริง
             if (response.data && response.data.data) {
-                const data = response.data.data;
-                
-                return {
-                    success: true,
-                    amount: parseFloat(data.amount) || 0,
-                    transactionRef: data.transRef || data.transactionId || data.ref,
-                    sender: data.sender?.displayName || data.sender?.name || 'Unknown',
-                    receiver: data.receiver?.displayName || data.receiver?.name || 'Unknown',
-                    date: data.date,
-                    time: data.time,
-                    rawData: response.data
-                };
-            } else {
-                return {
-                    success: false,
-                    error: response.data?.message || 'Verification failed'
-                };
-            }
+    const data = response.data.data;
+    
+    // แก้ปัญหา amount เป็น object
+    let amount = 0;
+    if (data.amount && typeof data.amount === 'object') {
+        amount = parseFloat(data.amount.amount) || 0;
+    } else {
+        amount = parseFloat(data.amount) || 0;
+    }
+    
+    return {
+        success: true,
+        amount: amount,
+        transactionRef: data.transRef || data.transactionId || data.ref,
+        sender: data.sender?.displayName || data.sender?.name || 'Unknown',
+        receiver: data.receiver?.displayName || data.receiver?.name || 'Unknown',
+        date: data.date,
+        time: data.time,
+        rawData: response.data
+    };
+} else {
+    return {
+        success: false,
+        error: response.data?.message || 'Verification failed'
+    };
+}
             
         } catch (error) {
             console.error('❌ ESY Slip Error:', error.message);
