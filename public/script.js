@@ -1795,6 +1795,9 @@ function copyPrompt(button) {
         console.error('Cannot find prompt content');
         return;
     }
+    // เพิ่มบรรทัดนี้เพื่อ debug
+    console.log('Prompt element HTML:', promptElement.innerHTML);
+    console.log('Prompt element text:', promptElement.textContent);
     
     // แปลง HTML เป็น text
     const fullText = promptElement.innerHTML

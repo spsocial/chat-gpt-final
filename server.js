@@ -110,10 +110,19 @@ app.post('/api/admin/add-credits', checkAdminAuth, async (req, res) => {
     }
 });
 
-// Calculate cost
-function calculateCost(usage) {
+// Calculate cost (with premium for multichar mode)
+function calculateCost(usage, mode = 'general') {
     const totalTokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
-    return (totalTokens / 1000) * COST_PER_1K_TOKENS;
+    let costPerThousand = COST_PER_1K_TOKENS;
+    
+    // Prompt Master mode ใช้ GPT-4o ราคาแพงกว่า
+    if (mode === 'multichar') {
+        // GPT-4o cost ~$5/1M input, $15/1M output
+        // เฉลี่ยประมาณ 0.50 บาท/1K tokens + กำไร 10%
+        costPerThousand = 0.55; // 0.50 + 10% = 0.55 บาท
+    }
+    
+    return (totalTokens / 1000) * costPerThousand;
 }
 
 // Test route
@@ -277,7 +286,7 @@ while (retryCount < maxRetries) {
         const result = await assistants.runAssistant(threadId, assistantId);
 
         // Calculate cost
-        const costTHB = calculateCost(result.usage);
+        const costTHB = calculateCost(result.usage, mode);
         let todayTotal = costTHB;
 
         // Save usage if database is available
