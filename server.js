@@ -31,6 +31,7 @@ console.log('CHARACTER_ASSISTANT_ID:', process.env.CHARACTER_ASSISTANT_ID);
 console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTANT_ID);
 console.log('Loading .env from:', path.resolve(__dirname, '.env'));
 console.log('ASSISTANT_ID:', process.env.ASSISTANT_ID);
+console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTANT_ID ? 'Found ✓' : 'Not found ✗');
 
 // Import modules
 const assistants = require('./assistants');
@@ -140,23 +141,32 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Select assistant based on mode
-    let assistantId;
-    if (mode === 'character') {
-        assistantId = process.env.CHARACTER_ASSISTANT_ID;
-        if (!assistantId) {
-            return res.status(500).json({ 
-                error: 'Character Assistant ID not configured'
-            });
-        }
-    } else {
+let assistantId;
+if (mode === 'character') {
+    assistantId = process.env.CHARACTER_ASSISTANT_ID;
+    if (!assistantId) {
+        return res.status(500).json({ 
+            error: 'Character Assistant ID not configured'
+        });
+    }
+} else if (mode === 'multichar') {
+    // เพิ่มส่วนนี้ใหม่สำหรับ multichar mode
+    console.log('Multichar mode - MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTANT_ID);
+    assistantId = process.env.MULTI_CHARACTER_ASSISTANT_ID;
+    if (!assistantId) {
+        return res.status(500).json({ 
+            error: 'Multi-Character Assistant ID not configured'
+        });
+    }
+} else {
     console.log('General mode - ASSISTANT_ID:', process.env.ASSISTANT_ID);
     assistantId = process.env.ASSISTANT_ID || 'asst_p1ZxkTa5US7Yn1GgUSy8sNy9';
-        if (!assistantId) {
-            return res.status(500).json({ 
-                error: 'Assistant ID not configured'
-            });
-        }
+    if (!assistantId) {
+        return res.status(500).json({ 
+            error: 'Assistant ID not configured'
+        });
     }
+}
 
     try {
         // Check daily limit if database is available
