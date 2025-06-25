@@ -1796,10 +1796,6 @@ function copyPrompt(button) {
         return;
     }
     
-    // Debug log
-    console.log('Copying from mode:', currentMode);
-    console.log('Prompt element HTML:', promptElement.innerHTML);
-    
     // แปลง HTML เป็น text
     const fullText = promptElement.innerHTML
         .replace(/<br><br>/g, '\n\n')
@@ -1809,13 +1805,52 @@ function copyPrompt(button) {
     
     let finalPrompt = '';
     
-    // ตรวจสอบ mode และ format ของ prompt
-    if (currentMode === 'multichar' || fullText.includes('[Scene Setup]') || fullText.includes('[Settings / Scene]')) {
-        // สำหรับ Prompt Master mode - เอาทั้งหมดจนถึงก่อนภาษาไทย
-        console.log('Detected multichar/prompt master mode');
+    // ตรวจสอบว่าเป็น Prompt Master format ใหม่
+    if (fullText.includes('VEO3 MULTI-CHARACTER SCENE') || 
+        fullText.includes('SETTING & ENVIRONMENT') ||
+        fullText.includes('CHARACTER ROSTER')) {
         
-        // หาจุดสิ้นสุดของ prompt ภาษาอังกฤษ
-        const thaiIndex = fullText.search(/[\u0E00-\u0E7F]/); // หาตัวอักษรไทยตัวแรก
+        console.log('Detected new Prompt Master format');
+        
+        // หาจุดเริ่มต้น (emoji 🎬 หรือ VEO3)
+        const startIndex = fullText.search(/🎬|VEO3 MULTI-CHARACTER SCENE/);
+        
+        // หาจุดสิ้นสุด (หลัง VISUAL EFFECTS บรรทัดสุดท้าย)
+        const visualEffectsIndex = fullText.lastIndexOf('VISUAL EFFECTS');
+        let endIndex = fullText.length;
+        
+        if (visualEffectsIndex !== -1) {
+            // หาบรรทัดสุดท้ายหลัง VISUAL EFFECTS
+            const afterVisualEffects = fullText.substring(visualEffectsIndex);
+            const lines = afterVisualEffects.split('\n');
+            
+            // นับบรรทัดที่มีเนื้อหา (ไม่ใช่บรรทัดว่าง)
+            let contentLines = 0;
+            let lastContentIndex = 0;
+            
+            for (let i = 0; i < lines.length; i++) {
+                if (lines[i].trim().length > 0) {
+                    contentLines++;
+                    lastContentIndex = i;
+                }
+                // ถ้าเจอภาษาไทยหรือสรุป ให้หยุด
+                if (lines[i].match(/[\u0E00-\u0E7F]|สรุป|Summary/)) {
+                    break;
+                }
+            }
+            
+            // ตัดที่บรรทัดที่มีเนื้อหาสุดท้าย
+            const cutLines = lines.slice(0, lastContentIndex + 1).join('\n');
+            endIndex = visualEffectsIndex + cutLines.length;
+        }
+        
+        if (startIndex !== -1) {
+            finalPrompt = fullText.substring(startIndex, endIndex).trim();
+        }
+        
+    } else if (currentMode === 'multichar' || fullText.includes('[Scene Setup]') || fullText.includes('[Settings / Scene]')) {
+        // Format เก่า
+        const thaiIndex = fullText.search(/[\u0E00-\u0E7F]/);
         const summaryIndex = fullText.search(/(\*\*)?สรุป|Summary|📌|📽️|🎬|⏱️/i);
         
         let cutoffIndex = fullText.length;
@@ -1827,14 +1862,10 @@ function copyPrompt(button) {
             cutoffIndex = Math.min(cutoffIndex, summaryIndex);
         }
         
-        // ตัด prompt
         finalPrompt = fullText.substring(0, cutoffIndex).trim();
         
-        // ลบบรรทัดว่างท้าย
-        finalPrompt = finalPrompt.replace(/\n\s*\n\s*$/g, '\n');
-        
     } else if (fullText.includes('Professional Music Video Prompt') || fullText.includes('[Visual Style]')) {
-        // สำหรับ Music Video
+        // Music Video format
         const visualStyleEnd = fullText.lastIndexOf('[Visual Style]');
         if (visualStyleEnd !== -1) {
             const nextSectionStart = fullText.indexOf('\n\n', visualStyleEnd + 100);
@@ -1844,7 +1875,7 @@ function copyPrompt(button) {
             finalPrompt = thaiIndex > 0 ? fullText.substring(0, thaiIndex).trim() : fullText;
         }
     } else {
-        // Prompt ปกติ (general mode)
+        // General format
         const veoPromptMatch = fullText.match(/Veo 3 Prompt:[\s\S]*?(?=\n{1,2}(?:📽️|🎬|⏱️|📌|\*\*สรุป|สรุป))/);
         if (veoPromptMatch) {
             finalPrompt = veoPromptMatch[0].trim();
@@ -1863,13 +1894,10 @@ function copyPrompt(button) {
         }
     }
     
-    // ตรวจสอบว่า copy ได้อะไรมาบ้าง
-    console.log('Final prompt to copy:', finalPrompt);
-    console.log('Length:', finalPrompt.length);
+    // ลบบรรทัดว่างท้าย
+    finalPrompt = finalPrompt.replace(/\n\s*\n\s*$/g, '\n');
     
-    // ถ้าไม่มีอะไรให้ copy
-    if (finalPrompt.length === 0) {
-        console.error('No content to copy!');
+    if (!finalPrompt || finalPrompt.length === 0) {
         showNotification('❌ ไม่พบข้อความที่จะ copy', 'error');
         return;
     }
@@ -1887,7 +1915,7 @@ function copyPrompt(button) {
     }).catch(err => {
         console.error('Failed to copy:', err);
         
-        // Fallback method สำหรับเบราว์เซอร์เก่า
+        // Fallback method
         const textArea = document.createElement('textarea');
         textArea.value = finalPrompt;
         textArea.style.position = 'fixed';
