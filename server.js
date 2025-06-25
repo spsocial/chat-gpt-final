@@ -119,7 +119,7 @@ function calculateCost(usage, mode = 'general') {
     if (mode === 'multichar') {
         // GPT-4o cost ~$5/1M input, $15/1M output
         // เฉลี่ยประมาณ 0.50 บาท/1K tokens + กำไร 10%
-        costPerThousand = 0.55; // 0.50 + 10% = 0.55 บาท
+        costPerThousand = 0.02;
     }
     
     return (totalTokens / 1000) * costPerThousand;
