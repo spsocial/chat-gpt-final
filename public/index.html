@@ -2788,7 +2788,7 @@ line-clamp: 3;
 /* Floating Action Button */
 .fab-announcement {
     position: fixed;
-    bottom: 20px;
+    bottom: 20px !important;
     right: 20px;
     background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
@@ -2985,7 +2985,7 @@ line-clamp: 3;
 /* Floating Course Button - ขนาดเล็กลงเหมือนข่าวสาร */
 .fab-course {
     position: fixed;
-    bottom: 80px;
+    bottom: 90px !important;
     right: 20px;
     background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
     color: white;
@@ -3845,7 +3845,7 @@ line-clamp: 3;
 /* FAB Tools - อยู่เหนือคอร์ส */
 .fab-tools {
     position: fixed;
-    bottom: 140px;
+    bottom: 160px !important;
     right: 20px;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
@@ -3928,7 +3928,7 @@ line-clamp: 3;
 }
 .fab-tools-menu {
     position: fixed !important;
-    bottom: 150px !important;  /* ปรับให้อยู่ระดับเดียวกับปุ่ม Tools */
+    bottom: 160px !important;  /* ปรับให้อยู่ระดับเดียวกับปุ่ม Tools */
     right: 85px !important;    /* ขยับไปทางซ้าย */
     display: none;
     flex-direction: column !important;
@@ -4392,44 +4392,38 @@ line-clamp: 3;
 
 .fab-music {
     position: fixed;
-    bottom: 230px; /* อยู่เหนือปุ่มอื่นๆ */
+    bottom: 300px;
     right: 20px;
     background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
     color: white;
     border: none;
-    border-radius: 30px;
-    padding: 12px 20px;
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-family: 'Kanit', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 24px !important;
     box-shadow: 0 4px 20px rgba(245, 158, 11, 0.4);
     transition: all 0.3s ease;
     z-index: 999;
+    animation: float 3s ease-in-out infinite;
 }
 
 .fab-music:hover {
-    transform: translateY(-2px) scale(1.05);
+    transform: translateY(-3px) scale(1.1) !important;
     box-shadow: 0 8px 30px rgba(245, 158, 11, 0.5);
-    padding: 16px 32px;
 }
 
-/* Mobile - ทำให้เป็นวงกลม */
-@media (max-width: 768px) {
-    .fab-music {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        padding: 0;
-        justify-content: center;
-    }
-    
-    .fab-music .fab-text {
-        display: none;
-    }
+.fab-music .fab-icon {
+    font-size: 24px !important;
+    margin: 0 !important;
+}
+
+.fab-music .fab-text {
+    display: none !important;
 }
 
 /* BYOK Button */
@@ -4561,6 +4555,39 @@ line-clamp: 3;
     font-size: 12px;
     font-weight: 600;
     flex-shrink: 0;
+}
+
+/* FAB Video Analyzer */
+.fab-video-analyzer {
+    position: fixed;
+    bottom: 230px;  /* เปลี่ยนจาก 90px */
+    right: 20px;
+    background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);  /* เปลี่ยนเป็นสีม่วง */
+    color: white;
+    border: none;
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    cursor: pointer;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 24px !important;
+    box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);  /* เปลี่ยนเป็นแสงสีม่วง */
+    transition: all 0.3s ease;
+    z-index: 999;
+    animation: float 3s ease-in-out infinite;
+}
+
+.fab-video-analyzer:hover {
+    transform: translateY(-3px) scale(1.1) !important;
+    box-shadow: 0 8px 30px rgba(168, 85, 247, 0.5);  /* เปลี่ยนเป็นแสงสีม่วง */
+}
+
+.fab-video-analyzer .fab-icon {
+    font-size: 24px !important;
+    margin: 0 !important;
 }
 
     </style>  <!-- นี่คือ closing tag -->
@@ -5413,6 +5440,11 @@ function toggleToolsMenu() {
     }
 }
 
+// Function สำหรับเปิดเว็บ Video Analyzer
+function openVideoAnalyzer() {
+    window.open('https://video-downloader-production-db61.up.railway.app/', '_blank');
+}
+
 // Test ว่าฟังก์ชันทำงานไหม
 console.log('toggleToolsMenu loaded:', typeof toggleToolsMenu);
 </script>
@@ -5420,6 +5452,10 @@ console.log('toggleToolsMenu loaded:', typeof toggleToolsMenu);
 <button class="fab-music" onclick="showMusicVideoForm()" title="สร้าง Music Video Prompt">
     <span class="fab-icon">🎵</span>
     <span class="fab-text">Music Video</span>
+</button>
+<!-- Video Analyzer FAB -->
+<button class="fab-video-analyzer" onclick="openVideoAnalyzer()" title="วิเคราะห์และดาวน์โหลดวิดีโอ">
+    <span class="fab-icon">🎥</span>
 </button>
 
 <!-- Hidden file input for slip upload -->
