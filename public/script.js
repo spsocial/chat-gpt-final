@@ -600,10 +600,8 @@ async function loadUserCredits() {
     }
 }
 function updateCreditDisplay() {
-    // เพิ่มการแสดงเครดิตใน header
     const creditDisplay = document.getElementById('creditDisplay');
     if (!creditDisplay) {
-        // สร้าง element ใหม่ถ้ายังไม่มี
         const usageDisplay = document.querySelector('.usage-display');
         const creditDiv = document.createElement('div');
         creditDiv.id = 'creditDisplay';
@@ -617,11 +615,17 @@ function updateCreditDisplay() {
             <button class="add-credit-btn" onclick="showCreditPackages()">
                 <span>+</span> เติมเครดิต
             </button>
+            <!-- ปุ่ม BYOK ใหม่ -->
+            <button class="byok-btn" onclick="showByokDialog()" title="ใช้ API Key ของคุณเอง">
+                🔑
+            </button>
         `;
         usageDisplay.appendChild(creditDiv);
     } else {
-        // อัพเดทจำนวนเครดิต
         creditDisplay.querySelector('.credit-amount').textContent = userCredits.toFixed(2);
+        
+        // แสดง/ซ่อนปุ่ม BYOK ตามสถานะ
+        updateByokButton();
     }
 }
 
@@ -808,6 +812,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             updateModelSelection(e.target.value);
         }
     });
+
+    // Load BYOK status
+    await loadByokStatus();
 
 // Function สำหรับ update UI เมื่อเลือก model
 function updateModelSelection(selectedModel) {
@@ -2861,6 +2868,20 @@ function displayChatResponse(response, model, cost) {
     const messagesContainer = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     
+    // จัดการ cost ที่อาจเป็น object หรือ number
+    let costDisplay = '';
+    if (cost && typeof cost === 'object') {
+        if (cost.isByok) {
+            costDisplay = '🔑 API Key ของคุณ';
+        } else {
+            costDisplay = `${cost.this_request || '0.000'} เครดิต`;
+        }
+    } else if (typeof cost === 'number') {
+        costDisplay = `${cost.toFixed(3)} เครดิต`;
+    } else {
+        costDisplay = '0.000 เครดิต';
+    }
+    
     messageDiv.className = 'message assistant';
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
@@ -2873,7 +2894,7 @@ function displayChatResponse(response, model, cost) {
                     ${getModelDisplayName(model)}
                 </span>
                 <span style="font-size: 11px; color: #64748b;">
-                    ${cost.toFixed(3)} เครดิต
+                    ${costDisplay}
                 </span>
             </div>
         </div>
@@ -2889,6 +2910,16 @@ function displayChatResponseFromHistory(content, modelData) {
     const messagesContainer = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
     
+    // จัดการ cost สำหรับ history
+    let costDisplay = '0.000 เครดิต';
+    if (modelData.cost) {
+        if (typeof modelData.cost === 'number') {
+            costDisplay = `${modelData.cost.toFixed(3)} เครดิต`;
+        } else if (modelData.cost === 0 && modelData.isByok) {
+            costDisplay = '🔑 API Key ของคุณ';
+        }
+    }
+    
     messageDiv.className = 'message assistant';
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
@@ -2901,7 +2932,7 @@ function displayChatResponseFromHistory(content, modelData) {
                     ${modelData.model}
                 </span>
                 <span style="font-size: 11px; color: #64748b;">
-                    ${modelData.cost.toFixed(3)} เครดิต
+                    ${costDisplay}
                 </span>
             </div>
         </div>
@@ -4961,5 +4992,330 @@ window.showMusicVideoForm = showMusicVideoForm;
 window.closeMusicVideoForm = closeMusicVideoForm;
 window.generateMusicVideoPrompt = generateMusicVideoPrompt;
 window.toggleAdvancedOptions = toggleAdvancedOptions;
+
+// ========== BYOK SYSTEM ==========
+let userHasByok = false;
+let userApiKey = null;
+
+// แสดง BYOK Dialog
+function showByokDialog() {
+    const modal = document.createElement('div');
+    modal.className = 'byok-modal';
+    modal.innerHTML = `
+        <div class="byok-modal-content">
+            <button class="close-btn" onclick="closeByokModal()">✕</button>
+            
+            <h2>🔑 ใช้ OpenAI API Key ของคุณเอง</h2>
+            
+            ${userHasByok ? `
+                <div class="byok-status">
+                    <span style="font-size: 24px;">✅</span>
+                    <div>
+                        <strong>API Key เปิดใช้งานแล้ว!</strong><br>
+                        <span style="font-size: 14px; color: var(--text-secondary);">
+                            ใช้งานได้ไม่จำกัด • ใช้ GPT-4o ทุกโหมด • ไม่เสียเครดิต
+                        </span>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 24px 0;">
+                    <button onclick="removeApiKey()" style="
+                        background: var(--error);
+                        color: white;
+                        border: none;
+                        padding: 12px 32px;
+                        border-radius: 12px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-family: 'Kanit', sans-serif;
+                    ">
+                        🗑️ ลบ API Key
+                    </button>
+                </div>
+            ` : `
+                <div class="byok-status inactive">
+                    <span style="font-size: 24px;">🔒</span>
+                    <div>
+                        <strong>ยังไม่ได้เปิดใช้งาน</strong><br>
+                        <span style="font-size: 14px;">
+                            ใส่ API Key เพื่อใช้งานไม่จำกัด
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="api-tutorial">
+                    <h3>📚 วิธีเอา OpenAI API Key:</h3>
+                    <ol class="tutorial-steps">
+                        <li>
+                            <span class="step-number">1</span>
+                            <div>
+                                ไปที่ <a href="https://platform.openai.com/api-keys" target="_blank" 
+                                   style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                                   platform.openai.com/api-keys
+                                </a> 
+                                <br><small>(ต้อง login ก่อน)</small>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="step-number">2</span>
+                            <div>
+                                คลิก <strong>"Create new secret key"</strong>
+                                <br><small>ตั้งชื่อได้ตามใจชอบ เช่น "Veo Prompt"</small>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="step-number">3</span>
+                            <div>
+                                <strong style="color: var(--warning);">⚠️ Copy key ทันที!</strong>
+                                <br><small>จะเห็นแค่ครั้งเดียว ถ้าลืม copy ต้องสร้างใหม่</small>
+                            </div>
+                        </li>
+                        <li>
+                            <span class="step-number">4</span>
+                            <div>
+                                มาวางที่ช่องด้านล่างนี้
+                                <br><small>รูปแบบ: sk-proj-xxxxx...</small>
+                            </div>
+                        </li>
+                    </ol>
+                    
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(245, 158, 11, 0.1); 
+                                border-radius: 8px; font-size: 14px;">
+                        💳 <strong>ค่าใช้จ่าย:</strong> OpenAI จะเรียกเก็บตรงกับคุณ 
+                        (~$0.01-0.02 ต่อ prompt)
+                    </div>
+                </div>
+                
+                <div class="api-key-input-group">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600;">
+                        OpenAI API Key:
+                    </label>
+                    <input type="password" 
+                           id="apiKeyInput"
+                           class="api-key-input"
+                           placeholder="sk-proj-xxxxxxxxxxxxxxxxxx"
+                           onpaste="handleApiKeyPaste(event)">
+                    
+                    <div style="display: flex; gap: 12px; margin-top: 16px;">
+                        <button onclick="saveApiKey()" style="
+                            flex: 1;
+                            background: var(--primary);
+                            color: white;
+                            border: none;
+                            padding: 14px;
+                            border-radius: 12px;
+                            cursor: pointer;
+                            font-size: 16px;
+                            font-weight: 600;
+                            font-family: 'Kanit', sans-serif;
+                        ">
+                            ✅ บันทึก API Key
+                        </button>
+                        
+                        <button onclick="testApiKey()" style="
+                            background: var(--surface-light);
+                            color: var(--text);
+                            border: 1px solid var(--border);
+                            padding: 14px 24px;
+                            border-radius: 12px;
+                            cursor: pointer;
+                            font-family: 'Kanit', sans-serif;
+                        ">
+                            🧪 ทดสอบ
+                        </button>
+                    </div>
+                </div>
+            `}
+            
+            <div style="margin-top: 24px; text-align: center;">
+                <h3 style="color: var(--success); margin-bottom: 16px;">
+                    ✨ ข้อดีของการใช้ API Key ตัวเอง:
+                </h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+                            gap: 16px; text-align: left;">
+                    <div style="background: var(--surface-light); padding: 16px; border-radius: 12px;">
+                        <span style="font-size: 24px;">♾️</span>
+                        <h4>ใช้งานไม่จำกัด</h4>
+                        <p style="font-size: 14px; color: var(--text-secondary);">
+                            ไม่มี daily limit ใช้ได้เท่าที่ต้องการ
+                        </p>
+                    </div>
+                    <div style="background: var(--surface-light); padding: 16px; border-radius: 12px;">
+                        <span style="font-size: 24px;">🧠</span>
+                        <h4>GPT-4o ทุกโหมด</h4>
+                        <p style="font-size: 14px; color: var(--text-secondary);">
+                            AI ฉลาดกว่า ผลลัพธ์ดีกว่า
+                        </p>
+                    </div>
+                    <div style="background: var(--surface-light); padding: 16px; border-radius: 12px;">
+                        <span style="font-size: 24px;">💰</span>
+                        <h4>จ่ายตรง OpenAI</h4>
+                        <p style="font-size: 14px; color: var(--text-secondary);">
+                            ไม่มีค่าบริการเพิ่ม จ่ายตามใช้จริง
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Handle paste event
+function handleApiKeyPaste(event) {
+    setTimeout(() => {
+        const input = event.target;
+        const value = input.value.trim();
+        
+        // Validate format
+        if (!value.startsWith('sk-')) {
+            showNotification('⚠️ API Key ต้องขึ้นต้นด้วย sk-', 'warning');
+        }
+    }, 100);
+}
+
+// Test API Key
+async function testApiKey() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    
+    if (!apiKey) {
+        showNotification('❌ กรุณาใส่ API Key', 'error');
+        return;
+    }
+    
+    showNotification('🧪 กำลังทดสอบ API Key...', 'info');
+    
+    try {
+        const response = await fetch(`${API_URL}/test-api-key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ apiKey })
+        });
+        
+        const data = await response.json();
+        
+        if (data.valid) {
+            showNotification('✅ API Key ใช้งานได้!', 'success');
+        } else {
+            showNotification('❌ API Key ไม่ถูกต้อง', 'error');
+        }
+    } catch (error) {
+        showNotification('❌ เกิดข้อผิดพลาด', 'error');
+    }
+}
+
+// Save API Key
+async function saveApiKey() {
+    const apiKey = document.getElementById('apiKeyInput').value.trim();
+    
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+        showNotification('❌ กรุณาใส่ API Key ที่ถูกต้อง', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/save-api-key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                userId,
+                apiKey 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            userHasByok = true;
+            showNotification('✅ บันทึก API Key สำเร็จ!', 'success');
+            closeByokModal();
+            updateByokButton();
+            
+            // Reload page to apply changes
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification('❌ บันทึกไม่สำเร็จ', 'error');
+        }
+    } catch (error) {
+        showNotification('❌ เกิดข้อผิดพลาด', 'error');
+    }
+}
+
+// Remove API Key
+async function removeApiKey() {
+    if (!confirm('ต้องการลบ API Key ใช่ไหม?\n\nคุณจะกลับไปใช้ระบบเครดิตปกติ')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/remove-api-key`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            userHasByok = false;
+            showNotification('✅ ลบ API Key แล้ว', 'success');
+            closeByokModal();
+            updateByokButton();
+            
+            // Reload page
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+    } catch (error) {
+        showNotification('❌ เกิดข้อผิดพลาด', 'error');
+    }
+}
+
+// Update BYOK button state
+function updateByokButton() {
+    const btn = document.querySelector('.byok-btn');
+    if (btn) {
+        if (userHasByok) {
+            btn.classList.add('active');
+            btn.title = 'API Key เปิดใช้งานแล้ว (คลิกเพื่อจัดการ)';
+        } else {
+            btn.classList.remove('active');
+            btn.title = 'ใช้ API Key ของคุณเอง';
+        }
+    }
+}
+
+// Close modal
+function closeByokModal() {
+    const modal = document.querySelector('.byok-modal');
+    if (modal) modal.remove();
+}
+
+// Load BYOK status on init
+async function loadByokStatus() {
+    try {
+        const response = await fetch(`${API_URL}/byok-status/${userId}`);
+        const data = await response.json();
+        
+        userHasByok = data.hasByok || false;
+        updateByokButton();
+        
+        console.log('🔑 BYOK Status:', userHasByok ? 'Active' : 'Inactive');
+    } catch (error) {
+        console.error('Error loading BYOK status:', error);
+    }
+}
+
+// Export functions
+window.showByokDialog = showByokDialog;
+window.closeByokModal = closeByokModal;
+window.handleApiKeyPaste = handleApiKeyPaste;
+window.testApiKey = testApiKey;
+window.saveApiKey = saveApiKey;
+window.removeApiKey = removeApiKey;
 
 // END OF PROFESSIONAL SCRIPT
