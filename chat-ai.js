@@ -9,14 +9,20 @@ const openai = new OpenAI({
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
 
+// Check if Google API key exists
+if (!process.env.GOOGLE_AI_API_KEY) {
+    console.warn('⚠️ WARNING: Google AI API key not configured!');
+    console.warn('⚠️ Gemini models will not work without API key');
+}
+
 // Model configurations with pricing (per 1K tokens)
 const MODEL_CONFIG = {
     // OpenAI Models
     'gpt-3.5-turbo': {
         api: 'openai',
         name: 'GPT-3.5 Turbo',
-        inputCost: 0.0015,
-        outputCost: 0.002,
+        inputCost: 0.0005,
+        outputCost: 0.0015,
         description: 'เร็ว ประหยัด เหมาะกับงานทั่วไป',
         displayPrice: '0.07 เครดิต/1K tokens'
     },
@@ -31,21 +37,21 @@ const MODEL_CONFIG = {
     'gpt-4o': {
         api: 'openai',
         name: 'GPT-4o',
-        inputCost: 0.0025,
-        outputCost: 0.01,
+        inputCost: 0.005,
+        outputCost: 0.015,
         description: 'ฉลาดที่สุด เหมาะกับงานซับซ้อน',
         displayPrice: '0.25 เครดิต/1K tokens'
     },
     
     // Google Models
     'gemini-1.5-flash': {
-        api: 'google',
-        name: 'Gemini 1.5 Flash',
-        inputCost: 0.00001875,
-        outputCost: 0.000075,
-        description: 'เร็วมาก ราคาถูก',
-        displayPrice: '0.002 เครดิต/1K tokens'
-    },
+    api: 'google',
+    name: 'Gemini 1.5 Flash',
+    inputCost: 0.000075,     // ← แก้แล้ว (เพิ่มขึ้น 4 เท่า)
+    outputCost: 0.0003,      // ← แก้แล้ว (เพิ่มขึ้น 4 เท่า)
+    description: 'เร็วมาก ราคาถูก',
+    displayPrice: '0.008 เครดิต/1K tokens'  // ← อัพเดทราคาแสดง
+},
     'gemini-1.5-pro': {
         api: 'google',
         name: 'Gemini 1.5 Pro',
@@ -67,7 +73,7 @@ function calculateCostTHB(inputTokens, outputTokens, model) {
     const totalCostUSD = inputCostUSD + outputCostUSD;
     
     // Convert to THB (assume 35 THB/USD) and add 10% markup
-    const totalCostTHB = totalCostUSD * 35 * 1.1;
+    const totalCostTHB = totalCostUSD * 35 * 1.3;
     
     return totalCostTHB;
 }
