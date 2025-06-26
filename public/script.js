@@ -613,7 +613,7 @@ function updateCreditDisplay() {
                 <span class="credit-label">เครดิต</span>
             </div>
             <button class="add-credit-btn" onclick="showCreditPackages()">
-                <span>+</span> เติมเครดิต
+                <span>+</span> สนับสนุนเว็บ
             </button>
             <!-- ปุ่ม BYOK ใหม่ -->
             <button class="byok-btn" onclick="showByokDialog()" title="ใช้ API Key ของคุณเอง">
@@ -5151,7 +5151,7 @@ function showByokDialog() {
                         <span style="font-size: 24px;">💰</span>
                         <h4>จ่ายตรง OpenAI</h4>
                         <p style="font-size: 14px; color: var(--text-secondary);">
-                            ไม่มีค่าบริการเพิ่ม จ่ายตามใช้จริง
+                            ใช้แยกของตัวเองหัเครดิตจาก Open ai
                         </p>
                     </div>
                 </div>
