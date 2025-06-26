@@ -4641,24 +4641,15 @@ line-clamp: 3;
 <div class="info-panel" id="chatInfo" style="display: none;">
     <div class="info-section">
         <h3>💬 AI Chat Assistant</h3>
+        
+        <!-- แสดง Model Info แทน Dropdown -->
         <div class="tip-card">
-            <h4>✨ เลือก Model</h4>
-            <!-- Model Selector แบบ Dropdown -->
-            <select id="chatModelSelect" class="scene-input" onchange="updateChatModel(this.value)">
-    <optgroup label="OpenAI Models">
-        <option value="gpt-3.5-turbo" selected>GPT-3.5 Turbo</option>
-        <option value="gpt-4o-mini">GPT-4o Mini</option>
-        <option value="gpt-4o">GPT-4o</option>
-    </optgroup>
-    <optgroup label="Google Models">
-        <option value="gemini-1.5-flash">Gemini Flash</option>
-        <option value="gemini-1.5-pro">Gemini Pro</option>
-    </optgroup>
-</select>
-            
-            <!-- Model Description -->
-            <div id="modelDescription" style="margin-top: 12px; padding: 12px; background: rgba(147, 51, 234, 0.1); border-radius: 8px; font-size: 13px;">
-                <strong>GPT-3.5 Turbo:</strong> เร็ว ประหยัด เหมาะกับงานทั่วไป
+            <h4>🤖 Model ที่ใช้งาน</h4>
+            <div id="currentModelInfo" style="padding: 12px; background: rgba(147, 51, 234, 0.1); border-radius: 8px; font-size: 13px;">
+                <!-- จะอัพเดทด้วย JS -->
+                <div id="modelStatusDisplay">
+                    <strong>⚡ GPT-4o-mini / GPT-4o (สำหรับผู้ใช้ Api key)</strong> - เชื่อมต่อ Api key เพื่อเพิ่มประสิทธิภาพสูงสุด!!
+                </div>
             </div>
         </div>
         
