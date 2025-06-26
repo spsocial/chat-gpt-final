@@ -8,6 +8,35 @@ const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
 const ESYSlipService = require('./esy-slip');
 
+// เพิ่มหลัง require อื่นๆ
+const crypto = require('crypto');
+
+// Encryption settings สำหรับ API keys
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex').slice(0, 32);
+const IV_LENGTH = 16;
+
+// Assistant IDs mapping
+const ASSISTANT_CONFIGS = {
+    standard: {
+        general: process.env.ASSISTANT_ID,
+        character: process.env.CHARACTER_ASSISTANT_ID,
+        multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID,
+        chat: process.env.CHAT_ASSISTANT_ID
+    },
+    byok: {
+        general: process.env.ASSISTANT_ID_4O,
+        character: process.env.CHARACTER_ASSISTANT_ID_4O, 
+        multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID_4O,
+        chat: process.env.CHAT_ASSISTANT_ID_4O
+    }
+};
+
+// Log config
+console.log('🤖 Assistant Configuration:');
+console.log('Standard (4o-mini):', ASSISTANT_CONFIGS.standard);
+console.log('BYOK (4o):', ASSISTANT_CONFIGS.byok);
+
+
 // Setup multer for file upload
 const upload = multer({
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
@@ -32,6 +61,7 @@ console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTA
 console.log('Loading .env from:', path.resolve(__dirname, '.env'));
 console.log('ASSISTANT_ID:', process.env.ASSISTANT_ID);
 console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTANT_ID ? 'Found ✓' : 'Not found ✗');
+
 
 // Import modules
 const assistants = require('./assistants');
@@ -63,6 +93,42 @@ app.use(express.static('public'));
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
+
+// ========== ENCRYPTION FUNCTIONS ==========
+function encrypt(text) {
+    const iv = crypto.randomBytes(IV_LENGTH);
+    const cipher = crypto.createCipheriv(
+        'aes-256-cbc',
+        Buffer.from(ENCRYPTION_KEY),
+        iv
+    );
+    
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    
+    return iv.toString('hex') + ':' + encrypted.toString('hex');
+}
+
+function decrypt(text) {
+    try {
+        const textParts = text.split(':');
+        const iv = Buffer.from(textParts.shift(), 'hex');
+        const encryptedText = Buffer.from(textParts.join(':'), 'hex');
+        const decipher = crypto.createDecipheriv(
+            'aes-256-cbc',
+            Buffer.from(ENCRYPTION_KEY),
+            iv
+        );
+        
+        let decrypted = decipher.update(encryptedText);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        
+        return decrypted.toString();
+    } catch (error) {
+        console.error('Decryption error:', error);
+        return null;
+    }
+}
 
 // ======== ADMIN ENDPOINTS ========
 const ADMIN_KEY = process.env.ADMIN_SECRET_KEY || 'your-secret-admin-key-2025';
@@ -136,10 +202,14 @@ app.get('/test', (req, res) => {
     });
 });
 
+// ========== AI CHAT ENDPOINT ==========
 // Chat endpoint using Assistants API
 app.post('/api/chat', async (req, res) => {
     const { message, userId = 'guest', images = [], mode = 'general' } = req.body;
     let shouldUseCredits = false;
+    let isUsingByok = false;
+    let userOpenAI = null;
+    
 
     // Check configuration
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'demo-key') {
@@ -149,229 +219,338 @@ app.post('/api/chat', async (req, res) => {
         });
     }
 
-    // Select assistant based on mode
-let assistantId;
-if (mode === 'character') {
-    assistantId = process.env.CHARACTER_ASSISTANT_ID;
-    if (!assistantId) {
-        return res.status(500).json({ 
-            error: 'Character Assistant ID not configured'
-        });
-    }
-} else if (mode === 'multichar') {
-    // เพิ่มส่วนนี้ใหม่สำหรับ multichar mode
-    console.log('Multichar mode - MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTANT_ID);
-    assistantId = process.env.MULTI_CHARACTER_ASSISTANT_ID;
-    if (!assistantId) {
-        return res.status(500).json({ 
-            error: 'Multi-Character Assistant ID not configured'
-        });
+    try {
+        // ========== CHECK BYOK FIRST ==========
+        const userApiData = await db.getUserApiKey(userId);
+        
+        if (userApiData.isByok && userApiData.apiKey) {
+            // User has BYOK - decrypt and use their key
+            const decryptedKey = decrypt(userApiData.apiKey);
+            
+            if (decryptedKey) {
+                console.log(`🔑 Using BYOK for user: ${userId}`);
+                isUsingByok = true;
+                
+                // สร้าง OpenAI instance ใหม่ด้วย user's key
+                const OpenAI = require('openai');
+                userOpenAI = new OpenAI({ apiKey: decryptedKey });
+                
+                // Increment BYOK usage counter
+                await db.incrementByokUsage(userId);
+            } else {
+                console.error('Failed to decrypt user API key');
+            }
+        }
+        
+        // ========== SELECT ASSISTANT BASED ON USER TYPE ==========
+        let assistantId;
+        const assistantType = isUsingByok ? 'byok' : 'standard';
+        
+        // เลือก Assistant ID ตาม mode และ type
+        if (isUsingByok) {
+    switch(mode) {
+        case 'character':
+            assistantId = process.env.CHARACTER_ASSISTANT_ID_4O;
+            break;
+        case 'multichar':
+            assistantId = process.env.MULTI_CHARACTER_ASSISTANT_ID_4O;
+            break;
+        case 'chat':  // เพิ่ม case นี้
+            assistantId = process.env.CHAT_ASSISTANT_ID_4O;
+            break;
+        default:
+            assistantId = process.env.ASSISTANT_ID_4O;
     }
 } else {
-    console.log('General mode - ASSISTANT_ID:', process.env.ASSISTANT_ID);
-    assistantId = process.env.ASSISTANT_ID || 'asst_p1ZxkTa5US7Yn1GgUSy8sNy9';
-    if (!assistantId) {
-        return res.status(500).json({ 
-            error: 'Assistant ID not configured'
-        });
+    switch(mode) {
+        case 'character':
+            assistantId = process.env.CHARACTER_ASSISTANT_ID;
+            break;
+        case 'multichar':
+            assistantId = process.env.MULTI_CHARACTER_ASSISTANT_ID;
+            break;
+        case 'chat':  // เพิ่ม case นี้
+            assistantId = process.env.CHAT_ASSISTANT_ID;
+            break;
+        default:
+            assistantId = process.env.ASSISTANT_ID;
     }
 }
-
-    try {
-        // Check daily limit if database is available
-        if (db) {
+        
+        // Verify assistant ID exists
+        if (!assistantId) {
+            return res.status(500).json({ 
+                error: `${mode} Assistant ID not configured for ${assistantType} user` 
+            });
+        }
+        
+        console.log(`📌 Mode: ${mode}, Type: ${assistantType}, Assistant: ${assistantId}`);
+        
+        // ========== CHECK DAILY LIMIT (ONLY FOR NON-BYOK) ==========
+        if (!isUsingByok && db) {
             const todayUsage = await db.getTodayUsage(userId);
+            const estimatedCost = 0.10;
+            const estimatedTotal = todayUsage + estimatedCost;
             
-            const estimatedCost = 0.10; // เพิ่มบรรทัดนี้
-const estimatedTotal = todayUsage + estimatedCost; // แก้จาก 0.05 เป็น estimatedCost
-
-if (estimatedTotal > DAILY_LIMIT_THB) {
-    // คำนวณว่าต้องใช้เครดิตเท่าไหร่ (เฉพาะส่วนที่เกิน 5 บาท)
-    const creditsNeeded = estimatedTotal - DAILY_LIMIT_THB;
-    const userCredits = await db.getUserCredits(userId);
-    
-    if (userCredits < creditsNeeded) {  // แก้จาก estimatedCost เป็น creditsNeeded
-        // ไม่มีเครดิตพอ
-        return res.status(429).json({
-            error: 'Insufficient credits',
-            message: 'เครดิตไม่เพียงพอ กรุณาเติมเครดิต',
-            credits: {
-                current: userCredits.toFixed(2),
-                required: estimatedCost.toFixed(2)
-            },
-            usage: {
-                used: todayUsage.toFixed(2),
-                limit: DAILY_LIMIT_THB,
-                wouldBe: estimatedTotal.toFixed(2)
+            if (estimatedTotal > DAILY_LIMIT_THB) {
+                const creditsNeeded = estimatedTotal - DAILY_LIMIT_THB;
+                const userCredits = await db.getUserCredits(userId);
+                
+                if (userCredits < creditsNeeded) {
+                    return res.status(429).json({
+                        error: 'Insufficient credits',
+                        message: 'เครดิตไม่เพียงพอ กรุณาเติมเครดิต',
+                        credits: {
+                            current: userCredits.toFixed(2),
+                            required: estimatedCost.toFixed(2)
+                        },
+                        usage: {
+                            used: todayUsage.toFixed(2),
+                            limit: DAILY_LIMIT_THB,
+                            wouldBe: estimatedTotal.toFixed(2)
+                        },
+                        suggestByok: true
+                    });
+                }
+                
+                shouldUseCredits = true;
             }
-        });
-    }
-    
-    // มีเครดิตพอ - จะหักเครดิตหลังจากสร้าง prompt สำเร็จ
-    // ตั้ง flag ไว้ก่อน
-    shouldUseCredits = true;  // ไม่ต้องมี var หรือ let
-}
         }
 
-        // แทนที่โค้ดเดิมด้วยโค้ดนี้
-
-// Get or create thread with error handling
-const threadKey = `${userId}_${mode}`;
-let threadId = userThreads.get(threadKey);
-let retryCount = 0;
-const maxRetries = 2;
-
-// Function to create new thread
-const createNewThread = async () => {
-    try {
-        threadId = await assistants.createThread();
-        userThreads.set(threadKey, threadId);
-        console.log(`✅ New thread created for ${userId}: ${threadId}`);
-        return threadId;
-    } catch (err) {
-        console.error('❌ Failed to create thread:', err);
-        throw err;
-    }
-};
-
-// Try to use existing thread or create new one
-while (retryCount < maxRetries) {
-    try {
-        if (!threadId) {
-            console.log('📌 No thread found, creating new one...');
-            threadId = await createNewThread();
+        // ========== CREATE THREAD AND RUN ==========
+        const threadKey = `${userId}_${mode}_${assistantType}`;
+        let threadId = userThreads.get(threadKey);
+        
+        // Create assistant instance (use user's or default)
+        const openaiInstance = userOpenAI || assistants.openai;
+        
+        // Temporarily replace global assistants module functions
+        const originalFunctions = {
+            createThread: assistants.createThread,
+            addMessage: assistants.addMessage,
+            runAssistant: assistants.runAssistant,
+            deleteThread: assistants.deleteThread
+        };
+        
+        if (isUsingByok) {
+            // Override with user's OpenAI instance
+            assistants.createThread = async () => {
+                const thread = await userOpenAI.beta.threads.create();
+                return thread.id;
+            };
+            
+            assistants.addMessage = async (threadId, content, images) => {
+                let messageContent = content;
+                if (images.length > 0) {
+                    messageContent = [
+                        { type: "text", text: content || "ช่วยสร้าง prompt จากรูปนี้" }
+                    ];
+                    for (const img of images) {
+                        if (img.url) {
+                            messageContent.push({
+                                type: "image_url",
+                                image_url: { url: img.url }
+                            });
+                        }
+                    }
+                }
+                
+                const message = await userOpenAI.beta.threads.messages.create(
+                    threadId,
+                    { role: "user", content: messageContent }
+                );
+                return message.id;
+            };
+            
+            assistants.runAssistant = async (threadId, assistantId) => {
+                const assistant = await userOpenAI.beta.assistants.retrieve(assistantId);
+                console.log('BYOK Assistant model:', assistant.model);
+                
+                const run = await userOpenAI.beta.threads.runs.createAndPoll(
+                    threadId,
+                    { assistant_id: assistantId }
+                );
+                
+                if (run.status === 'completed') {
+                    const messages = await userOpenAI.beta.threads.messages.list(threadId);
+                    const lastMessage = messages.data.find(msg => msg.role === 'assistant');
+                    
+                    if (lastMessage && lastMessage.content[0]) {
+                        return {
+                            response: lastMessage.content[0].text.value,
+                            usage: run.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
+                        };
+                    }
+                }
+                
+                throw new Error(`Run failed with status: ${run.status}`);
+            };
+            
+            assistants.deleteThread = async (threadId) => {
+                try {
+                    await userOpenAI.beta.threads.del(threadId);
+                } catch (error) {
+                    console.error('Error deleting thread:', error);
+                }
+            };
         }
-
-        // Try to add message
-        console.log('📨 Adding message to thread...');
-        await assistants.addMessage(threadId, message, images);
         
-        // If successful, break the loop
-        console.log('✅ Message added successfully');
-        break;
-
-    } catch (error) {
-        console.error(`❌ Error adding message (attempt ${retryCount + 1}):`, error.message);
+        // Thread management with retry logic
+        let retryCount = 0;
+        const maxRetries = 2;
         
-        // If thread is expired or invalid
-        if (error.message.includes("Can't add messages to thread") || 
-            error.message.includes("No thread found") ||
-            error.message.includes("No assistant found") ||
-            error.status === 400 || 
-            error.status === 404) {
-            
-            console.log('🔄 Thread expired or invalid, creating new thread...');
-            
-            // Delete old thread reference
-            userThreads.delete(threadKey);
-            
-            // Create new thread
-            if (retryCount < maxRetries - 1) {
-                threadId = await createNewThread();
-                retryCount++;
-            } else {
-                throw new Error('Failed to create valid thread after retries');
+        while (retryCount < maxRetries) {
+            try {
+                if (!threadId) {
+                    threadId = await assistants.createThread();
+                    userThreads.set(threadKey, threadId);
+                    console.log(`✅ New thread created for ${userId}: ${threadId}`);
+                }
+                
+                await assistants.addMessage(threadId, message, images);
+                console.log('✅ Message added successfully');
+                break;
+                
+            } catch (error) {
+                console.error(`❌ Error (attempt ${retryCount + 1}):`, error.message);
+                
+                if (error.message.includes("Can't add messages") || 
+                    error.status === 400 || error.status === 404) {
+                    
+                    userThreads.delete(threadKey);
+                    
+                    if (retryCount < maxRetries - 1) {
+                        threadId = await assistants.createThread();
+                        userThreads.set(threadKey, threadId);
+                        retryCount++;
+                    } else {
+                        throw new Error('Failed to create valid thread after retries');
+                    }
+                } else {
+                    throw error;
+                }
             }
-        } else {
-            // Other errors, don't retry
-            throw error;
         }
-    }
-}
-
-        // Add message to thread
-        await assistants.addMessage(threadId, message, images);
 
         // Run assistant and get response
         const result = await assistants.runAssistant(threadId, assistantId);
-
-        // Calculate cost
-        const costTHB = calculateCost(result.usage, mode);
-        let todayTotal = costTHB;
-
-        // Save usage if database is available
-        if (db) {
-    console.log(`💰 === PROMPT GENERATION COST ===`);
-    console.log(`💰 Mode: ${mode}`);
-    console.log(`💰 Cost: ฿${costTHB.toFixed(2)}`);
-    
-    // ใช้ระบบเครดิตใหม่
-    const creditResult = await db.useCreditsNew(
-        userId,
-        costTHB,
-        `${mode} prompt generation`
-    );
-    
-    if (creditResult.success) {
-        console.log(`✅ Used ฿${costTHB.toFixed(2)}:`);
-        console.log(`   - From free: ฿${creditResult.used_from_free.toFixed(2)}`);
-        console.log(`   - From paid: ฿${creditResult.used_from_paid.toFixed(2)}`);
-        console.log(`   - Free remaining: ฿${creditResult.free_remaining.toFixed(2)}`);
-        console.log(`   - Paid remaining: ฿${creditResult.paid_remaining.toFixed(2)}`);
         
-        // เก็บค่าสำหรับแสดงผล
-        todayTotal = DAILY_LIMIT_THB - creditResult.free_remaining;
-    } else {
-        console.error('❌ Failed to deduct credits:', creditResult.error);
-        // ถ้าหักเครดิตไม่สำเร็จ ให้หยุดทำงาน
-        return res.status(429).json({
-            error: 'Insufficient credits',
-            message: 'เครดิตไม่เพียงพอ',
-            credits: {
-                current: creditResult.paid_remaining || 0,
-                required: costTHB
-            }
-        });
-    }
-}
+        // Restore original functions
+        if (isUsingByok) {
+            Object.assign(assistants, originalFunctions);
+        }
 
-        // Send response
-        res.json({
-            response: result.response,
-            mode: mode,
-            usage: {
-                tokens: {
-                    input: result.usage.prompt_tokens,
-                    output: result.usage.completion_tokens,
-                    total: result.usage.total_tokens
-                },
-                cost: {
-                    this_request: costTHB.toFixed(2),
-                    today_total: todayTotal.toFixed(2),
-                    daily_limit: DAILY_LIMIT_THB.toFixed(2),
-                    remaining: (DAILY_LIMIT_THB - todayTotal).toFixed(2)
+        // ========== CALCULATE COST (ONLY FOR NON-BYOK) ==========
+        let costTHB = 0;
+        let todayTotal = 0;
+        
+        if (!isUsingByok) {
+            costTHB = calculateCost(result.usage, mode);
+            todayTotal = costTHB;
+            
+            if (db) {
+                console.log(`💰 === PROMPT GENERATION COST ===`);
+                console.log(`💰 Mode: ${mode}`);
+                console.log(`💰 Cost: ฿${costTHB.toFixed(2)}`);
+                
+                const creditResult = await db.useCreditsNew(
+                    userId,
+                    costTHB,
+                    `${mode} prompt generation`
+                );
+                
+                if (creditResult.success) {
+                    console.log(`✅ Used ฿${costTHB.toFixed(2)}`);
+                    todayTotal = DAILY_LIMIT_THB - creditResult.free_remaining;
+                } else {
+                    console.error('❌ Failed to deduct credits:', creditResult.error);
+                    return res.status(429).json({
+                        error: 'Insufficient credits',
+                        message: 'เครดิตไม่เพียงพอ',
+                        credits: {
+                            current: creditResult.paid_remaining || 0,
+                            required: costTHB
+                        },
+                        suggestByok: true
+                    });
                 }
             }
-        });
+        }
+
+        // ========== SEND RESPONSE ==========
+res.json({
+    success: true,  // เพิ่ม field นี้
+    response: result.response,
+    model: isUsingByok ? 'gpt-4o' : 'gpt-4o-mini',  // เพิ่ม model
+    cost: isUsingByok ? {
+        message: '🔑 Using your API key',
+        isByok: true
+    } : {
+        this_request: costTHB.toFixed(2),
+        today_total: todayTotal.toFixed(2),
+        daily_limit: DAILY_LIMIT_THB.toFixed(2),
+        remaining: (DAILY_LIMIT_THB - todayTotal).toFixed(2)
+    },
+    usage: {  // เก็บ usage ไว้ด้วย
+        tokens: {
+            input: result.usage.prompt_tokens,
+            output: result.usage.completion_tokens,
+            total: result.usage.total_tokens
+        }
+    },
+    usingByok: isUsingByok
+});
 
     } catch (error) {
-    console.error('❌ Chat error:', error);
-    
-    // Special handling for thread errors
-    if (error.message.includes('thread') || 
-        error.message.includes('Thread') ||
-        error.message.includes('assistant')) {
+        console.error('❌ Chat error:', error);
         
-        // Clear the thread for this user
-        const threadKey = `${userId}_${mode}`;
-        userThreads.delete(threadKey);
+        // Handle thread errors
+        if (error.message.includes('thread') || 
+            error.message.includes('Thread') ||
+            error.message.includes('assistant')) {
+            
+            const threadKey = `${userId}_${mode}_${isUsingByok ? 'byok' : 'standard'}`;
+            userThreads.delete(threadKey);
+            
+            return res.status(500).json({ 
+                error: 'Session expired. Please try again.',
+                details: 'กรุณาลองส่งข้อความใหม่อีกครั้ง',
+                shouldRetry: true,
+                clearThread: true
+            });
+        }
         
-        console.log('🔄 Cleared expired thread for user:', userId);
-        
-        return res.status(500).json({ 
-            error: 'Session expired. Please try again.',
-            details: 'กรุณาลองส่งข้อความใหม่อีกครั้ง',
-            shouldRetry: true,
-            clearThread: true
-        });
+        res.status(500).json({ 
+    success: false,  // เพิ่ม
+    error: 'Failed to generate response',
+    details: error.message
+});
     }
+});
+
+// ========== AI CHAT ALIAS ENDPOINT ==========
+// Redirect /api/ai-chat to /api/chat with mode='chat'
+app.post('/api/ai-chat', async (req, res, next) => {
+    // Force mode to 'chat'
+    req.body.mode = 'chat';
     
-    // Handle other errors
-    res.status(500).json({ 
-        error: 'Failed to generate response',
-        details: error.message 
-    });
-}
+    // Log for debugging
+    console.log('🤖 AI Chat request redirected to /api/chat');
+    
+    // Find the /api/chat handler
+    const chatRoute = app._router.stack.find(layer => 
+        layer.route && 
+        layer.route.path === '/api/chat' && 
+        layer.route.methods.post
+    );
+    
+    if (chatRoute && chatRoute.route.stack[0]) {
+        // Call the chat handler directly
+        chatRoute.route.stack[0].handle(req, res, next);
+    } else {
+        console.error('❌ Cannot find /api/chat handler');
+        res.status(500).json({ error: 'Chat endpoint not found' });
+    }
 });
 
 // Character Library Endpoints
@@ -626,105 +805,122 @@ app.post('/api/enhance-prompt', async (req, res) => {
     }
 });
 
-// ========== AI CHAT ENDPOINT ==========
-app.post('/api/ai-chat', async (req, res) => {
-    const { message, userId = 'guest', model = 'gpt-3.5-turbo', images = [], history = [] } = req.body;
+// ========== BYOK ENDPOINTS ==========
+
+// Test API Key
+app.post('/api/test-api-key', async (req, res) => {
+    const { apiKey } = req.body;
     
-    console.log('🤖 AI Chat request:', { userId, model, hasImages: images.length > 0 });
+    if (!apiKey || !apiKey.startsWith('sk-')) {
+        return res.json({ valid: false });
+    }
     
-    // Validate input
-    if (!message && images.length === 0) {
+    try {
+        // Test with a simple API call
+        const OpenAI = require('openai');
+        const testOpenAI = new OpenAI({ apiKey });
+        const models = await testOpenAI.models.list();
+        
+        // Check if has access to GPT-4o
+        const hasGPT4o = models.data.some(m => m.id.includes('gpt-4o'));
+        
+        res.json({ 
+            valid: true,
+            hasGPT4o: hasGPT4o,
+            message: hasGPT4o ? 'API Key valid with GPT-4o access!' : 'API Key valid (GPT-3.5 only)'
+        });
+        
+    } catch (error) {
+        console.error('API Key test error:', error);
+        res.json({ valid: false });
+    }
+});
+
+// Save API Key
+app.post('/api/save-api-key', async (req, res) => {
+    const { userId, apiKey } = req.body;
+    
+    if (!userId || !apiKey) {
         return res.status(400).json({ 
-            error: 'Message or image is required' 
+            error: 'Missing required fields' 
         });
     }
     
     try {
-        // 1. ตรวจสอบเครดิต
-        if (db) {
-            // ประมาณการใช้ tokens (คร่าวๆ)
-            const estimatedTokens = 500; // ประมาณ 500 tokens ต่อครั้ง
-            const estimatedCost = chatAI.calculateCostTHB(
-                estimatedTokens / 2,  // input
-                estimatedTokens / 2,  // output
-                model
-            );
-            
-            console.log(`💰 Estimated cost: ฿${estimatedCost.toFixed(2)}`);
-            
-            // ใช้ระบบเครดิตใหม่
-            const creditCheck = await db.getUserCredits(userId);
-            const freeCredits = await db.getFreeCredits(userId);
-            const totalAvailable = creditCheck + freeCredits;
-            
-            if (totalAvailable < estimatedCost) {
-                return res.status(429).json({
-                    error: 'Insufficient credits',
-                    message: 'เครดิตไม่เพียงพอ',
-                    credits: {
-                        current: totalAvailable.toFixed(2),
-                        required: estimatedCost.toFixed(2)
-                    }
-                });
-            }
+        // Encrypt API key
+        const encryptedKey = encrypt(apiKey);
+        
+        // Save to database
+        const result = await db.saveUserApiKey(userId, encryptedKey);
+        
+        if (result.success) {
+            res.json({ 
+                success: true,
+                message: 'API Key saved successfully' 
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'Failed to save API key' 
+            });
         }
         
-        // 2. เตรียม messages array
-        const messages = [
-            {
-                role: 'system',
-                content: 'You are a helpful AI assistant. คุณเป็น AI ผู้ช่วยที่พูดภาษาไทยได้ ตอบคำถามแบบเป็นกันเอง'
-            }
-        ];
-        
-        // เพิ่ม history (ถ้ามี)
-        if (history.length > 0) {
-            // เอาแค่ 10 ข้อความล่าสุด
-            const recentHistory = history.slice(-10);
-            messages.push(...recentHistory);
-        }
-        
-        // เพิ่ม message ปัจจุบัน
-        messages.push({
-            role: 'user',
-            content: message || 'วิเคราะห์รูปนี้ให้หน่อย'
+    } catch (error) {
+        console.error('Save API key error:', error);
+        res.status(500).json({ 
+            error: 'Internal server error' 
         });
+    }
+});
+
+// Remove API Key
+app.post('/api/remove-api-key', async (req, res) => {
+    const { userId } = req.body;
+    
+    if (!userId) {
+        return res.status(400).json({ 
+            error: 'User ID required' 
+        });
+    }
+    
+    try {
+        const result = await db.removeUserApiKey(userId);
         
-        // 3. เรียกใช้ AI
-        console.log('📨 Sending to AI...');
-        const result = await chatAI.chat(model, messages, images);
-        
-        // 4. หักเครดิต
-        if (db) {
-            const actualCost = result.costTHB;
-            console.log(`💰 Actual cost: ฿${actualCost.toFixed(4)}`);
-            
-            // ใช้ระบบเครดิตใหม่
-            const creditResult = await db.useCreditsNew(
-                userId,
-                actualCost,
-                `AI Chat - ${model}`
-            );
-            
-            if (!creditResult.success) {
-                console.error('Failed to deduct credits:', creditResult.error);
-            }
+        if (result.success) {
+            res.json({ 
+                success: true,
+                message: 'API Key removed' 
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'Failed to remove API key' 
+            });
         }
         
-        // 5. ส่งผลลัพธ์กลับ
+    } catch (error) {
+        console.error('Remove API key error:', error);
+        res.status(500).json({ 
+            error: 'Internal server error' 
+        });
+    }
+});
+
+// Get BYOK Status
+app.get('/api/byok-status/:userId', async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        const userData = await db.getUserApiKey(userId);
+        
         res.json({
-            success: true,
-            response: result.content,
-            model: result.model,
-            usage: result.usage,
-            cost: result.costTHB
+            hasByok: userData.isByok,
+            isActive: userData.isByok
         });
         
     } catch (error) {
-        console.error('AI Chat error:', error);
-        res.status(500).json({ 
-            error: 'Failed to process chat',
-            details: error.message 
+        console.error('Get BYOK status error:', error);
+        res.json({
+            hasByok: false,
+            isActive: false
         });
     }
 });
@@ -1162,81 +1358,38 @@ app.get('/health', (req, res) => {
     res.json({ status: 'healthy' });
 });
 
-// ======== ADMIN ENDPOINTS ========
-
-// Middleware ตรวจสอบ admin key
-function checkAdminAuth(req, res, next) {
-    const adminKey = req.headers['x-admin-key'];
-    
-    if (!adminKey || adminKey !== ADMIN_KEY) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
-    next();
-}
-
-// Admin endpoint เติมเครดิต
-app.post('/api/admin/add-credits', checkAdminAuth, async (req, res) => {
-    const { userId, amount, note } = req.body;
-    
-    if (!userId || !amount || amount <= 0) {
-        return res.status(400).json({ 
-            error: 'Invalid parameters' 
-        });
-    }
-    
-    try {
-        const result = await db.addCredits(
-            userId,
-            amount,
-            'ชำระเงินผ่าน PromptPay',
-            null,
-            note || 'Manual credit addition'
-        );
-        
-        if (result.success) {
-            res.json({
-                success: true,
-                newBalance: result.newBalance,
-                message: `Added ${amount} credits to ${userId}`
-            });
-        } else {
-            res.status(400).json({ 
-                error: result.error 
-            });
-        }
-    } catch (error) {
-        console.error('Error adding credits:', error);
-        res.status(500).json({ 
-            error: 'Failed to add credits' 
-        });
-    }
-});
-
 // Start server
 app.listen(PORT, () => {
     console.log(`
         
 ╔═══════════════════════════════════════╗
 ║     Veo 3 Prompt Generator Server     ║
-║        with Character Support         ║
+║        with BYOK Support 🔑           ║
 ╚═══════════════════════════════════════╝
 
 ✅ Server running on port ${PORT}
 📌 API Key: ${process.env.OPENAI_API_KEY ? 'Configured ✓' : 'Not configured ✗'}
-📌 General Assistant: ${process.env.ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
-📌 Character Assistant: ${process.env.CHARACTER_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
+
+Standard Assistants (GPT-4o-mini):
+📌 General: ${process.env.ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
+📌 Character: ${process.env.CHARACTER_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
+📌 Multichar: ${process.env.MULTI_CHARACTER_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
+💬 Chat: ${process.env.CHAT_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}  // เพิ่ม
+
+BYOK Assistants (GPT-4o):
+🔑 General: ${process.env.ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}
+🔑 Character: ${process.env.CHARACTER_ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}
+🔑 Multichar: ${process.env.MULTI_CHARACTER_ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}
+💬 Chat: ${process.env.CHAT_ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}  // เพิ่ม
+
 📌 Database: ${db ? 'Connected ✓' : 'Not connected ✗'}
 💰 Daily Limit: ${DAILY_LIMIT_THB} THB per user
-📱 PromptPay: ${process.env.PROMPTPAY_ID || 'Not configured'}
-💳 ESY Slip API: ${process.env.ESY_SLIP_API_KEY ? 'Configured ✓' : 'Not configured ✗'}
+🔐 Encryption Key: ${ENCRYPTION_KEY ? 'Set ✓' : 'Not set ✗'}
 🌐 URL: http://localhost:${PORT}
 
-
-Available Modes:
-- General Prompt Generator
-- Character Creator
-- Character Library
-- Auto Payment Verification ✨ NEW!
+Available Features:
+- Standard Mode (GPT-4o-mini with credits)
+- BYOK Mode (GPT-4o with user's API key)
+- Auto Payment Verification
     `);
 });

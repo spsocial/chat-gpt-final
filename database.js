@@ -652,6 +652,108 @@ async function getPaymentByRef(transactionRef) {
     }
 }
 
+// ========== BYOK (Bring Your Own Key) FUNCTIONS ==========
+
+// บันทึก API Key ของ user
+async function saveUserApiKey(userId, encryptedApiKey) {
+    const client = await pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // อัพเดท API key และ flag
+        await client.query(
+            `UPDATE users 
+             SET openai_api_key = $2,
+                 is_byok = true,
+                 byok_enabled_at = NOW()
+             WHERE user_id = $1`,
+            [userId, encryptedApiKey]
+        );
+        
+        // สร้าง user ถ้ายังไม่มี
+        await client.query(
+            `INSERT INTO users (user_id, name, openai_api_key, is_byok, byok_enabled_at)
+             VALUES ($1, $1, $2, true, NOW())
+             ON CONFLICT (user_id) 
+             DO UPDATE SET 
+                 openai_api_key = $2,
+                 is_byok = true,
+                 byok_enabled_at = NOW()`,
+            [userId, encryptedApiKey]
+        );
+        
+        await client.query('COMMIT');
+        
+        console.log(`✅ API Key saved for user: ${userId}`);
+        return { success: true };
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error saving API key:', error);
+        return { success: false, error: error.message };
+    } finally {
+        client.release();
+    }
+}
+
+// ดึง API Key ของ user (ถ้ามี)
+async function getUserApiKey(userId) {
+    try {
+        const result = await pool.query(
+            'SELECT openai_api_key, is_byok FROM users WHERE user_id = $1',
+            [userId]
+        );
+        
+        if (result.rows.length > 0 && result.rows[0].is_byok) {
+            return {
+                apiKey: result.rows[0].openai_api_key,
+                isByok: true
+            };
+        }
+        
+        return { apiKey: null, isByok: false };
+        
+    } catch (error) {
+        console.error('Error getting user API key:', error);
+        return { apiKey: null, isByok: false };
+    }
+}
+
+// ลบ API Key
+async function removeUserApiKey(userId) {
+    try {
+        await pool.query(
+            `UPDATE users 
+             SET openai_api_key = NULL,
+                 is_byok = false
+             WHERE user_id = $1`,
+            [userId]
+        );
+        
+        console.log(`✅ API Key removed for user: ${userId}`);
+        return { success: true };
+        
+    } catch (error) {
+        console.error('Error removing API key:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// เพิ่มการนับการใช้งาน BYOK
+async function incrementByokUsage(userId) {
+    try {
+        await pool.query(
+            `UPDATE users 
+             SET byok_usage_count = byok_usage_count + 1
+             WHERE user_id = $1`,
+            [userId]
+        );
+    } catch (error) {
+        console.error('Error incrementing BYOK usage:', error);
+    }
+}
+
 // อย่าลืม export!
 module.exports = {
     pool,
@@ -678,5 +780,9 @@ module.exports = {
     // เพิ่ม payment verification functions
     savePaymentVerification,
     checkDuplicatePayment,
-    getPaymentByRef
+    getPaymentByRef,
+    saveUserApiKey,
+    getUserApiKey,
+    removeUserApiKey,
+    incrementByokUsage
 };
