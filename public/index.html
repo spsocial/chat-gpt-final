@@ -132,6 +132,157 @@
     box-shadow: 0 4px 15px rgba(147, 51, 234, 0.2);
 }
 
+/* Active state with soft glow effect */
+.mode-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    position: relative;
+    z-index: 1;
+    animation: soft-pulse 3s ease-in-out infinite;
+    box-shadow: 
+        0 0 15px rgba(147, 51, 234, 0.3),
+        0 0 25px rgba(147, 51, 234, 0.2),
+        inset 0 0 10px rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(147, 51, 234, 0.5);
+    transform: translateY(-1px);
+}
+
+/* Soft glow border effect */
+.mode-btn.active::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, 
+        rgba(147, 51, 234, 0.4), 
+        rgba(236, 72, 153, 0.4), 
+        rgba(147, 51, 234, 0.4), 
+        rgba(236, 72, 153, 0.4)
+    );
+    border-radius: 10px;
+    opacity: 0.5;
+    z-index: -1;
+    animation: soft-rotate 4s linear infinite;
+    filter: blur(3px);
+}
+
+/* Subtle inner glow */
+.mode-btn.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        rgba(255, 255, 255, 0.15) 0%, 
+        transparent 50%, 
+        rgba(255, 255, 255, 0.05) 100%
+    );
+    border-radius: 8px;
+    pointer-events: none;
+}
+
+/* Softer animation for pulsing glow */
+@keyframes soft-pulse {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(147, 51, 234, 0.3),
+            0 0 25px rgba(147, 51, 234, 0.2),
+            inset 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow: 
+            0 0 20px rgba(147, 51, 234, 0.4),
+            0 0 35px rgba(147, 51, 234, 0.3),
+            inset 0 0 15px rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Slower rotation */
+@keyframes soft-rotate {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+/* Softer red for Image Gen */
+.mode-btn.active[data-mode="image"] {
+    animation: soft-pulse-red 3s ease-in-out infinite;
+}
+
+.mode-btn.active[data-mode="image"]::before {
+    background: linear-gradient(45deg, 
+        rgba(255, 71, 87, 0.3), 
+        rgba(255, 107, 107, 0.3), 
+        rgba(255, 71, 87, 0.3), 
+        rgba(255, 107, 107, 0.3)
+    );
+}
+
+@keyframes soft-pulse-red {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(255, 71, 87, 0.25),
+            0 0 25px rgba(255, 71, 87, 0.15),
+            inset 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow: 
+            0 0 20px rgba(255, 71, 87, 0.35),
+            0 0 30px rgba(255, 71, 87, 0.25),
+            inset 0 0 15px rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Softer blue for AI Chat */
+.mode-btn.active[data-mode="chat"] {
+    animation: soft-pulse-blue 3s ease-in-out infinite;
+}
+
+.mode-btn.active[data-mode="chat"]::before {
+    background: linear-gradient(45deg, 
+        rgba(59, 130, 246, 0.3), 
+        rgba(96, 165, 250, 0.3), 
+        rgba(59, 130, 246, 0.3), 
+        rgba(96, 165, 250, 0.3)
+    );
+}
+
+@keyframes soft-pulse-blue {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(59, 130, 246, 0.25),
+            0 0 25px rgba(59, 130, 246, 0.15),
+            inset 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+    50% {
+        box-shadow: 
+            0 0 20px rgba(59, 130, 246, 0.35),
+            0 0 30px rgba(59, 130, 246, 0.25),
+            inset 0 0 15px rgba(255, 255, 255, 0.15);
+    }
+}
+
+/* Subtle hover effect */
+.mode-btn:not(.active):hover {
+    box-shadow: 
+        0 4px 10px rgba(147, 51, 234, 0.15),
+        0 0 20px rgba(147, 51, 234, 0.08);
+}
+
+/* Enhanced hover effect */
+.mode-btn:not(.active):hover {
+    box-shadow: 
+        0 4px 15px rgba(147, 51, 234, 0.3),
+        0 0 30px rgba(147, 51, 234, 0.15);
+}
+
 /* Active state */
 .mode-btn:active {
     transform: translateY(0);
@@ -2536,6 +2687,7 @@ line-clamp: 3;
     flex: 1; /* เพิ่มบรรทัดนี้ให้ปุ่มขนาดเท่ากัน */
     justify-content: center; /* จัดข้อความกึ่งกลาง */
     min-width: 130px; /* ขนาดขั้นต่ำ */
+    overflow: visible;
 }
 
 /* Mobile Responsive */
@@ -3670,7 +3822,8 @@ line-clamp: 3;
 .mode-btn.new-feature::after {
     content: 'สร้างภาพด้วย AI!';
     position: absolute;
-    bottom: -30px;
+    top: 100%;
+    margin-top: 8px;
     left: 50%;
     transform: translateX(-50%);
     background: #333;
@@ -3682,6 +3835,7 @@ line-clamp: 3;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s;
+    z-index: 1000;
 }
 
 .mode-btn.new-feature:hover::after {
