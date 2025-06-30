@@ -1486,5 +1486,277 @@ window.testPresets = function() {
 console.log('✅ Preset system loaded! Use testPresets() to check status.');
 </script>
 
+<!-- เพิ่มโค้ดนี้ใน index.html ก่อน </body> เพื่อแก้ปัญหา input ไม่ทำงาน -->
+<script>
+// Fix Template Form Event Listeners
+function initTemplateFormListeners() {
+    console.log('Initializing Template Form Listeners...');
+    
+    // 1. เพิ่ม event listeners ให้ทุก select
+    const selectElements = [
+        'videoType', 'cameraAngle', 'timeOfDay', 'visualStyle',
+        'duration', 'sceneType', 'mood', 'soundType', 'cameraMovement'
+    ];
+    
+    selectElements.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+            // ลบ listener เก่า
+            elem.removeEventListener('change', updateTemplatePreview);
+            // เพิ่ม listener ใหม่
+            elem.addEventListener('change', function() {
+                console.log(`${id} changed to:`, this.value);
+                updateTemplatePreview();
+            });
+        }
+    });
+    
+    // 2. เพิ่ม event listeners ให้ input และ textarea
+    const inputElements = ['location', 'additionalDetails', 'dialogueText'];
+    
+    inputElements.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+            elem.removeEventListener('input', updateTemplatePreview);
+            elem.addEventListener('input', function() {
+                console.log(`${id} input:`, this.value);
+                updateTemplatePreview();
+            });
+        }
+    });
+    
+    // 3. เพิ่ม listeners ให้ checkboxes
+    const checkboxes = document.querySelectorAll('.effects-checkboxes input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.removeEventListener('change', updateTemplatePreview);
+        cb.addEventListener('change', updateTemplatePreview);
+    });
+    
+    console.log('✅ Event listeners attached!');
+}
+
+// Override updateTemplatePreview ให้ทำงานได้ดีขึ้น
+window.updateTemplatePreview = function() {
+    console.log('Updating preview...');
+    
+    try {
+        const preview = document.getElementById('templatePreview');
+        if (!preview) {
+            console.error('Preview element not found');
+            return;
+        }
+        
+        // ดึงค่าจากฟอร์ม
+        const formData = {
+            videoType: document.getElementById('videoType')?.value || '',
+            cameraAngle: document.getElementById('cameraAngle')?.value || '',
+            timeOfDay: document.getElementById('timeOfDay')?.value || '',
+            visualStyle: document.getElementById('visualStyle')?.value || '',
+            duration: document.getElementById('duration')?.value || '',
+            location: document.getElementById('location')?.value || '',
+            mood: document.getElementById('mood')?.value || '',
+            soundType: document.getElementById('soundType')?.value || '',
+            sceneType: document.getElementById('sceneType')?.value || '',
+            cameraMovement: document.getElementById('cameraMovement')?.value || ''
+        };
+        
+        console.log('Form data:', formData);
+        
+        // ตรวจสอบว่ามีข้อมูลหรือไม่
+        const hasData = Object.values(formData).some(val => val !== '');
+        
+        if (!hasData) {
+            preview.innerHTML = '<p style="color: #666; text-align: center;">กรอกข้อมูลด้านบนเพื่อดูตัวอย่าง...</p>';
+            return;
+        }
+        
+        // สร้าง preview
+        let previewHTML = '<strong>🔍 Preview - ข้อมูลที่กรอก:</strong><br><br>';
+        
+        if (formData.videoType) previewHTML += `🎬 <strong>ประเภท:</strong> ${formData.videoType}<br>`;
+        if (formData.cameraAngle) previewHTML += `📷 <strong>มุมกล้อง:</strong> ${formData.cameraAngle}<br>`;
+        if (formData.timeOfDay) previewHTML += `🌅 <strong>แสง/เวลา:</strong> ${formData.timeOfDay}<br>`;
+        if (formData.visualStyle) previewHTML += `🎨 <strong>สไตล์:</strong> ${formData.visualStyle}<br>`;
+        if (formData.duration) previewHTML += `⏱️ <strong>ความยาว:</strong> ${formData.duration}<br>`;
+        if (formData.location) previewHTML += `📍 <strong>สถานที่:</strong> ${formData.location}<br>`;
+        if (formData.mood) previewHTML += `😊 <strong>อารมณ์:</strong> ${formData.mood}<br>`;
+        if (formData.soundType) previewHTML += `🔊 <strong>เสียง:</strong> ${formData.soundType}<br>`;
+        if (formData.sceneType) previewHTML += `🎭 <strong>ประเภทฉาก:</strong> ${formData.sceneType}<br>`;
+        if (formData.cameraMovement) previewHTML += `🎬 <strong>การเคลื่อนกล้อง:</strong> ${formData.cameraMovement}<br>`;
+        
+        // เช็ค characters
+        const charCount = window.templateCharCount || 2;
+        previewHTML += `👥 <strong>จำนวนตัวละคร:</strong> ${charCount} คน<br>`;
+        
+        // เช็ค effects
+        const effects = [];
+        document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
+            if (cb.nextElementSibling) {
+                effects.push(cb.nextElementSibling.textContent);
+            }
+        });
+        if (effects.length > 0) {
+            previewHTML += `✨ <strong>Effects:</strong> ${effects.join(', ')}<br>`;
+        }
+        
+        previewHTML += '<br><em style="color: #10b981;">✓ พร้อมสร้าง prompt แล้ว!</em>';
+        
+        preview.innerHTML = previewHTML;
+        
+    } catch (error) {
+        console.error('Error in updateTemplatePreview:', error);
+    }
+};
+
+// Override generateFromTemplate ให้ดึงข้อมูลได้ถูกต้อง
+window.generateFromTemplate = function() {
+    console.log('Generating prompt from template...');
+    console.log('Current mode:', currentMode);
+    
+    let prompt = '';
+    
+    try {
+        // ดึงข้อมูลจากฟอร์ม
+        const getValue = (id) => {
+            const elem = document.getElementById(id);
+            const value = elem ? elem.value : '';
+            console.log(`${id}: "${value}"`);
+            return value;
+        };
+        
+        if (currentMode === 'general' || currentMode === 'multichar') {
+            // รวบรวมข้อมูลทั้งหมด
+            const videoType = getValue('videoType');
+            const cameraAngle = getValue('cameraAngle');
+            const timeOfDay = getValue('timeOfDay');
+            const visualStyle = getValue('visualStyle');
+            const duration = getValue('duration');
+            const location = getValue('location');
+            const mood = getValue('mood');
+            const soundType = getValue('soundType');
+            const sceneType = getValue('sceneType');
+            const cameraMovement = getValue('cameraMovement');
+            const dialogueText = getValue('dialogueText');
+            const additionalDetails = getValue('additionalDetails');
+            
+            // สร้าง prompt
+            prompt = currentMode === 'general' ? 
+                'สร้าง Cinematic Veo Prompt แบบละเอียดสำหรับ:\n\n' :
+                'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
+            
+            // เพิ่มข้อมูลที่มี
+            if (videoType) prompt += `🎬 ประเภท: ${videoType}\n`;
+            if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
+            if (location) prompt += `📍 สถานที่: ${location}\n`;
+            if (cameraAngle) prompt += `📷 มุมกล้อง: ${cameraAngle}\n`;
+            if (cameraMovement) prompt += `🎬 การเคลื่อนกล้อง: ${cameraMovement}\n`;
+            if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
+            if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
+            if (mood) prompt += `😊 อารมณ์: ${mood}\n`;
+            if (soundType) prompt += `🔊 เสียง: ${soundType}\n`;
+            if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
+            
+            // Effects
+            const effects = [];
+            document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
+                if (cb.nextElementSibling) {
+                    effects.push(cb.nextElementSibling.textContent);
+                }
+            });
+            if (effects.length > 0) {
+                prompt += `✨ Effects: ${effects.join(', ')}\n`;
+            }
+            
+            // Characters
+            const charCount = window.templateCharCount || 0;
+            if (charCount > 0) {
+                prompt += `\n👥 จำนวนตัวละคร: ${charCount} คน\n`;
+                prompt += 'รายละเอียดตัวละคร:\n';
+                
+                for (let i = 1; i <= charCount; i++) {
+                    const charInput = document.getElementById(`char${i}`);
+                    if (charInput && charInput.value) {
+                        prompt += `${i}. ${charInput.value}\n`;
+                    } else {
+                        prompt += `${i}. (ให้ AI สร้างให้เหมาะกับฉาก)\n`;
+                    }
+                }
+            }
+            
+            // Dialogue
+            if (dialogueText) {
+                prompt += `\n💬 บทพูด:\n${dialogueText}\n`;
+            }
+            
+            // Additional details
+            if (additionalDetails) {
+                prompt += `\n📝 รายละเอียดเพิ่มเติม: ${additionalDetails}\n`;
+            }
+            
+            // Footer
+            prompt += '\n⚠️ สำคัญ: ต้องมีรายละเอียด cinematography, มุมกล้อง, แสง, การเคลื่อนไหว และเอาท์พุตเป็นภาษาอังกฤษ';
+        }
+        
+        // ตรวจสอบว่ามี prompt หรือไม่
+        if (!prompt || prompt.length < 50) {
+            alert('กรุณากรอกข้อมูลก่อนสร้าง Prompt');
+            return;
+        }
+        
+        // ใส่ prompt ใน textarea
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.value = prompt;
+            
+            // Auto resize
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
+            
+            // ปิด modal
+            closeTemplateForm();
+            
+            // Scroll to input
+            messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            console.log('✅ Prompt generated successfully!');
+            showNotification('📋 สร้าง Prompt สำเร็จ! กด "สร้าง Prompt ✨" เพื่อดำเนินการ', 'success');
+        }
+        
+    } catch (error) {
+        console.error('Error generating prompt:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+};
+
+// Initialize เมื่อเปิด Template Form
+const originalShowTemplateForm = window.showTemplateForm;
+window.showTemplateForm = function() {
+    if (originalShowTemplateForm) {
+        originalShowTemplateForm();
+    }
+    
+    // Initialize listeners หลังเปิด form
+    setTimeout(() => {
+        initTemplateFormListeners();
+        updateTemplatePreview(); // Update preview ทันที
+    }, 100);
+};
+
+// Initialize listeners เมื่อโหลดหน้า
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Page loaded, waiting for template form...');
+    
+    // ลองหา form ทุก 1 วินาที
+    const checkForm = setInterval(() => {
+        if (document.getElementById('templateFormModal')) {
+            clearInterval(checkForm);
+            console.log('Template form found!');
+        }
+    }, 1000);
+});
+
+console.log('✅ Template Form Input Fix Loaded!');
+</script>
+
 </body>
 </html>
