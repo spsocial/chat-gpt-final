@@ -5318,4 +5318,378 @@ window.testApiKey = testApiKey;
 window.saveApiKey = saveApiKey;
 window.removeApiKey = removeApiKey;
 
+
+// ========== TEMPLATE FORM SYSTEM ==========
+let templateCharCount = 2;
+
+// Show/Hide Template Button based on mode
+function updateTemplateButton() {
+    const templateSection = document.getElementById('templateButtonSection');
+    
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        templateSection.style.display = 'block';
+    } else {
+        templateSection.style.display = 'none';
+    }
+}
+
+// Show Template Form
+function showTemplateForm() {
+    const modal = document.getElementById('templateFormModal');
+    const title = document.getElementById('templateFormTitle');
+    
+    modal.style.display = 'flex';
+    
+    if (currentMode === 'general') {
+        title.innerHTML = '📋 General Prompt Template';
+    } else if (currentMode === 'multichar') {
+        title.innerHTML = '🎭 Prompt Master Template';
+    }
+    
+    // Reset character count to 2
+    templateCharCount = 2;
+    setTemplateCharCount(2);
+    
+    // Clear all fields
+    document.querySelectorAll('.template-input, .template-textarea, .template-select').forEach(field => {
+        field.value = '';
+    });
+    
+    // Stop any ongoing voice recognition
+    if (typeof stopFieldVoice === 'function') {
+        stopFieldVoice();
+    }
+}
+
+// Close Template Form
+function closeTemplateForm() {
+    const modal = document.getElementById('templateFormModal');
+    modal.style.display = 'none';
+    stopFieldVoice(); // เพิ่มบรรทัดนี้
+    
+    // Reset form
+    document.querySelectorAll('.template-select, .template-input, .template-textarea').forEach(el => {
+        el.value = '';
+    });
+}
+
+// Close template form when clicking outside
+function closeTemplateFormOnOutsideClick(event) {
+    if (event.target.classList.contains('template-form-modal')) {
+        closeTemplateForm();
+    }
+}
+
+// Set character count in template
+function setTemplateCharCount(count, buttonElement) {
+    console.log('setTemplateCharCount called with count:', count);
+    
+    // Update the global variable
+    templateCharCount = count;
+    
+    // Update buttons
+    document.querySelectorAll('.char-count-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Add active class to clicked button
+    if (buttonElement) {
+        buttonElement.classList.add('active');
+    }
+    
+    // Update character inputs
+    const container = document.getElementById('characterDescriptions');
+    if (!container) {
+        console.error('characterDescriptions container not found!');
+        return;
+    }
+    
+    // Clear and rebuild character inputs
+    container.innerHTML = '';
+    
+    if (count === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">ไม่มีตัวละครในฉากนี้</p>';
+    } else {
+        let html = '';
+        for (let i = 1; i <= count; i++) {
+            html += `
+                <div class="form-group char-field" data-char="${i}">
+                    <label>
+                        👤 ตัวละครที่ ${i}
+                        <button type="button" class="mic-btn" onclick="toggleFieldVoice('char${i}')" data-field="char${i}">
+                            🎤
+                        </button>
+                    </label>
+                    <input type="text" id="char${i}" class="template-input" 
+                           placeholder="บรรยายลักษณะตัวละคร เช่น อายุ เพศ การแต่งตัว">
+                </div>
+            `;
+        }
+        container.innerHTML = html;
+    }
+    
+    console.log('Character inputs updated successfully');
+}
+
+// Generate prompt from template
+function generateFromTemplate() {
+    let prompt = '';
+    
+    if (currentMode === 'general') {
+        // General Template
+        const videoType = document.getElementById('videoType').value;
+        const cameraAngle = document.getElementById('cameraAngle').value;
+        const timeOfDay = document.getElementById('timeOfDay').value;
+        const visualStyle = document.getElementById('visualStyle').value;
+        const duration = document.getElementById('duration').value;
+        const details = document.getElementById('additionalDetails').value;
+        
+        // Build prompt
+        prompt = 'สร้าง Cinematic Veo Prompt แบบละเอียดสำหรับ:\n\n';
+        
+        if (videoType) prompt += `🎬 ประเภท: ${getVideoTypeText(videoType)}\n`;
+        if (cameraAngle) prompt += `📷 มุมกล้อง: ${getCameraAngleText(cameraAngle)}\n`;
+        if (timeOfDay) prompt += `🌅 แสง/เวลา: ${getTimeOfDayText(timeOfDay)}\n`;
+        if (visualStyle) prompt += `🎨 สไตล์: ${getVisualStyleText(visualStyle)}\n`;
+        if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
+        if (details) prompt += `\n📝 รายละเอียด: ${details}\n`;
+        
+        prompt += '\n⚠️ สำคัญ: ต้องมีรายละเอียด cinematography, มุมกล้อง, แสง, การเคลื่อนไหว และเอาท์พุตเป็นภาษาอังกฤษ';
+        
+    } else if (currentMode === 'multichar') {
+        // Prompt Master Template
+        const sceneType = document.getElementById('sceneType').value;
+        const location = document.getElementById('location').value;
+        const cameraMovement = document.getElementById('cameraMovement').value;
+        const dialogue = document.getElementById('dialogueText').value;
+        
+        prompt = 'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
+        
+        if (sceneType) prompt += `🎭 ประเภทฉาก: ${getSceneTypeText(sceneType)}\n`;
+        if (location) prompt += `📍 สถานที่: ${location}\n`;
+        prompt += `👥 จำนวนตัวละคร: ${templateCharCount} คน\n\n`;
+        
+        // Characters
+        prompt += 'รายละเอียดตัวละคร:\n';
+        for (let i = 1; i <= templateCharCount; i++) {
+            const charInput = document.getElementById(`char${i}`);
+            if (charInput && charInput.value) {
+                prompt += `${i}. ${charInput.value}\n`;
+            } else {
+                prompt += `${i}. (ให้ AI สร้างให้เหมาะกับฉาก)\n`;
+            }
+        }
+        
+        if (cameraMovement) prompt += `\n🎬 Camera Movement: ${getCameraMovementText(cameraMovement)}\n`;
+        if (dialogue) prompt += `\n💬 บทพูด:\n${dialogue}\n`;
+        
+        prompt += '\n⚠️ สำคัญ: ต้องมี setting ละเอียด, ตัวละครชัดเจน, timing แม่นยำ, camera angles, audio layers และเอาท์พุตเป็นภาษาอังกฤษ';
+    }
+    
+    // Insert prompt and close modal
+    document.getElementById('messageInput').value = prompt;
+    closeTemplateForm();
+    
+    // Auto resize textarea
+    const textarea = document.getElementById('messageInput');
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+    
+    // Scroll to input
+    textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    showNotification('📋 Template applied! กด "สร้าง Prompt" เพื่อดำเนินการ', 'success');
+}
+
+// Helper functions to get Thai text
+function getVideoTypeText(type) {
+    const types = {
+        'cinematic': 'ภาพยนตร์ คุณภาพสูง',
+        'documentary': 'สารคดี สมจริง',
+        'commercial': 'โฆษณา น่าสนใจ',
+        'musicvideo': 'มิวสิควิดีโอ',
+        'action': 'แอ็คชั่นมันส์ๆ',
+        'drama': 'ดราม่า อารมณ์',
+        'horror': 'สยองขวัญ น่ากลัว',
+        'comedy': 'ตลกขำขัน',
+        'travel': 'ท่องเที่ยว',
+        'nature': 'ธรรมชาติ'
+    };
+    return types[type] || type;
+}
+
+function getCameraAngleText(angle) {
+    const angles = {
+        'wide': 'Wide Shot - เห็นภาพรวม',
+        'medium': 'Medium Shot - ระยะกลาง',
+        'closeup': 'Close-up - ใกล้',
+        'extreme-closeup': 'Extreme Close-up - ใกล้มาก',
+        'aerial': 'Aerial/Drone - มุมสูง',
+        'low-angle': 'Low Angle - มุมต่ำ',
+        'dutch': 'Dutch Angle - มุมเอียง',
+        'pov': 'POV - มุมมองบุคคลที่ 1',
+        'tracking': 'Tracking Shot - กล้องตาม',
+        'handheld': 'Handheld - ถือกล้อง'
+    };
+    return angles[angle] || angle;
+}
+
+function getTimeOfDayText(time) {
+    const times = {
+        'golden-hour': 'Golden Hour - แสงทอง',
+        'blue-hour': 'Blue Hour - แสงน้ำเงิน',
+        'sunrise': 'พระอาทิตย์ขึ้น',
+        'sunset': 'พระอาทิตย์ตก',
+        'midday': 'กลางวันแสงจ้า',
+        'night': 'กลางคืน',
+        'overcast': 'มืดครึ้ม',
+        'studio': 'แสงสตูดิโอ'
+    };
+    return times[time] || time;
+}
+
+function getVisualStyleText(style) {
+    const styles = {
+        'realistic': 'สมจริง',
+        'cinematic': 'สไตล์ภาพยนตร์',
+        'vintage': 'ย้อนยุค',
+        'modern': 'โมเดิร์น',
+        'noir': 'Film Noir ขาวดำ',
+        'vibrant': 'สีสดใส',
+        'desaturated': 'สีจืด',
+        'warm': 'โทนอุ่น',
+        'cold': 'โทนเย็น'
+    };
+    return styles[style] || style;
+}
+
+function getSceneTypeText(type) {
+    const types = {
+        'dialogue': 'ฉากสนทนา',
+        'action': 'ฉากแอ็คชั่น',
+        'emotional': 'ฉากอารมณ์',
+        'meeting': 'การประชุม/สัมภาษณ์',
+        'party': 'งานปาร์ตี้',
+        'dining': 'ฉากรับประทานอาหาร'
+    };
+    return types[type] || type;
+}
+
+function getCameraMovementText(movement) {
+    const movements = {
+        'static': 'กล้องนิ่ง',
+        'pan': 'Pan - หมุนซ้าย-ขวา',
+        'tilt': 'Tilt - หมุนบน-ล่าง',
+        'dolly': 'Dolly - เคลื่อนเข้า-ออก',
+        'tracking': 'Tracking - กล้องตาม',
+        'handheld': 'Handheld - ถือกล้อง',
+        'steadicam': 'Steadicam - นิ่มนวล'
+    };
+    return movements[movement] || movement;
+}
+
+// Update switchMode to show/hide template button
+const originalSwitchMode3 = window.switchMode;
+window.switchMode = function(mode) {
+    originalSwitchMode3(mode);
+    updateTemplateButton();
+};
+
+// Export functions
+window.showTemplateForm = showTemplateForm;
+window.closeTemplateForm = closeTemplateForm;
+window.setTemplateCharCount = setTemplateCharCount;
+window.generateFromTemplate = generateFromTemplate;
+window.closeTemplateFormOnOutsideClick = closeTemplateFormOnOutsideClick;
+window.toggleFieldVoice = toggleFieldVoice;
+window.stopFieldVoice = stopFieldVoice;
+
+// Initialize on load
+document.addEventListener('DOMContentLoaded', () => {
+    updateTemplateButton();
+});
+
+// Voice input for individual fields
+let fieldRecognition = null;
+let currentFieldId = null;
+
+function toggleFieldVoice(fieldId) {
+    const micBtn = document.querySelector(`[data-field="${fieldId}"]`);
+    
+    if (micBtn.classList.contains('listening')) {
+        stopFieldVoice();
+    } else {
+        startFieldVoice(fieldId);
+    }
+}
+
+function startFieldVoice(fieldId) {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('เบราว์เซอร์ของคุณไม่รองรับการพูด');
+        return;
+    }
+    
+    // หยุดการฟังก่อนหน้า
+    stopFieldVoice();
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    fieldRecognition = new SpeechRecognition();
+    fieldRecognition.lang = 'th-TH';
+    fieldRecognition.continuous = true;
+    fieldRecognition.interimResults = true;
+    
+    currentFieldId = fieldId;
+    const field = document.getElementById(fieldId);
+    const micBtn = document.querySelector(`[data-field="${fieldId}"]`);
+    
+    micBtn.classList.add('listening');
+    
+    let finalTranscript = field.value || '';
+    
+    fieldRecognition.onresult = function(event) {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        field.value = finalTranscript + interimTranscript;
+    };
+    
+    fieldRecognition.onerror = function(event) {
+        console.error('Speech recognition error', event.error);
+        stopFieldVoice();
+    };
+    
+    fieldRecognition.onend = function() {
+        micBtn.classList.remove('listening');
+    };
+    
+    fieldRecognition.start();
+}
+
+function stopFieldVoice() {
+    if (fieldRecognition) {
+        fieldRecognition.stop();
+        fieldRecognition = null;
+    }
+    
+    // ลบ class listening จากทุกปุ่ม
+    document.querySelectorAll('.mic-btn.listening').forEach(btn => {
+        btn.classList.remove('listening');
+    });
+}
+
+// หยุดการฟังเมื่อปิด modal
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('template-form-modal')) {
+        stopFieldVoice();
+    }
+});
+
 // END OF PROFESSIONAL SCRIPT

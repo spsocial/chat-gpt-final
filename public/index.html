@@ -315,9 +315,15 @@
                         <button class="upload-btn" onclick="showImageUrlDialog()">
                             🔗 เพิ่ม URL รูป
                         </button>
-                         <button class="voice-btn" id="voiceButton" onclick="toggleVoiceInput()">
-        🎤 พูดเลย
-    </button>
+                        <button class="voice-btn" id="voiceButton" onclick="toggleVoiceInput()">
+                            🎤 พูดเลย
+                        </button>
+                        <!-- Template Button Section -->
+                        <div class="template-button-inline" id="templateButtonSection" style="display: none;">
+                            <button class="template-form-btn-orange" onclick="showTemplateForm()">
+                                📋 ใช้ Template Form
+                            </button>
+                        </div>
                         <span class="upload-tip" id="uploadTip">
                             💡 ฝากรูปที่ 
                             <a href="https://postimages.org" target="_blank">postimages.org</a>, 
@@ -911,5 +917,574 @@ console.log('toggleToolsMenu loaded:', typeof toggleToolsMenu);
 
 <!-- Hidden file input for slip upload -->
 <input type="file" id="slipFileInput" accept="image/*" style="display: none;">
+
+<!-- Template Form Modal ที่จัดระเบียบใหม่ -->
+<div id="templateFormModal" class="template-form-modal" style="display: none;" onclick="closeTemplateFormOnOutsideClick(event)">
+    <div class="template-form-content">
+        <button class="close-btn" onclick="closeTemplateForm()">✕</button>
+        
+        <h2 id="templateFormTitle">📋 Template Form</h2>
+        
+        <!-- Quick Presets -->
+        <div class="quick-presets">
+            <h3>⚡ Quick Presets - เลือกแนวที่ต้องการ</h3>
+            <div class="preset-buttons">
+                <button type="button" class="preset-btn" onclick="applyPreset('interview')">
+                    🎤 สัมภาษณ์
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('dialogue')">
+                    💬 บทสนทนา
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('action')">
+                    💥 แอ็คชั่น
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('emotional')">
+                    😢 ดราม่า
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('product')">
+                    📦 สินค้า
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('nature')">
+                    🌿 ธรรมชาติ
+                </button>
+            </div>
+        </div>
+        
+        <div class="template-form-body">
+            <!-- Section 1: พื้นฐาน -->
+            <div class="form-section">
+                <h4 class="form-section-title">📽️ ข้อมูลพื้นฐาน</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🎬 ประเภทวิดีโอ</label>
+                        <select id="videoType" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกประเภท --</option>
+                            <option value="cinematic">Cinematic (ภาพยนตร์)</option>
+                            <option value="documentary">Documentary (สารคดี)</option>
+                            <option value="commercial">Commercial (โฆษณา)</option>
+                            <option value="musicvideo">Music Video</option>
+                            <option value="action">Action (แอ็คชั่น)</option>
+                            <option value="drama">Drama (ดราม่า)</option>
+                            <option value="horror">Horror (สยองขวัญ)</option>
+                            <option value="comedy">Comedy (ตลก)</option>
+                            <option value="travel">Travel (ท่องเที่ยว)</option>
+                            <option value="nature">Nature (ธรรมชาติ)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>⏱️ ความยาว</label>
+                        <select id="duration" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกความยาว --</option>
+                            <option value="5-6 วินาที">5-6 วินาที</option>
+                            <option value="7-8 วินาที">7-8 วินาที</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        📍 สถานที่/ฉาก
+                        <button type="button" class="mic-btn" onclick="toggleFieldVoice('location')" data-field="location">
+                            🎤
+                        </button>
+                    </label>
+                    <input type="text" id="location" class="template-input" 
+                           placeholder="เช่น ร้านกาแฟ, ออฟฟิศ, สวนสาธารณะ, ริมทะเล">
+                </div>
+            </div>
+            
+            <!-- Section 2: Camera & Visual -->
+            <div class="form-section">
+                <h4 class="form-section-title">📷 กล้องและภาพ</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>📷 มุมกล้อง</label>
+                        <select id="cameraAngle" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกมุมกล้อง --</option>
+                            <option value="wide">Wide Shot (มุมกว้าง)</option>
+                            <option value="medium">Medium Shot (มุมกลาง)</option>
+                            <option value="closeup">Close-up (มุมใกล้)</option>
+                            <option value="extreme-closeup">Extreme Close-up</option>
+                            <option value="aerial">Aerial/Drone (มุมสูง)</option>
+                            <option value="low-angle">Low Angle (มุมต่ำ)</option>
+                            <option value="dutch">Dutch Angle (มุมเอียง)</option>
+                            <option value="pov">POV (มุมมองบุคคลที่ 1)</option>
+                            <option value="tracking">Tracking Shot</option>
+                            <option value="handheld">Handheld (ถือกล้อง)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🎬 การเคลื่อนกล้อง</label>
+                        <select id="cameraMovement" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกการเคลื่อนกล้อง --</option>
+                            <option value="static">Static (กล้องนิ่ง)</option>
+                            <option value="pan">Pan (หมุนซ้าย-ขวา)</option>
+                            <option value="tilt">Tilt (หมุนบน-ล่าง)</option>
+                            <option value="dolly">Dolly (เคลื่อนเข้า-ออก)</option>
+                            <option value="tracking">Tracking (กล้องตาม)</option>
+                            <option value="handheld">Handheld (ถือกล้อง)</option>
+                            <option value="steadicam">Steadicam (นิ่มนวล)</option>
+                            <option value="drone">Drone (โดรน)</option>
+                            <option value="360">360 Degree</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🌅 ช่วงเวลา/แสง</label>
+                        <select id="timeOfDay" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกช่วงเวลา --</option>
+                            <option value="golden-hour">Golden Hour (แสงทอง)</option>
+                            <option value="blue-hour">Blue Hour</option>
+                            <option value="sunrise">Sunrise (พระอาทิตย์ขึ้น)</option>
+                            <option value="sunset">Sunset (พระอาทิตย์ตก)</option>
+                            <option value="midday">Midday (กลางวัน)</option>
+                            <option value="night">Night (กลางคืน)</option>
+                            <option value="overcast">Overcast (มืดครึ้ม)</option>
+                            <option value="studio">Studio Lighting</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🎨 สไตล์/โทนสี</label>
+                        <select id="visualStyle" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกสไตล์ --</option>
+                            <option value="realistic">Realistic (สมจริง)</option>
+                            <option value="cinematic">Cinematic (ภาพยนตร์)</option>
+                            <option value="vintage">Vintage (ย้อนยุค)</option>
+                            <option value="modern">Modern (โมเดิร์น)</option>
+                            <option value="noir">Film Noir</option>
+                            <option value="vibrant">Vibrant (สีสดใส)</option>
+                            <option value="desaturated">Desaturated (สีจืด)</option>
+                            <option value="warm">Warm Tones (โทนอุ่น)</option>
+                            <option value="cold">Cold Tones (โทนเย็น)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>✨ Special Effects</label>
+                    <div class="effects-checkboxes">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-slowmo" value="slowmo" onchange="updateTemplatePreview()">
+                            <span>Slow Motion</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-timelapse" value="timelapse" onchange="updateTemplatePreview()">
+                            <span>Time Lapse</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-blur" value="blur" onchange="updateTemplatePreview()">
+                            <span>Motion Blur</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-particles" value="particles" onchange="updateTemplatePreview()">
+                            <span>Particles/Dust</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-lens" value="lens" onchange="updateTemplatePreview()">
+                            <span>Lens Flare</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-bokeh" value="bokeh" onchange="updateTemplatePreview()">
+                            <span>Bokeh</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 3: Characters & Mood -->
+            <div class="form-section">
+                <h4 class="form-section-title">👥 ตัวละครและอารมณ์</h4>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>🎭 ประเภทฉาก</label>
+                        <select id="sceneType" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกประเภทฉาก --</option>
+                            <option value="dialogue">ฉากสนทนา</option>
+                            <option value="action">ฉากแอ็คชั่น</option>
+                            <option value="emotional">ฉากอารมณ์</option>
+                            <option value="meeting">การประชุม/สัมภาษณ์</option>
+                            <option value="party">งานปาร์ตี้</option>
+                            <option value="dining">ฉากรับประทานอาหาร</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>😊 อารมณ์/ความรู้สึก</label>
+                        <select id="mood" class="template-select" onchange="updateTemplatePreview()">
+                            <option value="">-- เลือกอารมณ์ --</option>
+                            <option value="happy">Happy (มีความสุข)</option>
+                            <option value="sad">Sad (เศร้า)</option>
+                            <option value="excited">Excited (ตื่นเต้น)</option>
+                            <option value="calm">Calm (สงบ)</option>
+                            <option value="tense">Tense (ตึงเครียด)</option>
+                            <option value="mysterious">Mysterious (ลึกลับ)</option>
+                            <option value="romantic">Romantic (โรแมนติก)</option>
+                            <option value="scary">Scary (น่ากลัว)</option>
+                            <option value="funny">Funny (ตลก)</option>
+                            <option value="dramatic">Dramatic (ดราม่า)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>👥 จำนวนตัวละคร</label>
+                    <div class="character-count-select">
+                        <button type="button" onclick="setTemplateCharCount(0, this)" class="char-count-btn">ไม่มี</button>
+                        <button type="button" onclick="setTemplateCharCount(1, this)" class="char-count-btn">1 คน</button>
+                        <button type="button" onclick="setTemplateCharCount(2, this)" class="char-count-btn active">2 คน</button>
+                        <button type="button" onclick="setTemplateCharCount(3, this)" class="char-count-btn">3 คน</button>
+                        <button type="button" onclick="setTemplateCharCount(4, this)" class="char-count-btn">4 คน</button>
+                        <button type="button" onclick="setTemplateCharCount(5, this)" class="char-count-btn">5 คน</button>
+                    </div>
+                </div>
+                
+                <div id="characterDescriptions" class="character-descriptions">
+                    <!-- Character inputs จะถูกใส่ที่นี่ด้วย JavaScript -->
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        💬 บทพูด (ถ้ามี)
+                        <button type="button" class="mic-btn" onclick="toggleFieldVoice('dialogueText')" data-field="dialogueText">
+                            🎤
+                        </button>
+                    </label>
+                    <textarea id="dialogueText" class="template-textarea" rows="4"
+                              placeholder="ตัวอย่าง:&#10;A: สวัสดีครับ วันนี้อากาศดีจัง&#10;B: ใช่เลยค่ะ เหมาะกับการถ่ายทำมาก" 
+                              onchange="updateTemplatePreview()"></textarea>
+                </div>
+            </div>
+            
+            <!-- Section 4: Audio & Additional -->
+            <div class="form-section">
+                <h4 class="form-section-title">🔊 เสียงและรายละเอียดเพิ่มเติม</h4>
+                
+                <div class="form-group">
+                    <label>🔊 เสียง/ดนตรี</label>
+                    <select id="soundType" class="template-select" onchange="updateTemplatePreview()">
+                        <option value="">-- เลือกประเภทเสียง --</option>
+                        <option value="dialogue">Dialogue (บทพูด)</option>
+                        <option value="music">Background Music</option>
+                        <option value="ambient">Ambient Sound</option>
+                        <option value="sfx">Sound Effects</option>
+                        <option value="silent">Silent (ไม่มีเสียง)</option>
+                        <option value="natural">Natural Sound</option>
+                        <option value="dramatic-music">Dramatic Music</option>
+                        <option value="upbeat-music">Upbeat Music</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        📝 รายละเอียดเพิ่มเติม
+                        <button type="button" class="mic-btn" onclick="toggleFieldVoice('additionalDetails')" data-field="additionalDetails">
+                            🎤
+                        </button>
+                    </label>
+                    <textarea id="additionalDetails" class="template-textarea" rows="3"
+                              placeholder="บรรยายฉาก อารมณ์ หรือรายละเอียดอื่นๆ ที่ต้องการ..."
+                              onchange="updateTemplatePreview()"></textarea>
+                </div>
+            </div>
+            
+            <!-- Preview Section -->
+            <div class="template-preview-section">
+                <h3>👁️ Preview - ดูตัวอย่างโครงสร้าง Prompt</h3>
+                <div class="preview-box" id="templatePreview">
+                    <p style="color: #666; text-align: center;">กรอกข้อมูลด้านบนเพื่อดูตัวอย่าง...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="template-form-actions">
+            <button class="generate-template-btn" onclick="generateFromTemplate()">
+                ✨ สร้าง Prompt
+            </button>
+            <button class="reset-template-btn" onclick="resetTemplateForm()">
+                🔄 ล้างฟอร์ม
+            </button>
+            <button class="save-preset-btn" onclick="saveAsPreset()">
+                💾 บันทึก Preset
+            </button>
+            <button class="cancel-template-btn" onclick="closeTemplateForm()">
+                ยกเลิก
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- เพิ่มโค้ดนี้ใน index.html ก่อน closing </body> tag เพื่อ debug -->
+<script>
+// Debug: Check if functions are loaded
+window.addEventListener('load', function() {
+    console.log('=== Template Functions Debug ===');
+    console.log('applyPreset exists?', typeof applyPreset);
+    console.log('templatePresets exists?', typeof templatePresets);
+    console.log('updateTemplatePreview exists?', typeof updateTemplatePreview);
+    
+    // Check if elements exist
+    const checkElements = [
+        'templatePreview',
+        'videoType', 
+        'cameraAngle',
+        'timeOfDay',
+        'visualStyle',
+        'duration'
+    ];
+    
+    checkElements.forEach(id => {
+        const elem = document.getElementById(id);
+        console.log(`Element ${id}:`, elem ? 'Found ✓' : 'NOT FOUND ✗');
+    });
+    
+    // Make functions globally available as backup
+    if (typeof window.applyPreset === 'undefined' && typeof applyPreset !== 'undefined') {
+        window.applyPreset = applyPreset;
+        console.log('✅ applyPreset function attached to window');
+    }
+});
+
+// Emergency preset function
+if (typeof applyPreset === 'undefined') {
+    window.applyPreset = function(presetName) {
+        console.log('Emergency applyPreset called for:', presetName);
+        
+        // Basic presets without new fields
+        const basicPresets = {
+            interview: {
+                videoType: 'documentary',
+                cameraAngle: 'medium',
+                timeOfDay: 'studio',
+                visualStyle: 'realistic',
+                duration: '7-8 วินาที'
+            },
+            action: {
+                videoType: 'action',
+                cameraAngle: 'handheld',
+                timeOfDay: 'night',
+                visualStyle: 'vibrant',
+                duration: '5-6 วินาที'
+            }
+        };
+        
+        const preset = basicPresets[presetName];
+        if (!preset) {
+            alert('Preset ยังไม่พร้อมใช้งาน');
+            return;
+        }
+        
+        // Apply basic fields only
+        Object.keys(preset).forEach(key => {
+            const elem = document.getElementById(key);
+            if (elem) {
+                elem.value = preset[key];
+                console.log(`Set ${key} to ${preset[key]}`);
+            }
+        });
+        
+        alert(`ใช้ preset "${presetName}" แล้ว!`);
+    };
+}
+</script>
+
+<!-- เพิ่มโค้ดนี้ใน index.html ก่อน </body> เพื่อให้ presets ทำงานทั้งหมด -->
+<script>
+// Template Presets ที่ใช้เฉพาะ fields ที่มีอยู่จริง
+const workingTemplatePresets = {
+    interview: {
+        videoType: 'documentary',
+        cameraAngle: 'medium',
+        timeOfDay: 'studio',
+        visualStyle: 'realistic',
+        duration: '7-8 วินาที',
+        sceneType: 'meeting',
+        location: 'ห้องสัมภาษณ์ พื้นหลังเรียบๆ',
+        cameraMovement: 'static',
+        charCount: 2
+    },
+    dialogue: {
+        videoType: 'cinematic',
+        cameraAngle: 'medium',
+        timeOfDay: 'golden-hour',
+        visualStyle: 'cinematic',
+        duration: '5-6 วินาที',
+        sceneType: 'dialogue',
+        location: 'ร้านกาแฟ บรรยากาศอบอุ่น',
+        cameraMovement: 'tracking',
+        charCount: 2
+    },
+    action: {
+        videoType: 'action',
+        cameraAngle: 'handheld',
+        timeOfDay: 'night',
+        visualStyle: 'vibrant',
+        duration: '5-6 วินาที',
+        sceneType: 'action',
+        location: 'ตึกร้าง มืดๆ มีแสงนีออน',
+        cameraMovement: 'handheld',
+        charCount: 3
+    },
+    emotional: {
+        videoType: 'drama',
+        cameraAngle: 'closeup',
+        timeOfDay: 'golden-hour',
+        visualStyle: 'warm',
+        duration: '7-8 วินาที',
+        sceneType: 'emotional',
+        location: 'ริมหน้าต่าง แสงอาทิตย์ส่อง',
+        cameraMovement: 'dolly',
+        charCount: 2
+    },
+    product: {
+        videoType: 'commercial',
+        cameraAngle: 'medium',
+        timeOfDay: 'studio',
+        visualStyle: 'modern',
+        duration: '5-6 วินาที',
+        location: 'พื้นหลังขาว สตูดิโอ',
+        cameraMovement: 'tracking',
+        charCount: 0
+    },
+    nature: {
+        videoType: 'nature',
+        cameraAngle: 'wide',
+        timeOfDay: 'sunrise',
+        visualStyle: 'realistic',
+        duration: '7-8 วินาที',
+        location: 'ภูเขา ทะเลหมอก',
+        cameraMovement: 'tracking',
+        charCount: 0
+    }
+};
+
+// Override applyPreset function
+window.applyPreset = function(presetName) {
+    console.log('Applying preset:', presetName);
+    
+    try {
+        const preset = workingTemplatePresets[presetName];
+        if (!preset) {
+            showNotification('❌ ไม่พบ preset นี้', 'error');
+            return;
+        }
+        
+        // Apply fields ที่มีอยู่จริง
+        const applyField = (fieldId, value) => {
+            const field = document.getElementById(fieldId);
+            if (field && value !== undefined) {
+                field.value = value;
+                console.log(`✓ Set ${fieldId} = ${value}`);
+            } else if (!field && value !== undefined) {
+                console.log(`✗ Field ${fieldId} not found`);
+            }
+        };
+        
+        // Apply all fields
+        applyField('videoType', preset.videoType);
+        applyField('cameraAngle', preset.cameraAngle);
+        applyField('timeOfDay', preset.timeOfDay);
+        applyField('visualStyle', preset.visualStyle);
+        applyField('duration', preset.duration);
+        applyField('sceneType', preset.sceneType);
+        applyField('location', preset.location);
+        applyField('cameraMovement', preset.cameraMovement);
+        
+        // Apply fields ใหม่ (ถ้ามี)
+        applyField('mood', preset.mood);
+        applyField('soundType', preset.soundType);
+        
+        // Set character count
+        if (preset.charCount !== undefined) {
+            // หาปุ่มที่ตรงกับจำนวน
+            const buttons = document.querySelectorAll('.char-count-btn');
+            buttons.forEach(btn => {
+                // ตรวจสอบว่าปุ่มนี้คือจำนวนที่ต้องการหรือไม่
+                const btnText = btn.textContent;
+                if ((preset.charCount === 0 && btnText.includes('ไม่มี')) ||
+                    (preset.charCount > 0 && btnText.includes(preset.charCount + ' คน'))) {
+                    // เรียกฟังก์ชัน setTemplateCharCount
+                    if (typeof setTemplateCharCount === 'function') {
+                        setTemplateCharCount(preset.charCount, btn);
+                    } else {
+                        // ถ้าไม่มีฟังก์ชัน ให้ click ปุ่มแทน
+                        btn.click();
+                    }
+                    console.log(`✓ Set character count = ${preset.charCount}`);
+                }
+            });
+        }
+        
+        // Update preview ถ้ามี
+        if (typeof updateTemplatePreview === 'function') {
+            updateTemplatePreview();
+        } else {
+            // Simple preview update
+            const preview = document.getElementById('templatePreview');
+            if (preview) {
+                let previewText = '<strong>Preset Applied:</strong> ' + presetName + '<br><br>';
+                if (preset.videoType) previewText += `🎬 ${preset.videoType}<br>`;
+                if (preset.location) previewText += `📍 ${preset.location}<br>`;
+                if (preset.charCount !== undefined) previewText += `👥 ${preset.charCount} คน<br>`;
+                preview.innerHTML = previewText;
+            }
+        }
+        
+        // แสดงข้อความสำเร็จ
+        if (typeof showNotification === 'function') {
+            showNotification(`✅ ใช้ preset "${presetName}" สำเร็จ!`, 'success');
+        } else {
+            // Fallback notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                font-family: 'Kanit', sans-serif;
+                z-index: 9999;
+            `;
+            notification.textContent = `✅ ใช้ preset "${presetName}" สำเร็จ!`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
+    } catch (error) {
+        console.error('Error applying preset:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+};
+
+// Test function
+window.testPresets = function() {
+    console.log('Available presets:', Object.keys(workingTemplatePresets));
+    console.log('Testing applyPreset function...');
+    
+    // List all form fields
+    const fields = ['videoType', 'cameraAngle', 'timeOfDay', 'visualStyle', 
+                   'duration', 'sceneType', 'location', 'cameraMovement',
+                   'mood', 'soundType'];
+    
+    console.log('Form fields status:');
+    fields.forEach(id => {
+        const elem = document.getElementById(id);
+        console.log(`- ${id}: ${elem ? '✓ Found' : '✗ Not found'}`);
+    });
+};
+
+console.log('✅ Preset system loaded! Use testPresets() to check status.');
+</script>
+
 </body>
 </html>
