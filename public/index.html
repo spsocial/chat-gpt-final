@@ -312,26 +312,34 @@
                     <div class="mode-notice" id="modeNotice"></div>
 
                     <div class="upload-section" id="uploadSection">
-                        <button class="upload-btn" onclick="showImageUrlDialog()">
-                            🔗 เพิ่ม URL รูป
-                        </button>
-                        <button class="voice-btn" id="voiceButton" onclick="toggleVoiceInput()">
-                            🎤 พูดเลย
-                        </button>
-                        <!-- Template Button Section -->
-                        <div class="template-button-inline" id="templateButtonSection" style="display: none;">
-                            <button class="template-form-btn-orange" onclick="showTemplateForm()">
-                                📋 ใช้ Template Form
-                            </button>
-                        </div>
-                        <span class="upload-tip" id="uploadTip">
-                            💡 ฝากรูปที่ 
-                            <a href="https://postimages.org" target="_blank">postimages.org</a>, 
-                            <a href="https://uppic.cc" target="_blank">uppic.cc</a> 
-                            แล้วเอาลิงค์มาวาง
-                        </span>
-                        <div id="imagePreview" class="image-preview"></div>
-                    </div>
+    <button class="upload-btn" onclick="showImageUrlDialog()">
+        🔗 เพิ่ม URL รูป
+    </button>
+    <button class="voice-btn" id="voiceButton" onclick="toggleVoiceInput()">
+        🎤 พูดเลย
+    </button>
+    <!-- Template Button Section -->
+    <div class="template-button-inline" id="templateButtonSection" style="display: none;">
+        <button class="template-form-btn-orange" onclick="showTemplateForm()">
+            📋 ใช้ Template Form
+        </button>
+    </div>
+    
+    <!-- เพิ่ม Character Template Button Section ตรงนี้ -->
+    <div class="character-template-button-inline" id="characterTemplateButtonSection" style="display: none;">
+        <button class="character-template-btn-inline" onclick="showCharacterTemplate()">
+            📋 ใช้ฟอร์ม Character Template
+        </button>
+    </div>
+    
+    <span class="upload-tip" id="uploadTip">
+        💡 ฝากรูปที่ 
+        <a href="https://postimages.org" target="_blank">postimages.org</a>, 
+        <a href="https://uppic.cc" target="_blank">uppic.cc</a> 
+        แล้วเอาลิงค์มาวาง
+    </span>
+    <div id="imagePreview" class="image-preview"></div>
+</div>
 
                     <!-- Enhance Section สำหรับ Image Mode -->
 <div class="enhance-section" id="enhanceSection" style="display: none;">
@@ -1757,6 +1765,159 @@ document.addEventListener('DOMContentLoaded', () => {
 
 console.log('✅ Template Form Input Fix Loaded!');
 </script>
+
+<!-- Character Template Modal -->
+<div id="characterTemplateModal" class="character-template-modal" style="display: none;">
+    <div class="character-template-content">
+        <button class="close-btn" onclick="closeCharacterTemplate()">✕</button>
+        
+        <h2>📋 Character Identity Template (Prompt D)</h2>
+        <p class="template-subtitle">กรอกข้อมูลตัวละครแบบละเอียด เพื่อใช้สร้าง prompt ที่แม่นยำ</p>
+        
+        <div class="character-template-form">
+            <!-- 1. ชื่อเรียก / บทบาท -->
+            <div class="template-section">
+                <h3>👩‍🏫 1. ชื่อเรียก / บทบาท</h3>
+                <div class="form-group">
+                    <label>ชื่อเรียกภายใน Prompt:</label>
+                    <input type="text" id="charNickname" placeholder='เช่น "CEO สาว", "นักสืบหนุ่ม"'>
+                </div>
+                <div class="form-group">
+                    <label>บทบาท:</label>
+                    <input type="text" id="charRole" placeholder="เช่น ผู้นำในการอธิบาย / ผู้สาธิต / ตัวดำเนินเรื่องหลัก">
+                </div>
+            </div>
+
+            <!-- 2. เพศ / อายุ / เชื้อชาติ -->
+            <div class="template-section">
+                <h3>🧑‍🎨 2. เพศ / อายุ / เชื้อชาติ</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>เพศ:</label>
+                        <select id="charGender">
+                            <option value="">-- เลือกเพศ --</option>
+                            <option value="ชาย">ชาย</option>
+                            <option value="หญิง">หญิง</option>
+                            <option value="ไม่ระบุ">ไม่ระบุ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>อายุโดยประมาณ:</label>
+                        <input type="text" id="charAge" placeholder='เช่น "30 ปี", "วัยกลางคน"'>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>เชื้อชาติ / ภูมิหลัง:</label>
+                    <input type="text" id="charEthnicity" placeholder="เช่น ไทย / ลูกครึ่ง / อเมริกันเอเชีย">
+                </div>
+            </div>
+
+            <!-- 3. รูปร่าง / ผิว / ท่าทาง -->
+            <div class="template-section">
+                <h3>💃 3. รูปร่าง / ผิว / ท่าทาง</h3>
+                <div class="form-group">
+                    <label>รูปร่าง:</label>
+                    <input type="text" id="charBody" placeholder="เช่น หุ่นดี / ผอม / อ้วนเล็กน้อย / สูงเพรียว">
+                </div>
+                <div class="form-group">
+                    <label>ผิว:</label>
+                    <input type="text" id="charSkin" placeholder="เช่น ขาวอมชมพู / น้ำผึ้ง / แทนเข้ม">
+                </div>
+                <div class="form-group">
+                    <label>ท่าทาง / บุคลิกภายนอก:</label>
+                    <input type="text" id="charPosture" placeholder="เช่น ยืนตรง / ดูมั่นใจ / รอยยิ้มเล็กน้อย">
+                </div>
+            </div>
+
+            <!-- 4. ลักษณะผม / ใบหน้า -->
+            <div class="template-section">
+                <h3>💇‍♀️ 4. ลักษณะผม / ใบหน้า</h3>
+                <div class="form-group">
+                    <label>ทรงผม:</label>
+                    <input type="text" id="charHair" placeholder="เช่น ผมดำยาว รวบหางม้าต่ำ / แสกกลาง / หน้าม้า">
+                </div>
+                <div class="form-group">
+                    <label>คิ้ว / ดวงตา / ริมฝีปาก:</label>
+                    <input type="text" id="charFace" placeholder="เช่น คิ้วได้รูป / ตาคม / ปากอมชมพู">
+                </div>
+            </div>
+
+            <!-- 5. แว่น / เครื่องประดับ -->
+            <div class="template-section">
+                <h3>👓 5. แว่น / เครื่องประดับ</h3>
+                <div class="form-group">
+                    <label>แว่น:</label>
+                    <input type="text" id="charGlasses" placeholder="เช่น ทรงกลมขอบบางสีทอง (หรือไม่ใส่)">
+                </div>
+                <div class="form-group">
+                    <label>นาฬิกา / ต่างหู / สร้อย:</label>
+                    <input type="text" id="charAccessories" placeholder="ระบุรายละเอียด หรือพิมพ์ 'ไม่ใส่'">
+                </div>
+            </div>
+
+            <!-- 6. เครื่องแต่งกาย -->
+            <div class="template-section">
+                <h3>👗 6. เครื่องแต่งกาย</h3>
+                <div class="form-group">
+                    <label>เสื้อ:</label>
+                    <input type="text" id="charShirt" placeholder="เช่น เสื้อเชิ้ตสีขาว / คอปก / แขนยาว">
+                </div>
+                <div class="form-group">
+                    <label>เสื้อคลุม / สูท:</label>
+                    <input type="text" id="charJacket" placeholder="เช่น สูทสีชมพูอ่อน / ผ้าเรียบหรู / ทรงโมเดิร์น">
+                </div>
+                <div class="form-group">
+                    <label>กางเกง / กระโปรง:</label>
+                    <input type="text" id="charPants" placeholder="เช่น กางเกงขายาวสีขาวล้วน / ทรงตรง">
+                </div>
+                <div class="form-group">
+                    <label>รองเท้า:</label>
+                    <input type="text" id="charShoes" placeholder="เช่น รองเท้าส้นสูงหัวแหลมสีครีม">
+                </div>
+            </div>
+
+            <!-- 7. น้ำเสียง / วิธีพูด -->
+            <div class="template-section">
+                <h3>🎙️ 7. น้ำเสียง / วิธีพูด</h3>
+                <div class="form-group">
+                    <label>โทนเสียง:</label>
+                    <input type="text" id="charVoiceTone" placeholder="เช่น สุภาพ / ชัดเจน / มั่นใจ / จริงใจ">
+                </div>
+                <div class="form-group">
+                    <label>ลักษณะการพูด:</label>
+                    <input type="text" id="charSpeechStyle" placeholder="เช่น เริ่มต้นด้วยรอยยิ้ม / จบคำพูดด้วยสายตาแน่วแน่">
+                </div>
+            </div>
+
+            <!-- 8. บุคลิกภายใน -->
+            <div class="template-section">
+                <h3>💼 8. บุคลิกภายใน</h3>
+                <div class="form-group">
+                    <label>ความมั่นใจ:</label>
+                    <input type="text" id="charConfidence" placeholder="เช่น มั่นใจในสิ่งที่พูด / ไม่ลังเล">
+                </div>
+                <div class="form-group">
+                    <label>ท่าทีต่อกล้อง:</label>
+                    <input type="text" id="charCameraPresence" placeholder="เช่น สบตา / ยิ้ม / ส่งพลังบวก">
+                </div>
+                <div class="form-group">
+                    <label>บทบาทในเรื่อง:</label>
+                    <input type="text" id="charStoryRole" placeholder="เช่น ดำเนินเรื่อง / พูดอธิบาย / เปรียบเทียบ / สื่อสารความรู้">
+                </div>
+            </div>
+
+            <!-- Actions -->
+<div class="template-actions">
+    <button class="generate-from-template-btn" onclick="generateFromCharacterTemplate()">
+        ✨ สร้าง Character Profile
+    </button>
+    <button class="cancel-btn" onclick="closeCharacterTemplate()">
+        ยกเลิก
+    </button>
+</div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

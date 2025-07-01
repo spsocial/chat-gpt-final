@@ -5110,3 +5110,205 @@ line-clamp: 3;
         grid-template-columns: 1fr;
     }
 }
+
+/* Character Template Modal Styles */
+.character-template-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.character-template-content {
+    background: #1a1a1a;
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 900px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.character-template-form {
+    margin-top: 20px;
+}
+
+.template-section {
+    background: #262626;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #404040;
+}
+
+.template-section h3 {
+    font-size: 18px;
+    color: #9333ea;
+    margin-bottom: 16px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.template-section input,
+.template-section select {
+    width: 100%;
+    padding: 12px 16px;
+    background: #1a1a1a;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    font-family: 'Kanit', sans-serif;
+}
+
+.template-section input:focus,
+.template-section select:focus {
+    outline: none;
+    border-color: #9333ea;
+}
+
+.template-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    justify-content: center; /* เพิ่มบรรทัดนี้ */
+}
+
+.generate-from-template-btn {
+    flex: none; /* เปลี่ยนจาก flex: 1 */
+    min-width: 250px; /* กำหนดความกว้างขั้นต่ำ */
+    padding: 16px 32px;
+    background: linear-gradient(135deg, #9333ea, #ec4899);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Kanit', sans-serif;
+}
+
+.save-template-btn,
+.load-template-btn {
+    padding: 16px 24px;
+    background: #262626;
+    color: white;
+    border: 1px solid #404040;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'Kanit', sans-serif;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .character-template-content {
+        padding: 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .template-actions {
+        flex-direction: column;
+    }
+    
+    .template-actions button {
+        width: 100%;
+    }
+}
+
+.character-template-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #9333ea, #ec4899);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 20px;
+    font-family: 'Kanit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.character-template-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(147, 51, 234, 0.4);
+}
+
+/* Character Template Button Inline Style */
+.character-template-button-inline {
+    display: inline-block;
+}
+
+.character-template-btn-inline {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #9333ea, #ec4899);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Kanit', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.character-template-btn-inline:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(147, 51, 234, 0.3);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .upload-section {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .character-template-btn-inline {
+        width: 100%;
+        margin-top: 8px;
+    }
+}
+
+/* Hide template buttons based on body class */
+body.mode-chat #templateButtonSection,
+body.mode-character #templateButtonSection,
+body.mode-image #templateButtonSection,
+body.mode-library #templateButtonSection {
+    display: none !important;
+}
+
+body.mode-general #characterTemplateButtonSection,
+body.mode-multichar #characterTemplateButtonSection,
+body.mode-chat #characterTemplateButtonSection,
+body.mode-image #characterTemplateButtonSection,
+body.mode-library #characterTemplateButtonSection {
+    display: none !important;
+}
+
+/* Show only in correct modes */
+body.mode-general #templateButtonSection,
+body.mode-multichar #templateButtonSection {
+    display: inline-block !important;
+}
+
+body.mode-character #characterTemplateButtonSection {
+    display: inline-block !important;
+}

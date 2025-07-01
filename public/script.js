@@ -910,6 +910,11 @@ function getSelectedRatio() {
 // ========== MODE MANAGEMENT ==========
 function switchMode(mode) {
 
+    // ลบ class เก่าออก
+    document.body.className = document.body.className.replace(/mode-\w+/g, '');
+    // เพิ่ม class ใหม่
+    document.body.classList.add(`mode-${mode}`);
+
       // ถ้ากำลังประมวลผลอยู่ ไม่ให้เปลี่ยน mode
     if (isProcessing) {
         showNotification('⏳ กรุณารอให้ AI ตอบก่อนค่อยเปลี่ยนโหมด', 'warning');
@@ -984,7 +989,14 @@ case 'character':
     const uploadBtnChar = uploadSection.querySelector('.upload-btn');
     if (uploadBtnChar) uploadBtnChar.style.display = '';
     
-    // เพิ่มบรรทัดนี้
+    // ซ่อนปุ่ม Template Form สีส้ม
+    const templateBtnChar = document.getElementById('templateButtonSection');
+    if (templateBtnChar) templateBtnChar.style.display = 'none';
+    
+    // แสดงปุ่ม Character Template สีม่วง
+    const charTemplateBtnChar = document.getElementById('characterTemplateButtonSection');
+    if (charTemplateBtnChar) charTemplateBtnChar.style.display = 'inline-block';
+    
     const enhanceSection2 = document.getElementById('enhanceSection');
     if (enhanceSection2) enhanceSection2.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'none';
@@ -1053,6 +1065,10 @@ case 'image':
     if (enhanceSection) enhanceSection.style.display = 'flex';
     document.getElementById('clearChatBtn').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
+
+    // ซ่อนปุ่ม Template Form
+    const templateBtnImage = document.getElementById('templateButtonSection');
+    if (templateBtnImage) templateBtnImage.style.display = 'none';
     
     loadChatHistory('image');
     break;
@@ -1066,11 +1082,19 @@ case 'image':
     uploadSection.style.display = 'flex';
     const uploadBtnChat = uploadSection.querySelector('.upload-btn');
     if (uploadBtnChat) uploadBtnChat.style.display = '';
+    
+    // ซ่อนปุ่ม Template Form สีส้ม
+    const templateBtnChatMode = document.getElementById('templateButtonSection');
+    if (templateBtnChatMode) templateBtnChatMode.style.display = 'none';
+    
+    // ซ่อนปุ่ม Character Template สีม่วง
+    const charTemplateBtnChatMode = document.getElementById('characterTemplateButtonSection');
+    if (charTemplateBtnChatMode) charTemplateBtnChatMode.style.display = 'none';
+    
     const enhanceSectionChat = document.getElementById('enhanceSection');
     if (enhanceSectionChat) enhanceSectionChat.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'block';
     
-    // เพิ่มเฉพาะบรรทัดนี้
     loadChatHistory('chat');
     break;
     }
@@ -1224,10 +1248,11 @@ function useCharacter(index) {
     let characterData = character.profile || character.preview || 'Character details not available';
     
     if (character.profile) {
-    const visualProfile = extractVisualDetails(character.profile);
-    
-    // Format ใหม่ที่ชัดเจนกว่า
-    messageInput.value = `⚠️ MUST INCLUDE these character details in EVERY part of the video prompt:
+        // ดึงข้อมูลทั้งหมด 8 หัวข้อ
+        const visualProfile = extractCompleteCharacterProfile(character.profile);
+        
+        // Format ใหม่ที่ชัดเจนกว่า
+        messageInput.value = `⚠️ MUST INCLUDE these character details in EVERY part of the video prompt:
 
 CHARACTER: ${character.name}
 ===================
@@ -1237,7 +1262,7 @@ ${visualProfile}
 CRITICAL: The prompt MUST describe this EXACT character (not generic "person" or "man/woman"). Include their name, age, clothing colors, and appearance in EVERY shot.
 
 Now create a prompt where this character: [your scene here]`;
-}
+    }
     
     // Focus ที่ input
     messageInput.focus();
@@ -1248,79 +1273,99 @@ Now create a prompt where this character: [your scene here]`;
             messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
     }
+}
+
+// เพิ่มฟังก์ชันใหม่สำหรับดึงข้อมูลให้ครบทั้ง 8 หัวข้อ
+function extractCompleteCharacterProfile(profile) {
+    if (!profile) return '';
     
-    // Helper function (ถ้ายังไม่มี)
-    function extractVisualDetails(profile) {
-        if (!profile) return '';
+    // คำค้นหาสำหรับแต่ละหัวข้อ
+    const sections = [
+        {
+            headers: ['character identity template', '📋'],
+            include: true
+        },
+        {
+            headers: ['👩‍🏫', 'nickname / role', '1.'],
+            include: true
+        },
+        {
+            headers: ['🧑‍🎨', 'gender / age / ethnicity', '2.'],
+            include: true
+        },
+        {
+            headers: ['💃', 'body / skin / posture', '3.'],
+            include: true
+        },
+        {
+            headers: ['💇‍♀️', 'hair / face', '4.'],
+            include: true
+        },
+        {
+            headers: ['👓', 'glasses / accessories', '5.'],
+            include: true
+        },
+        {
+            headers: ['👗', 'clothing', '6.'],
+            include: true
+        },
+        {
+            headers: ['🎙️', 'voice / speech', '7.'],
+            include: true
+        },
+        {
+            headers: ['💼', 'personality', '8.'],
+            include: true
+        }
+    ];
+    
+    const lines = profile.split('\n');
+    const resultLines = [];
+    let currentSection = null;
+    let shouldInclude = false;
+    let foundSummary = false; // เพิ่มตัวแปรนี้
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const lowerLine = line.toLowerCase();
         
-        const wantedSections = [
-            'character profile',
-            'basic info',
-            'physical appearance', 
-            'costume', 'style'
-        ];
+        // ถ้าเจอ summary แล้ว ให้หยุดเลย
+        if (foundSummary) {
+            break;
+        }
         
-        const unwantedSections = [
-            'voice', 'speech', 'speaking', 'tone', 'accent',
-            'personality', 'mannerisms',
-            'cinematic notes', 'cinematic',
-            'veo 3 keywords', 'keywords'
-        ];
+        // ตรวจสอบว่าเป็นหัวข้อใหม่หรือไม่
+        let isNewSection = false;
         
-        const lines = profile.split('\n');
-        const resultLines = [];
-        let shouldInclude = true;
-        
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const lowerLine = line.toLowerCase();
-            
-            const isSectionHeader = line.includes('🎭') || line.includes('📋') || 
-                                  line.includes('🎨') || line.includes('👔') || 
-                                  line.includes('🎬') || line.includes('💡') ||
-                                  /^[A-Z\s&]+:/.test(line) ||
-                                  /^##/.test(line) ||
-                                  /^\*\*[A-Z]/.test(line);
-            
-            if (isSectionHeader) {
-                shouldInclude = false;
-                
-                for (const wanted of wantedSections) {
-                    if (lowerLine.includes(wanted)) {
-                        shouldInclude = true;
-                        break;
-                    }
-                }
-                
-                for (const unwanted of unwantedSections) {
-                    if (lowerLine.includes(unwanted)) {
-                        shouldInclude = false;
-                        break;
-                    }
+        for (let j = 0; j < sections.length; j++) {
+            const section = sections[j];
+            for (const header of section.headers) {
+                if (lowerLine.includes(header.toLowerCase())) {
+                    currentSection = j;
+                    shouldInclude = section.include;
+                    isNewSection = true;
+                    break;
                 }
             }
-            
-            if (shouldInclude) {
+            if (isNewSection) break;
+        }
+        
+        // เก็บบรรทัดถ้าควรเก็บ
+        if (shouldInclude) {
+            resultLines.push(line);
+        }
+        
+        // ถ้าเจอประโยค summary ให้เก็บแค่ครั้งเดียวแล้วหยุด
+        if (lowerLine.includes('this character profile provides') || 
+            lowerLine.includes('comprehensive insight')) {
+            if (!foundSummary) {
                 resultLines.push(line);
+                foundSummary = true;
             }
         }
-        
-        if (resultLines.length < 5) {
-            return profile.split('\n')
-                .filter(line => {
-                    const lower = line.toLowerCase();
-                    return !lower.includes('voice') && 
-                           !lower.includes('speech') && 
-                           !lower.includes('personality & mannerisms') &&
-                           !lower.includes('cinematic notes') &&
-                           !lower.includes('veo 3 keywords') &&
-                           !lower.includes('dialogue');
-                })
-                .join('\n');
-        }
-        
-        return resultLines.join('\n').trim();
     }
+    
+    return resultLines.join('\n').trim();
 }
 
 async function deleteCharacter(characterId, event) {
@@ -2051,13 +2096,23 @@ async function saveCharacter() {
         .replace(/• /g, '* ')
         .replace(/<[^>]*>/g, '');
     
-    // สร้าง preview โดยเอาเฉพาะส่วนสรุปหรือ 300 ตัวอักษรแรก
+    // สร้าง structured data จาก characterTemplateData (ถ้ามี)
+    let structuredData = null;
+    if (characterTemplateData && Object.keys(characterTemplateData).length > 0) {
+        structuredData = {
+            ...characterTemplateData
+        };
+    }
+    
+    // สร้าง preview
     let previewText = profileText;
-    const summaryMatch = profileText.match(/summary[:\s]*(.+?)(?=\n|$)/i);
-    if (summaryMatch) {
-        previewText = summaryMatch[1];
+    if (structuredData && structuredData.nickname) {
+        previewText = `${structuredData.nickname} - ${structuredData.gender || 'N/A'}, ${structuredData.age || 'N/A'}`;
+        if (structuredData.role) {
+            previewText += ` (${structuredData.role})`;
+        }
     } else {
-        // ถ้าไม่มี summary ให้เอา 300 ตัวแรก
+        // ใช้ 300 ตัวแรกเป็น preview
         previewText = profileText.substring(0, 300) + '...';
     }
     
@@ -2068,8 +2123,9 @@ async function saveCharacter() {
             body: JSON.stringify({
                 userId,
                 name,
-                profile: profileText, // ส่ง profile แบบเต็ม
-                preview: previewText  // preview แค่ส่วนสรุป
+                profile: profileText,
+                preview: previewText,
+                structuredData: structuredData // เพิ่มข้อมูลจากฟอร์ม
             })
         });
         
@@ -2092,6 +2148,7 @@ async function saveCharacter() {
             messagesContainer.appendChild(successDiv);
             
             currentCharacterProfile = null;
+            characterTemplateData = {}; // Clear template data
         } else {
             alert('เกิดข้อผิดพลาดในการบันทึก');
         }
@@ -3743,19 +3800,52 @@ function continueScene(promptId) {
         .replace(/• /g, '* ')
         .replace(/<[^>]*>/g, '');
     
+    // ตรวจสอบและดึง Character Identity จาก prompt
+    let characterDetails = '';
+    
+    // พยายามดึงข้อมูลตัวละครจาก prompt เดิม
+    const characterMatches = originalPrompt.match(/Character[^:]*:[\s\S]*?(?=\n\n|\n[A-Z]|$)/gi);
+    if (characterMatches) {
+        characterDetails = '\n\n[Character Identity - คงไว้เหมือนเดิม]\n' + characterMatches.join('\n');
+    }
+    
+    // ถ้ามี characterTemplateData จากฟอร์ม ให้ใช้ข้อมูลนั้น
+    if (characterTemplateData && Object.keys(characterTemplateData).length > 0) {
+        characterDetails = '\n\n[Character Identity from Template]\n';
+        
+        const data = characterTemplateData;
+        if (data.nickname) characterDetails += `Nickname: ${data.nickname}\n`;
+        if (data.gender) characterDetails += `Gender: ${data.gender}\n`;
+        if (data.age) characterDetails += `Age: ${data.age}\n`;
+        if (data.ethnicity) characterDetails += `Ethnicity: ${data.ethnicity}\n`;
+        if (data.body) characterDetails += `Body type: ${data.body}\n`;
+        if (data.skin) characterDetails += `Skin: ${data.skin}\n`;
+        if (data.hair) characterDetails += `Hair: ${data.hair}\n`;
+        if (data.face) characterDetails += `Face features: ${data.face}\n`;
+        if (data.glasses) characterDetails += `Glasses: ${data.glasses}\n`;
+        if (data.shirt) characterDetails += `Shirt: ${data.shirt}\n`;
+        if (data.jacket) characterDetails += `Jacket/Suit: ${data.jacket}\n`;
+        if (data.pants) characterDetails += `Pants/Skirt: ${data.pants}\n`;
+        if (data.shoes) characterDetails += `Shoes: ${data.shoes}\n`;
+    }
+    
     // สร้างข้อความสำหรับต่อฉาก
     const continuationText = `
 [ต่อฉากจาก Scene ก่อนหน้า]
 =========================
 ${originalPrompt}
 =========================
+${characterDetails}
 
 [Scene ต่อไป - ขอให้คงทุกอย่างไว้เหมือนเดิม ยกเว้น]:
 - เปลี่ยนมุมกล้อง: [ระบุมุมใหม่]
 - เปลี่ยน action: [ระบุ action ใหม่]
 - เพิ่มบทพูด: [ระบุบทพูดใหม่]
 
-⚠️ สำคัญมาก: ต้องใช้ตัวละครเดิม, สถานที่เดิม, แสงเดิม, และ style เดิมทุกอย่าง!`;
+⚠️ สำคัญมาก: 
+- ต้องใช้ตัวละครเดิม 100% (ทุกรายละเอียดต้องเหมือนเดิม)
+- ใช้สถานที่เดิม, แสงเดิม, และ style เดิม
+- Character Identity ด้านบนต้องปรากฏในทุกส่วนของ prompt!`;
     
     // ใส่ใน textarea
     const messageInput = document.getElementById('messageInput');
@@ -3764,27 +3854,12 @@ ${originalPrompt}
     // Auto resize textarea
     autoResize();
     
-    // ถ้าข้อความยาวมาก เปิด full editor อัตโนมัติ
-    if (continuationText.length > 500) {
-        setTimeout(() => {
-            openFullEditor();
-        }, 300);
-    } else {
-    
     // Scroll ไปที่ input
-        messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        messageInput.focus();
-    }
-    
-    // Highlight text ที่ต้องแก้ไข
-    setTimeout(() => {
-        const start = continuationText.indexOf('[ระบุมุมใหม่]');
-        const end = continuationText.indexOf('⚠️ สำคัญมาก');
-        messageInput.setSelectionRange(start, end);
-    }, 500);
+    messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    messageInput.focus();
     
     // แสดง notification
-    showNotification('📋 Copied scene! ใช้ปุ่ม ⛶ เพื่อขยาย editor', 'success');
+    showNotification('📋 Scene ต่อพร้อมข้อมูลตัวละคร! กด "สร้าง Prompt ✨"', 'success');
 }
 
 // ========== EXPANDABLE TEXTAREA FUNCTIONS ==========
@@ -5326,9 +5401,13 @@ let templateCharCount = 2;
 function updateTemplateButton() {
     const templateSection = document.getElementById('templateButtonSection');
     
+    if (!templateSection) return;
+    
+    // แสดงเฉพาะใน general และ multichar เท่านั้น
     if (currentMode === 'general' || currentMode === 'multichar') {
-        templateSection.style.display = 'block';
+        templateSection.style.display = 'inline-block';
     } else {
+        // ซ่อนในโหมดอื่นๆ ทั้งหมด
         templateSection.style.display = 'none';
     }
 }
@@ -5692,4 +5771,299 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// END OF PROFESSIONAL SCRIPT
+// ========== CHARACTER TEMPLATE SYSTEM ==========
+// เพิ่มโค้ดนี้ที่ท้ายไฟล์ script.js
+
+let characterTemplateData = {};
+
+// ฟังก์ชันอัพเดทการแสดงปุ่ม Character Template
+function updateCharacterTemplateButton() {
+    const charTemplateSection = document.getElementById('characterTemplateButtonSection');
+    
+    if (charTemplateSection) {
+        // แสดงเฉพาะในโหมด character
+        if (currentMode === 'character') {
+            charTemplateSection.style.display = 'inline-block';
+        } else {
+            charTemplateSection.style.display = 'none';
+        }
+    }
+}
+
+// Show Character Template Modal
+function showCharacterTemplate() {
+    document.getElementById('characterTemplateModal').style.display = 'flex';
+    
+    // Clear all fields
+    const fields = [
+        'charNickname', 'charRole', 'charGender', 'charAge', 'charEthnicity',
+        'charBody', 'charSkin', 'charPosture', 'charHair', 'charFace',
+        'charGlasses', 'charAccessories', 'charShirt', 'charJacket', 
+        'charPants', 'charShoes', 'charVoiceTone', 'charSpeechStyle',
+        'charConfidence', 'charCameraPresence', 'charStoryRole'
+    ];
+    
+    fields.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '';
+    });
+}
+
+// Close Character Template Modal
+function closeCharacterTemplate() {
+    document.getElementById('characterTemplateModal').style.display = 'none';
+}
+
+// Generate Character Profile from Template
+function generateFromCharacterTemplate() {
+    // Collect all data
+    const data = {
+        nickname: document.getElementById('charNickname').value || '',
+        role: document.getElementById('charRole').value || '',
+        gender: document.getElementById('charGender').value || '',
+        age: document.getElementById('charAge').value || '',
+        ethnicity: document.getElementById('charEthnicity').value || '',
+        body: document.getElementById('charBody').value || '',
+        skin: document.getElementById('charSkin').value || '',
+        posture: document.getElementById('charPosture').value || '',
+        hair: document.getElementById('charHair').value || '',
+        face: document.getElementById('charFace').value || '',
+        glasses: document.getElementById('charGlasses').value || '',
+        accessories: document.getElementById('charAccessories').value || '',
+        shirt: document.getElementById('charShirt').value || '',
+        jacket: document.getElementById('charJacket').value || '',
+        pants: document.getElementById('charPants').value || '',
+        shoes: document.getElementById('charShoes').value || '',
+        voiceTone: document.getElementById('charVoiceTone').value || '',
+        speechStyle: document.getElementById('charSpeechStyle').value || '',
+        confidence: document.getElementById('charConfidence').value || '',
+        cameraPresence: document.getElementById('charCameraPresence').value || '',
+        storyRole: document.getElementById('charStoryRole').value || ''
+    };
+    
+    // Store data for later use
+    characterTemplateData = data;
+    
+    // Build character description
+    let prompt = 'สร้าง Character Profile แบบละเอียดมากจากข้อมูลนี้:\n\n';
+    
+    if (data.nickname || data.role) {
+        prompt += '👩‍🏫 **ชื่อเรียก / บทบาท**\n';
+        if (data.nickname) prompt += `- ชื่อเรียก: ${data.nickname}\n`;
+        if (data.role) prompt += `- บทบาท: ${data.role}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.gender || data.age || data.ethnicity) {
+        prompt += '🧑‍🎨 **เพศ / อายุ / เชื้อชาติ**\n';
+        if (data.gender) prompt += `- เพศ: ${data.gender}\n`;
+        if (data.age) prompt += `- อายุ: ${data.age}\n`;
+        if (data.ethnicity) prompt += `- เชื้อชาติ: ${data.ethnicity}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.body || data.skin || data.posture) {
+        prompt += '💃 **รูปร่าง / ผิว / ท่าทาง**\n';
+        if (data.body) prompt += `- รูปร่าง: ${data.body}\n`;
+        if (data.skin) prompt += `- ผิว: ${data.skin}\n`;
+        if (data.posture) prompt += `- ท่าทาง: ${data.posture}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.hair || data.face) {
+        prompt += '💇‍♀️ **ลักษณะผม / ใบหน้า**\n';
+        if (data.hair) prompt += `- ทรงผม: ${data.hair}\n`;
+        if (data.face) prompt += `- ใบหน้า: ${data.face}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.glasses || data.accessories) {
+        prompt += '👓 **แว่น / เครื่องประดับ**\n';
+        if (data.glasses) prompt += `- แว่น: ${data.glasses}\n`;
+        if (data.accessories) prompt += `- เครื่องประดับ: ${data.accessories}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.shirt || data.jacket || data.pants || data.shoes) {
+        prompt += '👗 **เครื่องแต่งกาย**\n';
+        if (data.shirt) prompt += `- เสื้อ: ${data.shirt}\n`;
+        if (data.jacket) prompt += `- เสื้อคลุม/สูท: ${data.jacket}\n`;
+        if (data.pants) prompt += `- กางเกง/กระโปรง: ${data.pants}\n`;
+        if (data.shoes) prompt += `- รองเท้า: ${data.shoes}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.voiceTone || data.speechStyle) {
+        prompt += '🎙️ **น้ำเสียง / วิธีพูด**\n';
+        if (data.voiceTone) prompt += `- โทนเสียง: ${data.voiceTone}\n`;
+        if (data.speechStyle) prompt += `- ลักษณะการพูด: ${data.speechStyle}\n`;
+        prompt += '\n';
+    }
+    
+    if (data.confidence || data.cameraPresence || data.storyRole) {
+        prompt += '💼 **บุคลิกภายใน**\n';
+        if (data.confidence) prompt += `- ความมั่นใจ: ${data.confidence}\n`;
+        if (data.cameraPresence) prompt += `- ท่าทีต่อกล้อง: ${data.cameraPresence}\n`;
+        if (data.storyRole) prompt += `- บทบาทในเรื่อง: ${data.storyRole}\n`;
+    }
+    
+    prompt += '\n⚠️ สำคัญ: ให้สร้างเป็น Character Profile ภาษาอังกฤษ พร้อมคำอธิบายละเอียดมาก รวมทั้งลักษณะท่าทาง การเคลื่อนไหว และรายละเอียดที่จะช่วยให้ AI สร้างตัวละครได้สมจริง';
+    
+    // Insert into message input
+    document.getElementById('messageInput').value = prompt;
+    
+    // Close modal
+    closeCharacterTemplate();
+    
+    // Auto resize textarea
+    const textarea = document.getElementById('messageInput');
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+    
+    // Show notification
+    showNotification('📋 ข้อมูล Character พร้อมแล้ว! กด "สร้างตัวละคร" เพื่อสร้าง Profile', 'success');
+}
+
+// Export functions
+window.showCharacterTemplate = showCharacterTemplate;
+window.closeCharacterTemplate = closeCharacterTemplate;
+window.generateFromCharacterTemplate = generateFromCharacterTemplate;
+window.updateCharacterTemplateButton = updateCharacterTemplateButton;
+
+// Override switchMode เพื่อเรียก updateCharacterTemplateButton
+const originalSwitchModeForCharTemplate = window.switchMode;
+window.switchMode = function(mode) {
+    originalSwitchModeForCharTemplate(mode);
+    updateTemplateButton();
+    updateCharacterTemplateButton();
+};
+
+// เพิ่มการเรียกใช้เมื่อโหลดหน้า
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        updateCharacterTemplateButton();
+    }, 100);
+});
+
+console.log('✅ Character Template System loaded!');
+
+// ========== TEMPLATE BUTTON FIX ==========
+// ฟังก์ชันตรวจสอบการแสดงปุ่ม
+function verifyButtonVisibility() {
+    const templateBtn = document.getElementById('templateButtonSection');
+    const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
+    
+    switch(currentMode) {
+        case 'general':
+        case 'multichar':
+            // แสดงปุ่ม Template Form สีส้ม
+            if (templateBtn) templateBtn.style.display = 'inline-block';
+            // ซ่อนปุ่ม Character Template สีม่วง
+            if (charTemplateBtn) charTemplateBtn.style.display = 'none';
+            break;
+            
+        case 'character':
+            // ซ่อนปุ่ม Template Form สีส้ม
+            if (templateBtn) templateBtn.style.display = 'none';
+            // แสดงปุ่ม Character Template สีม่วง
+            if (charTemplateBtn) charTemplateBtn.style.display = 'inline-block';
+            break;
+            
+        default:
+            // ซ่อนทั้งสองปุ่มในโหมดอื่นๆ
+            if (templateBtn) templateBtn.style.display = 'none';
+            if (charTemplateBtn) charTemplateBtn.style.display = 'none';
+            break;
+    }
+}
+
+// เรียกใช้ทุกครั้งที่เปลี่ยนโหมด
+const originalSwitchModeFixed = window.switchMode;
+window.switchMode = function(mode) {
+    originalSwitchModeFixed(mode);
+    
+    // เรียกตรวจสอบปุ่มหลังเปลี่ยนโหมด
+    setTimeout(() => {
+        verifyButtonVisibility();
+    }, 50);
+};
+
+// เรียกตรวจสอบเมื่อโหลดหน้า
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        verifyButtonVisibility();
+    }, 500);
+});
+
+console.log('✅ Template button visibility fix applied!');
+// ========== END TEMPLATE BUTTON FIX ==========
+
+// ========== FORCE HIDE TEMPLATE BUTTONS ==========
+// สร้าง observer เพื่อเฝ้าดูการเปลี่ยนแปลง
+const buttonObserver = new MutationObserver(function(mutations) {
+    const templateBtn = document.getElementById('templateButtonSection');
+    const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
+    
+    if (!templateBtn || !charTemplateBtn) return;
+    
+    // ตรวจสอบโหมดปัจจุบันและซ่อน/แสดงปุ่มให้ถูกต้อง
+    switch(currentMode) {
+        case 'general':
+        case 'multichar':
+            templateBtn.style.display = 'inline-block';
+            templateBtn.style.visibility = 'visible';
+            charTemplateBtn.style.display = 'none';
+            charTemplateBtn.style.visibility = 'hidden';
+            break;
+            
+        case 'character':
+            templateBtn.style.display = 'none';
+            templateBtn.style.visibility = 'hidden';
+            charTemplateBtn.style.display = 'inline-block';
+            charTemplateBtn.style.visibility = 'visible';
+            break;
+            
+        case 'chat':
+        case 'image':
+        case 'library':
+            templateBtn.style.display = 'none';
+            templateBtn.style.visibility = 'hidden';
+            charTemplateBtn.style.display = 'none';
+            charTemplateBtn.style.visibility = 'hidden';
+            break;
+    }
+});
+
+// เริ่ม observe เมื่อ DOM พร้อม
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadSection = document.getElementById('uploadSection');
+    if (uploadSection) {
+        buttonObserver.observe(uploadSection, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+            attributeFilter: ['style', 'class']
+        });
+    }
+    
+    // Force hide on load
+    setTimeout(() => {
+        const templateBtn = document.getElementById('templateButtonSection');
+        const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
+        
+        if (currentMode === 'chat' || currentMode === 'image') {
+            if (templateBtn) {
+                templateBtn.style.display = 'none';
+                templateBtn.style.visibility = 'hidden';
+            }
+            if (charTemplateBtn) {
+                charTemplateBtn.style.display = 'none';
+                charTemplateBtn.style.visibility = 'hidden';
+            }
+        }
+    }, 1000);
+});
+
+// ========== END FORCE HIDE ==========
+
+// ========== END CHARACTER TEMPLATE SYSTEM ==========
