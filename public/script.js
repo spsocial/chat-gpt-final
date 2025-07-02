@@ -3270,7 +3270,7 @@ function showSceneBuilder() {
     modal.innerHTML = `
         <div class="scene-modal-content">
             <button class="close-modal" onclick="closeSceneBuilder()">✕</button>
-            <h2>🎭 สร้าง Promp master</h2>
+            <h2>🎭 สร้าง Prompt master</h2>
             
             <div class="scene-form">
                 <!-- 1. สถานที่ -->
@@ -3283,13 +3283,13 @@ function showSceneBuilder() {
                 </div>
 
                 <!-- 1.5 สถานการณ์ -->
-<div class="form-section">
-    <h3>🎭 1.5 เกิดเหตุการณ์/สถานการณ์อะไร?</h3>
-    <input type="text" id="sceneSituation" 
-           placeholder="เช่น ด่านตรวจเมาไม่ขับ, งานแต่งงาน, การสัมภาษณ์งาน" 
-           class="scene-input">
-    <small>💡 บอกเหตุการณ์ที่กำลังเกิดขึ้น หรือบรรยากาศของฉาก</small>
-</div>
+                <div class="form-section">
+                    <h3>🎭 1.5 เกิดเหตุการณ์/สถานการณ์อะไร?</h3>
+                    <input type="text" id="sceneSituation" 
+                           placeholder="เช่น ด่านตรวจเมาไม่ขับ, งานแต่งงาน, การสัมภาษณ์งาน" 
+                           class="scene-input">
+                    <small>💡 บอกเหตุการณ์ที่กำลังเกิดขึ้น หรือบรรยากาศของฉาก</small>
+                </div>
                 
                 <!-- 2. จำนวนคน -->
                 <div class="form-section">
@@ -3306,17 +3306,11 @@ function showSceneBuilder() {
                 <div class="form-section" id="charactersSection">
                     <h3>👤 3. แต่ละคนเป็นใคร?</h3>
                     <div id="characterInputs">
-                        <div class="char-input-group">
-                            <label>คนที่ 1:</label>
-                            <input type="text" placeholder="เช่น นักข่าวสาวชุดสูท" class="scene-input" data-index="0">
-                        </div>
-                        <div class="char-input-group">
-                            <label>คนที่ 2:</label>
-                            <input type="text" placeholder="เช่น ลุงขายของ" class="scene-input" data-index="1">
-                        </div>
+                        <!-- จะถูกสร้างโดย setCharacterCount -->
                     </div>
                 </div>
                 
+                <!-- ส่วนที่เหลือเหมือนเดิม... -->
                 <!-- 4. พูดอะไร -->
                 <div class="form-section">
                     <h3>💬 4. พูดอะไรกัน? (ถ้ามี)</h3>
@@ -3371,8 +3365,9 @@ function showSceneBuilder() {
     
     document.body.appendChild(modal);
     
-    // Focus first input
+    // เรียก setCharacterCount เพื่อสร้างช่องกรอกเริ่มต้น 2 คน
     setTimeout(() => {
+        setCharacterCount(2);
         document.getElementById('sceneLocation').focus();
     }, 100);
 }
@@ -3391,36 +3386,41 @@ let sceneData = {
 function setCharacterCount(count) {
     sceneData.characterCount = count;
     
+    // Update UI
     document.querySelectorAll('.count-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.target.classList.add('active');
+    // ใช้ currentTarget แทน event.target เพื่อหลีกเลี่ยงปัญหา
+    const clickedBtn = document.querySelector(`.count-btn:nth-child(${count-1})`);
+    if (clickedBtn) clickedBtn.classList.add('active');
     
+    // Update character inputs
     const container = document.getElementById('characterInputs');
-    container.innerHTML = '';
+    if (!container) return;
     
+    container.innerHTML = '';
     sceneData.characters = new Array(count).fill('');
     
     for (let i = 0; i < count; i++) {
-        container.innerHTML += `
-            <div class="char-input-group">
-                <label>
-                    คนที่ ${i+1}:
-                    <!-- เพิ่มปุ่ม My Character -->
-                    <button type="button" class="my-char-btn-small" 
-                            onclick="openCharacterPicker('sceneChar${i}')" 
-                            title="เลือกจาก My Characters">
-                        📚
-                    </button>
-                </label>
-                <input type="text" 
-                       id="sceneChar${i}"
-                       placeholder="บอกลักษณะสั้นๆ เช่น อายุ เพศ การแต่งตัว" 
-                       class="scene-input"
-                       data-index="${i}"
-                       onchange="updateCharacter(${i}, this.value)">
+        const charDiv = document.createElement('div');
+        charDiv.className = 'char-input-group';
+        charDiv.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                <label style="flex: 1;">คนที่ ${i+1}:</label>
+                <button type="button" class="my-char-btn" 
+                        onclick="openCharacterPicker('sceneChar${i}')" 
+                        title="เลือกจาก My Characters">
+                    📚 My Character
+                </button>
             </div>
+            <input type="text" 
+                   id="sceneChar${i}"
+                   placeholder="บอกลักษณะสั้นๆ เช่น อายุ เพศ การแต่งตัว" 
+                   class="scene-input"
+                   data-index="${i}"
+                   onchange="updateCharacter(${i}, this.value)">
         `;
+        container.appendChild(charDiv);
     }
 }
 
