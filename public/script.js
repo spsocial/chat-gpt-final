@@ -3391,13 +3391,11 @@ let sceneData = {
 function setCharacterCount(count) {
     sceneData.characterCount = count;
     
-    // Update UI
     document.querySelectorAll('.count-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     event.target.classList.add('active');
     
-    // Update character inputs
     const container = document.getElementById('characterInputs');
     container.innerHTML = '';
     
@@ -3406,8 +3404,17 @@ function setCharacterCount(count) {
     for (let i = 0; i < count; i++) {
         container.innerHTML += `
             <div class="char-input-group">
-                <label>คนที่ ${i+1}:</label>
+                <label>
+                    คนที่ ${i+1}:
+                    <!-- เพิ่มปุ่ม My Character -->
+                    <button type="button" class="my-char-btn-small" 
+                            onclick="openCharacterPicker('sceneChar${i}')" 
+                            title="เลือกจาก My Characters">
+                        📚
+                    </button>
+                </label>
                 <input type="text" 
+                       id="sceneChar${i}"
                        placeholder="บอกลักษณะสั้นๆ เช่น อายุ เพศ การแต่งตัว" 
                        class="scene-input"
                        data-index="${i}"
@@ -5506,27 +5513,22 @@ function closeTemplateFormOnOutsideClick(event) {
 function setTemplateCharCount(count, buttonElement) {
     console.log('setTemplateCharCount called with count:', count);
     
-    // Update the global variable
     templateCharCount = count;
     
-    // Update buttons
     document.querySelectorAll('.char-count-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     
-    // Add active class to clicked button
     if (buttonElement) {
         buttonElement.classList.add('active');
     }
     
-    // Update character inputs
     const container = document.getElementById('characterDescriptions');
     if (!container) {
         console.error('characterDescriptions container not found!');
         return;
     }
     
-    // Clear and rebuild character inputs
     container.innerHTML = '';
     
     if (count === 0) {
@@ -5541,6 +5543,10 @@ function setTemplateCharCount(count, buttonElement) {
                         <button type="button" class="mic-btn" onclick="toggleFieldVoice('char${i}')" data-field="char${i}">
                             🎤
                         </button>
+                        <!-- เพิ่มปุ่ม My Character ใหม่ -->
+                        <button type="button" class="my-char-btn" onclick="openCharacterPicker('char${i}')" title="เลือกจาก My Characters">
+                            📚 My Character
+                        </button>
                     </label>
                     <input type="text" id="char${i}" class="template-input" 
                            placeholder="บรรยายลักษณะตัวละคร เช่น อายุ เพศ การแต่งตัว">
@@ -5549,8 +5555,6 @@ function setTemplateCharCount(count, buttonElement) {
         }
         container.innerHTML = html;
     }
-    
-    console.log('Character inputs updated successfully');
 }
 
 // Generate prompt from template
@@ -6108,5 +6112,218 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========== END FORCE HIDE ==========
+
+// ========== CHARACTER PICKER SYSTEM ==========
+let currentCharacterFieldId = null;
+
+// ฟังก์ชันเปิด Character Picker
+function openCharacterPicker(fieldId) {
+    currentCharacterFieldId = fieldId;
+    
+    // สร้าง modal
+    const modal = document.createElement('div');
+    modal.className = 'character-picker-modal';
+    modal.innerHTML = `
+        <div class="character-picker-content">
+            <div class="picker-header">
+                <h3>📚 เลือกตัวละครจาก Library</h3>
+                <button class="close-btn" onclick="closeCharacterPicker()">✕</button>
+            </div>
+            
+            <div class="picker-body">
+                <div id="characterPickerList" class="character-picker-list">
+                    <!-- รายการตัวละครจะแสดงที่นี่ -->
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // โหลดรายการตัวละคร
+    loadCharacterPickerList();
+}
+
+// ฟังก์ชันโหลดรายการตัวละคร
+function loadCharacterPickerList() {
+    const listContainer = document.getElementById('characterPickerList');
+    
+    if (characterLibrary.length === 0) {
+        listContainer.innerHTML = `
+            <div class="empty-picker">
+                <p>ยังไม่มีตัวละครที่บันทึกไว้</p>
+                <button onclick="closeCharacterPicker(); switchMode('character');" 
+                        style="margin-top: 16px; padding: 8px 16px; background: var(--primary); 
+                               color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    + สร้างตัวละครใหม่
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    // แสดงรายการตัวละคร
+    listContainer.innerHTML = characterLibrary.map((char, index) => {
+        // ดึงข้อมูลสรุปจาก profile
+        const summary = extractCharacterSummary(char.profile || char.preview);
+        
+        return `
+            <div class="character-picker-item" onclick="selectCharacterForField(${index})">
+                <div class="picker-item-header">
+                    <h4>${char.name}</h4>
+                    <span class="select-indicator">เลือก</span>
+                </div>
+                <div class="picker-item-preview">
+                    ${summary}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// ฟังก์ชันดึงข้อมูลสรุปตัวละคร
+function extractCharacterSummary(profile) {
+    if (!profile) return 'ไม่มีข้อมูล';
+    
+    // พยายามดึงข้อมูลสำคัญ
+    const lines = profile.split('\n');
+    let summary = '';
+    let foundInfo = false;
+    
+    for (let line of lines) {
+        // หาข้อมูลเพศ อายุ การแต่งตัว
+        if (line.includes('Gender:') || line.includes('Age:') || 
+            line.includes('Appearance:') || line.includes('Clothing:') ||
+            line.includes('เพศ:') || line.includes('อายุ:')) {
+            summary += line.trim() + '<br>';
+            foundInfo = true;
+        }
+        
+        // ถ้าเจอข้อมูลพอแล้ว หยุด
+        if (foundInfo && summary.length > 150) break;
+    }
+    
+    return summary || profile.substring(0, 200) + '...';
+}
+
+// ฟังก์ชันเลือกตัวละครใส่ในช่อง
+// ฟังก์ชันเลือกตัวละครใส่ในช่อง (เวอร์ชันดึงเฉพาะ 8 หัวข้อ)
+function selectCharacterForField(index) {
+    const character = characterLibrary[index];
+    const field = document.getElementById(currentCharacterFieldId);
+    
+    if (!field || !character) return;
+    
+    // ดึงเฉพาะ 8 หัวข้อหลัก
+    let cleanProfile = '';
+    
+    if (character.profile) {
+        cleanProfile = extractMainCharacterInfo(character.profile);
+    } else {
+        cleanProfile = character.preview || character.name;
+    }
+    
+    // ใส่ข้อมูลในช่อง
+    field.value = cleanProfile;
+    
+    // ถ้าเป็น Scene Builder
+    if (currentCharacterFieldId.startsWith('sceneChar')) {
+        const idx = parseInt(currentCharacterFieldId.replace('sceneChar', ''));
+        sceneData.characters[idx] = cleanProfile;
+    }
+    
+    closeCharacterPicker();
+    showNotification(`✅ เลือก "${character.name}" แล้ว!`, 'success');
+}
+
+// ฟังก์ชันดึงเฉพาะข้อมูล 8 หัวข้อหลัก
+function extractMainCharacterInfo(profile) {
+    if (!profile) return '';
+    
+    // หัวข้อที่ต้องการเก็บ
+    const wantedSections = [
+        { emoji: '👩‍🏫', number: '1.', keywords: ['nickname', 'role'] },
+        { emoji: '🧑‍🎨', number: '2.', keywords: ['gender', 'age', 'ethnicity'] },
+        { emoji: '💃', number: '3.', keywords: ['body', 'skin', 'posture'] },
+        { emoji: '💇‍♀️', number: '4.', keywords: ['hair', 'face'] },
+        { emoji: '👓', number: '5.', keywords: ['glasses', 'accessories'] },
+        { emoji: '👗', number: '6.', keywords: ['clothing', 'shirt', 'jacket', 'pants', 'shoes'] },
+        { emoji: '🎙️', number: '7.', keywords: ['voice', 'speech'] },
+        { emoji: '💼', number: '8.', keywords: ['personality', 'confidence', 'camera', 'story'] }
+    ];
+    
+    const lines = profile.split('\n');
+    const result = [];
+    let currentSection = null;
+    let captureContent = false;
+    
+    for (let line of lines) {
+        const trimmedLine = line.trim();
+        const lowerLine = trimmedLine.toLowerCase();
+        
+        // ตรวจสอบว่าเป็นหัวข้อที่ต้องการหรือไม่
+        for (let section of wantedSections) {
+            // ตรวจสอบด้วย emoji หรือหมายเลข
+            if (trimmedLine.includes(section.emoji) || trimmedLine.includes(section.number)) {
+                currentSection = section;
+                captureContent = true;
+                result.push(trimmedLine); // เก็บบรรทัดหัวข้อ
+                break;
+            }
+        }
+        
+        // ถ้ากำลังเก็บเนื้อหาของหัวข้อ
+        if (captureContent && currentSection) {
+            // ถ้าเป็นเนื้อหา (ขึ้นต้นด้วย * หรือ -)
+            if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-')) {
+                result.push(trimmedLine);
+            }
+            // ถ้าเจอหัวข้อใหม่ที่ไม่ใช่ส่วนที่ต้องการ ให้หยุด
+            else if (trimmedLine && !trimmedLine.startsWith('*') && !trimmedLine.startsWith('-')) {
+                // ตรวจสอบว่าเป็นหัวข้อถัดไปหรือไม่
+                let isNextSection = false;
+                for (let section of wantedSections) {
+                    if (trimmedLine.includes(section.emoji) || trimmedLine.includes(section.number)) {
+                        isNextSection = true;
+                        break;
+                    }
+                }
+                
+                // ถ้าไม่ใช่หัวข้อที่ต้องการ และไม่ใช่บรรทัดว่าง ให้หยุดเก็บ
+                if (!isNextSection && trimmedLine.length > 0 && 
+                    !lowerLine.includes('summary') && 
+                    !lowerLine.includes('character profile') &&
+                    !lowerLine.includes('template')) {
+                    captureContent = false;
+                }
+            }
+        }
+        
+        // หยุดถ้าเจอคำที่บ่งบอกว่าเป็นส่วนท้าย
+        if (lowerLine.includes('summary') || 
+            lowerLine.includes('this character profile') ||
+            lowerLine.includes('comprehensive insight')) {
+            break;
+        }
+    }
+    
+    // รวมผลลัพธ์และจัดรูปแบบ
+    return result.join('\n').trim();
+}
+
+// Export function เพิ่มเติม
+window.extractMainCharacterInfo = extractMainCharacterInfo;
+
+// ฟังก์ชันปิด Character Picker
+function closeCharacterPicker() {
+    const modal = document.querySelector('.character-picker-modal');
+    if (modal) modal.remove();
+    currentCharacterFieldId = null;
+}
+
+// Export functions
+window.openCharacterPicker = openCharacterPicker;
+window.closeCharacterPicker = closeCharacterPicker;
+window.selectCharacterForField = selectCharacterForField;
 
 // ========== END CHARACTER TEMPLATE SYSTEM ==========
