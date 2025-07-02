@@ -5513,8 +5513,11 @@ function closeTemplateFormOnOutsideClick(event) {
 function setTemplateCharCount(count, buttonElement) {
     console.log('setTemplateCharCount called with count:', count);
     
-    templateCharCount = count;
+    // บันทึกจำนวนตัวละคร
+    templateFormData.characterCount = count;
+    window.templateCharCount = count; // เก็บทั้ง 2 ที่
     
+    // Update UI
     document.querySelectorAll('.char-count-btn').forEach(btn => {
         btn.classList.remove('active');
     });
@@ -5523,38 +5526,42 @@ function setTemplateCharCount(count, buttonElement) {
         buttonElement.classList.add('active');
     }
     
+    // Update character inputs
     const container = document.getElementById('characterDescriptions');
-    if (!container) {
-        console.error('characterDescriptions container not found!');
-        return;
-    }
+    if (!container) return;
     
     container.innerHTML = '';
     
     if (count === 0) {
         container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">ไม่มีตัวละครในฉากนี้</p>';
     } else {
-        let html = '';
         for (let i = 1; i <= count; i++) {
-            html += `
-                <div class="form-group char-field" data-char="${i}">
-                    <label>
-                        👤 ตัวละครที่ ${i}
-                        <button type="button" class="mic-btn" onclick="toggleFieldVoice('char${i}')" data-field="char${i}">
-                            🎤
-                        </button>
-                        <!-- เพิ่มปุ่ม My Character ใหม่ -->
-                        <button type="button" class="my-char-btn" onclick="openCharacterPicker('char${i}')" title="เลือกจาก My Characters">
-                            📚 My Character
-                        </button>
-                    </label>
-                    <input type="text" id="char${i}" class="template-input" 
-                           placeholder="บรรยายลักษณะตัวละคร เช่น อายุ เพศ การแต่งตัว">
-                </div>
+            const charDiv = document.createElement('div');
+            charDiv.className = 'form-group char-field';
+            charDiv.innerHTML = `
+                <label>
+                    👤 ตัวละครที่ ${i}
+                    <button type="button" class="mic-btn" onclick="toggleFieldVoice('char${i}')" data-field="char${i}">
+                        🎤
+                    </button>
+                    <button type="button" class="my-char-btn" onclick="openCharacterPicker('char${i}')" title="เลือกจาก My Characters">
+                        📚 My Character
+                    </button>
+                </label>
+                <input type="text" id="char${i}" class="template-input" 
+                       placeholder="บรรยายลักษณะตัวละคร เช่น อายุ เพศ การแต่งตัว"
+                       oninput="updateTemplatePreview(); saveCharacterData(${i}, this.value);">
             `;
+            container.appendChild(charDiv);
         }
-        container.innerHTML = html;
     }
+    
+    updateTemplatePreview();
+}
+
+// เพิ่มฟังก์ชันบันทึกข้อมูลตัวละคร
+function saveCharacterData(index, value) {
+    templateFormData.characters[`char${index}`] = value;
 }
 
 // Generate prompt from template
@@ -5578,6 +5585,23 @@ function generateFromTemplate() {
         if (timeOfDay) prompt += `🌅 แสง/เวลา: ${getTimeOfDayText(timeOfDay)}\n`;
         if (visualStyle) prompt += `🎨 สไตล์: ${getVisualStyleText(visualStyle)}\n`;
         if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
+        // ========== เพิ่มส่วนนี้ ==========
+// Characters - เหมือน Scene Builder
+const charCount = window.templateCharCount || 0;
+if (charCount > 0) {
+    prompt += `\n👥 จำนวนตัวละคร: ${charCount} คน\n`;
+    prompt += 'รายละเอียดตัวละคร:\n';
+    
+    for (let i = 1; i <= charCount; i++) {
+        const charInput = document.getElementById(`char${i}`);
+        if (charInput && charInput.value) {
+            prompt += `${i}. ${charInput.value}\n`;
+        } else {
+            prompt += `${i}. (ให้ AI สร้างให้เหมาะกับฉาก)\n`;
+        }
+    }
+}
+// ========== จบส่วนที่เพิ่ม ==========
         if (details) prompt += `\n📝 รายละเอียด: ${details}\n`;
         
         prompt += '\n⚠️ สำคัญ: ต้องมีรายละเอียด cinematography, มุมกล้อง, แสง, การเคลื่อนไหว และเอาท์พุตเป็นภาษาอังกฤษ';
@@ -5594,9 +5618,37 @@ function generateFromTemplate() {
         if (sceneType) prompt += `🎭 ประเภทฉาก: ${getSceneTypeText(sceneType)}\n`;
         if (location) prompt += `📍 สถานที่: ${location}\n`;
         prompt += `👥 จำนวนตัวละคร: ${templateCharCount} คน\n\n`;
+
+        // Debug - ตรวจสอบค่าตัวละคร
+console.log('=== ตรวจสอบข้อมูลตัวละคร ===');
+console.log('จำนวนตัวละคร:', templateCharCount);
+
+// ตรวจสอบค่าในแต่ละช่อง
+for (let i = 1; i <= templateCharCount; i++) {
+    const charInput = document.getElementById(`char${i}`);
+    if (charInput) {
+        console.log(`ช่องที่ ${i} มีข้อมูล:`, charInput.value ? 'มี' : 'ไม่มี');
+        if (charInput.value) {
+            console.log(`ข้อมูล: ${charInput.value.substring(0, 50)}...`);
+        }
+    } else {
+        console.log(`ช่องที่ ${i}: ไม่พบ element`);
+    }
+}
         
         // Characters
         prompt += 'รายละเอียดตัวละคร:\n';
+        // DEBUG - พิมพ์ค่าออกมาดู
+console.log('=== DEBUG Character Values ===');
+for (let i = 1; i <= templateCharCount; i++) {
+    const charInput = document.getElementById(`char${i}`);
+    console.log(`Character ${i}:`, {
+        element: charInput ? 'Found' : 'Not Found',
+        hasValue: charInput?.value ? 'Yes' : 'No',
+        value: charInput?.value?.substring(0, 100) || 'Empty'
+    });
+}
+console.log('===========================');
         for (let i = 1; i <= templateCharCount; i++) {
             const charInput = document.getElementById(`char${i}`);
             if (charInput && charInput.value) {
@@ -6225,11 +6277,32 @@ function selectCharacterForField(index) {
     
     // ใส่ข้อมูลในช่อง
     field.value = cleanProfile;
+
+    // Trigger events เพื่อให้ preview อัพเดท
+field.dispatchEvent(new Event('input', { bubbles: true }));
+field.dispatchEvent(new Event('change', { bubbles: true }));
+
+// Force update preview
+setTimeout(() => {
+    updateTemplatePreview();
+    console.log('✅ Preview updated after character selection');
+}, 100);
+    
+    // Trigger input event เพื่อให้ preview อัพเดท
+    const event = new Event('input', { bubbles: true });
+    field.dispatchEvent(event);
     
     // ถ้าเป็น Scene Builder
     if (currentCharacterFieldId.startsWith('sceneChar')) {
         const idx = parseInt(currentCharacterFieldId.replace('sceneChar', ''));
         sceneData.characters[idx] = cleanProfile;
+    }
+    
+    // Force update preview
+    if (typeof updateTemplatePreview === 'function') {
+        setTimeout(() => {
+            updateTemplatePreview();
+        }, 100);
     }
     
     closeCharacterPicker();
@@ -6325,5 +6398,479 @@ function closeCharacterPicker() {
 window.openCharacterPicker = openCharacterPicker;
 window.closeCharacterPicker = closeCharacterPicker;
 window.selectCharacterForField = selectCharacterForField;
+
+// ========== DEBUG CHARACTER TEMPLATE ==========
+window.debugTemplateCharacters = function() {
+    console.log('=== Debug Template Characters ===');
+    console.log('Character Count:', templateCharCount);
+    
+    for (let i = 1; i <= 5; i++) {
+        const field = document.getElementById(`char${i}`);
+        if (field) {
+            console.log(`Character ${i}:`, field.value);
+        }
+    }
+    
+    console.log('=== Preview Update Test ===');
+    updateTemplatePreview();
+};
+// ========== FORCE UPDATE CHARACTER VALUES ==========
+// Override setTemplateCharCount เพื่อเก็บ reference ของ fields
+window.templateCharFields = {};
+
+const originalSetTemplateCharCount = window.setTemplateCharCount;
+window.setTemplateCharCount = function(count, buttonElement) {
+    // เรียกฟังก์ชันเดิม
+    originalSetTemplateCharCount(count, buttonElement);
+    
+    // เก็บ reference ของทุก field
+    window.templateCharFields = {};
+    for (let i = 1; i <= count; i++) {
+        const field = document.getElementById(`char${i}`);
+        if (field) {
+            window.templateCharFields[i] = field;
+            
+            // เพิ่ม event listener เพื่อเก็บค่าทันที
+            field.addEventListener('input', function() {
+                console.log(`Character ${i} updated:`, this.value.substring(0, 50) + '...');
+            });
+        }
+    }
+};
+
+// Fix การดึงค่าตัวละครตอน generate
+const fixedGenerateFromTemplate = window.generateFromTemplate;
+window.generateFromTemplate = function() {
+    console.log('🔧 Fixed Generate - Checking character values...');
+    
+    // Log ค่าทั้งหมดก่อน generate
+    const charCount = window.templateCharCount || 0;
+    const characterData = [];
+    
+    for (let i = 1; i <= charCount; i++) {
+        const field = document.getElementById(`char${i}`);
+        if (field) {
+            const value = field.value;
+            console.log(`Character ${i}: ${value ? 'Has data' : 'Empty'}`);
+            if (value) {
+                characterData.push(`${i}. ${value}`);
+                console.log(`   Data: ${value.substring(0, 100)}...`);
+            }
+        }
+    }
+    
+    // เรียกฟังก์ชันเดิมก่อน
+    fixedGenerateFromTemplate();
+    
+    // ถ้ามีข้อมูลตัวละคร แต่ไม่มีใน prompt ให้เพิ่มเข้าไป
+    if (characterData.length > 0) {
+        const messageInput = document.getElementById('messageInput');
+        let currentPrompt = messageInput.value;
+        
+        // ตรวจสอบว่ามีข้อมูลตัวละครใน prompt หรือไม่
+        const hasCharacters = characterData.some(data => 
+            currentPrompt.includes(data.substring(0, 30))
+        );
+        
+        if (!hasCharacters) {
+            console.log('❌ ไม่พบข้อมูลตัวละครใน prompt - กำลังเพิ่ม...');
+            
+            // หาตำแหน่งที่จะแทรก
+            const insertPoint = currentPrompt.indexOf('⚠️ สำคัญ:');
+            const characterSection = `\n👥 รายละเอียดตัวละคร:\n${characterData.join('\n')}\n`;
+            
+            if (insertPoint > -1) {
+                currentPrompt = 
+                    currentPrompt.slice(0, insertPoint) + 
+                    characterSection + 
+                    currentPrompt.slice(insertPoint);
+            } else {
+                currentPrompt = currentPrompt.replace(
+                    'รายละเอียดตัวละคร:\n',
+                    `รายละเอียดตัวละคร:\n${characterData.join('\n')}\n`
+                );
+            }
+            
+            messageInput.value = currentPrompt;
+            console.log('✅ เพิ่มข้อมูลตัวละครเรียบร้อย!');
+        }
+    }
+};
+
+console.log('✅ Force Update Character Values Loaded!');
+
+// ========== FIX TEMPLATE PREVIEW UPDATE ==========
+// Override updateTemplatePreview ให้มี error handling
+window.updateTemplatePreview = function() {
+    console.log('📋 Updating template preview...');
+    
+    try {
+        const preview = document.getElementById('templatePreview');
+        if (!preview) {
+            console.log('Preview element not found');
+            return;
+        }
+        
+        // ดึงค่าจากฟอร์มอย่างปลอดภัย
+        const getValue = (id) => {
+            const elem = document.getElementById(id);
+            return elem ? elem.value : '';
+        };
+        
+        const formData = {
+            videoType: getValue('videoType'),
+            cameraAngle: getValue('cameraAngle'),
+            timeOfDay: getValue('timeOfDay'),
+            visualStyle: getValue('visualStyle'),
+            duration: getValue('duration'),
+            location: getValue('location'),
+            mood: getValue('mood'),
+            soundType: getValue('soundType'),
+            sceneType: getValue('sceneType'),
+            cameraMovement: getValue('cameraMovement')
+        };
+        
+        // สร้าง preview HTML
+        let previewHTML = '<strong>🔍 Preview:</strong><br><br>';
+        
+        // แสดงข้อมูลที่กรอก
+        let hasData = false;
+        Object.entries(formData).forEach(([key, value]) => {
+            if (value) {
+                hasData = true;
+                previewHTML += `• ${key}: ${value}<br>`;
+            }
+        });
+        
+        // ตัวละคร
+        const charCount = window.templateCharCount || 0;
+        if (charCount > 0) {
+            hasData = true;
+            previewHTML += `<br>👥 จำนวนตัวละคร: ${charCount} คน<br>`;
+            
+            for (let i = 1; i <= charCount; i++) {
+                const charValue = getValue(`char${i}`);
+                if (charValue) {
+                    previewHTML += `• ตัวละคร ${i}: ${charValue.substring(0, 50)}...<br>`;
+                }
+            }
+        }
+        
+        if (!hasData) {
+            preview.innerHTML = '<p style="color: #666; text-align: center;">กรอกข้อมูลด้านบนเพื่อดูตัวอย่าง...</p>';
+        } else {
+            preview.innerHTML = previewHTML;
+        }
+        
+    } catch (error) {
+        console.error('Error in updateTemplatePreview:', error);
+    }
+};
+
+
+// ========== FIX GENERATE FROM TEMPLATE ==========
+window.generateFromTemplate = function() {
+    console.log('Generating prompt from template...');
+    
+    try {
+        // ตรวจสอบ mode
+        if (!window.currentMode) {
+            alert('เกิดข้อผิดพลาด: ไม่พบโหมดปัจจุบัน');
+            return;
+        }
+        
+        let prompt = '';
+        
+        // ฟังก์ชันดึงค่าอย่างปลอดภัย
+        const getValue = (id) => {
+            const elem = document.getElementById(id);
+            const value = elem ? elem.value : '';
+            console.log(`Getting ${id}: "${value}"`);
+            return value;
+        };
+        
+        if (currentMode === 'general' || currentMode === 'multichar') {
+            // รวบรวมข้อมูล
+            const videoType = getValue('videoType');
+            const cameraAngle = getValue('cameraAngle');
+            const timeOfDay = getValue('timeOfDay');
+            const visualStyle = getValue('visualStyle');
+            const duration = getValue('duration');
+            const location = getValue('location');
+            const mood = getValue('mood');
+            const soundType = getValue('soundType');
+            const sceneType = getValue('sceneType');
+            const cameraMovement = getValue('cameraMovement');
+            const dialogueText = getValue('dialogueText');
+            const additionalDetails = getValue('additionalDetails');
+            
+            // สร้าง prompt header
+            prompt = currentMode === 'general' ? 
+                'สร้าง Cinematic Veo Prompt แบบละเอียดสำหรับ:\n\n' :
+                'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
+            
+            // เพิ่มข้อมูลที่มี
+            if (videoType) prompt += `🎬 ประเภท: ${videoType}\n`;
+            if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
+            if (location) prompt += `📍 สถานที่: ${location}\n`;
+            if (cameraAngle) prompt += `📷 มุมกล้อง: ${cameraAngle}\n`;
+            if (cameraMovement) prompt += `🎬 การเคลื่อนกล้อง: ${cameraMovement}\n`;
+            if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
+            if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
+            if (mood) prompt += `😊 อารมณ์: ${mood}\n`;
+            if (soundType) prompt += `🔊 เสียง: ${soundType}\n`;
+            if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
+            
+            // ตัวละคร
+            const charCount = window.templateCharCount || 0;
+            if (charCount > 0) {
+                prompt += `\n👥 จำนวนตัวละคร: ${charCount} คน\n`;
+                prompt += 'รายละเอียดตัวละคร:\n';
+                
+                for (let i = 1; i <= charCount; i++) {
+                    const charValue = getValue(`char${i}`);
+                    if (charValue) {
+                        prompt += `${i}. ${charValue}\n`;
+                    } else {
+                        prompt += `${i}. (ให้ AI สร้างให้เหมาะกับฉาก)\n`;
+                    }
+                }
+            }
+            
+            // Effects
+            const effects = [];
+            document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
+                const label = cb.nextElementSibling;
+                if (label) {
+                    effects.push(label.textContent.trim());
+                }
+            });
+            if (effects.length > 0) {
+                prompt += `\n✨ Effects: ${effects.join(', ')}\n`;
+            }
+            
+            // Dialogue
+            if (dialogueText) {
+                prompt += `\n💬 บทพูด:\n${dialogueText}\n`;
+            }
+            
+            // Additional details
+            if (additionalDetails) {
+                prompt += `\n📝 รายละเอียดเพิ่มเติม: ${additionalDetails}\n`;
+            }
+            
+            // Footer
+            prompt += '\n⚠️ สำคัญ: ต้องมีรายละเอียด cinematography, มุมกล้อง, แสง, การเคลื่อนไหว และเอาท์พุตเป็นภาษาอังกฤษ';
+        }
+        
+        // ตรวจสอบว่ามี prompt หรือไม่
+        if (!prompt || prompt.length < 50) {
+            alert('กรุณากรอกข้อมูลอย่างน้อย 1 ช่องก่อนสร้าง Prompt');
+            return;
+        }
+        
+        // ใส่ prompt ใน textarea
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.value = prompt;
+            
+            // Auto resize
+            messageInput.style.height = 'auto';
+            messageInput.style.height = messageInput.scrollHeight + 'px';
+            
+            // ปิด modal
+            closeTemplateForm();
+            
+            // แจ้งเตือน
+            if (typeof showNotification === 'function') {
+                showNotification('📋 สร้าง Prompt สำเร็จ! กด "สร้าง Prompt ✨" เพื่อดำเนินการ', 'success');
+            }
+            
+            console.log('✅ Prompt generated successfully!');
+        } else {
+            alert('ไม่พบช่องกรอกข้อความ');
+        }
+        
+    } catch (error) {
+        console.error('Error generating prompt:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+};
+
+// ========== ERROR RECOVERY SYSTEM ==========
+// ฟังก์ชันฉุกเฉินเมื่อเกิด error
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Global error:', {msg, url, lineNo, columnNo, error});
+    
+    // ถ้าเป็น error จาก template form
+    if (msg.includes('template') || msg.includes('preview')) {
+        console.log('🔧 Attempting to fix template error...');
+        
+        // Reset template state
+        if (typeof closeTemplateForm === 'function') {
+            closeTemplateForm();
+        }
+        
+        // แจ้งเตือนผู้ใช้
+        alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+        
+        return true; // ป้องกันไม่ให้แสดง error ใน console
+    }
+    
+    return false;
+};
+
+// ตรวจสอบว่าทุก element พร้อมใช้งาน
+function checkTemplateElements() {
+    const requiredElements = [
+        'templateFormModal',
+        'videoType',
+        'cameraAngle', 
+        'timeOfDay',
+        'visualStyle',
+        'duration',
+        'messageInput'
+    ];
+    
+    let allReady = true;
+    requiredElements.forEach(id => {
+        const elem = document.getElementById(id);
+        if (!elem) {
+            console.error(`❌ Element not found: ${id}`);
+            allReady = false;
+        }
+    });
+    
+    return allReady;
+}
+
+// เรียกใช้เมื่อเปิด template form
+const originalShowTemplateForm = window.showTemplateForm;
+window.showTemplateForm = function() {
+    // ตรวจสอบ elements ก่อน
+    if (!checkTemplateElements()) {
+        alert('ระบบยังไม่พร้อม กรุณารอสักครู่แล้วลองใหม่');
+        return;
+    }
+    
+    // เรียกฟังก์ชันเดิม
+    if (originalShowTemplateForm) {
+        originalShowTemplateForm();
+    }
+};
+
+console.log('✅ Template Form Error Fix Applied!');
+
+// ========== TEMPLATE FORM FINAL FIX ==========
+// ลบ listeners เก่าทั้งหมดก่อน
+if (window._templateFormInitialized) {
+    console.log('Template form already initialized, skipping...');
+} else {
+    window._templateFormInitialized = true;
+    
+    // Fix showTemplateForm only once
+    if (!window._originalShowTemplateForm) {
+        window._originalShowTemplateForm = window.showTemplateForm;
+        
+        window.showTemplateForm = function() {
+            console.log('Opening template form...');
+            
+            const modal = document.getElementById('templateFormModal');
+            if (!modal) {
+                alert('Template form not found!');
+                return;
+            }
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Reset form
+            document.querySelectorAll('.template-input, .template-textarea, .template-select').forEach(field => {
+                field.value = '';
+            });
+            
+            // Set default character count
+            if (typeof setTemplateCharCount === 'function') {
+                setTemplateCharCount(2);
+            }
+            
+            // Initialize listeners
+            setTimeout(() => {
+                initTemplateFormListeners();
+            }, 100);
+        };
+    }
+    
+    // Initialize template form listeners
+    function initTemplateFormListeners() {
+        // Remove old listeners first
+        const oldListeners = window._templateListeners || {};
+        Object.keys(oldListeners).forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem && oldListeners[id]) {
+                elem.removeEventListener('change', oldListeners[id]);
+                elem.removeEventListener('input', oldListeners[id]);
+            }
+        });
+        
+        window._templateListeners = {};
+        
+        // Add new listeners
+        const fields = [
+            'videoType', 'cameraAngle', 'timeOfDay', 'visualStyle',
+            'duration', 'sceneType', 'mood', 'soundType', 'cameraMovement',
+            'location', 'additionalDetails', 'dialogueText'
+        ];
+        
+        fields.forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) {
+                const handler = function() {
+                    if (typeof updateTemplatePreview === 'function') {
+                        updateTemplatePreview();
+                    }
+                };
+                
+                elem.addEventListener('change', handler);
+                elem.addEventListener('input', handler);
+                window._templateListeners[id] = handler;
+            }
+        });
+        
+        console.log('✅ Template form listeners initialized');
+    }
+}
+
+// Ensure functions are available globally
+window.initTemplateFormListeners = initTemplateFormListeners;
+
+console.log('✅ Template Form Final Fix Applied!');
+
+window.showTemplateForm = function() {
+    const modal = document.getElementById('templateFormModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    
+    // Reset template data
+    templateFormData = {
+        characterCount: 2,
+        characters: {}
+    };
+    window.templateCharCount = 2;
+    
+    // Clear form
+    document.querySelectorAll('.template-input, .template-textarea, .template-select').forEach(field => {
+        field.value = '';
+    });
+    
+    // Set default character count
+    setTemplateCharCount(2);
+    
+    // Initialize listeners
+    setTimeout(() => {
+        initTemplateFormListeners();
+    }, 100);
+};
 
 // ========== END CHARACTER TEMPLATE SYSTEM ==========

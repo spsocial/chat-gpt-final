@@ -684,81 +684,6 @@
 </div>
 
 <!-- เพิ่มโค้ดนี้ก่อน </body> ใน index.html -->
-<script>
-// Emergency fix - ตรวจสอบว่า script.js โหลดสำเร็จหรือไม่
-window.addEventListener('load', function() {
-    console.log('=== DEBUGGING INFO ===');
-    console.log('switchMode exists?', typeof switchMode);
-    console.log('currentMode exists?', typeof currentMode);
-    
-    // ถ้า switchMode ไม่มี ให้สร้างฉุกเฉิน
-    if (typeof switchMode === 'undefined') {
-        console.error('❌ script.js failed to load properly!');
-        
-        // สร้าง function ฉุกเฉิน
-        window.currentMode = 'general';
-        
-        window.switchMode = function(mode) {
-            console.log('Emergency switchMode called:', mode);
-            
-            // Update mode buttons
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            const activeBtn = document.querySelector(`[data-mode="${mode}"]`);
-            if (activeBtn) activeBtn.classList.add('active');
-            
-            // Hide all panels
-            document.getElementById('generalInfo').style.display = 'none';
-            document.getElementById('characterInfo').style.display = 'none';
-            document.getElementById('multicharInfo').style.display = 'none';
-            document.getElementById('characterLibrary').classList.remove('active');
-            
-            // Show selected panel
-            switch(mode) {
-                case 'general':
-                    document.getElementById('generalInfo').style.display = 'block';
-                    break;
-                case 'character':
-                    document.getElementById('characterInfo').style.display = 'block';
-                    break;
-                case 'multichar':
-                    document.getElementById('multicharInfo').style.display = 'block';
-                    break;
-                case 'library':
-                    document.getElementById('characterLibrary').classList.add('active');
-                    break;
-            }
-            
-            window.currentMode = mode;
-        };
-        
-        // สร้าง functions อื่นๆ ที่จำเป็น
-        window.showSceneBuilder = function() {
-            alert('Scene Builder ยังไม่พร้อมใช้งาน กรุณา refresh หน้าใหม่');
-        };
-        
-        window.backToChat = function() {
-            switchMode('general');
-        };
-        
-        console.log('✅ Emergency functions created!');
-    } else {
-        console.log('✅ script.js loaded successfully!');
-    }
-});
-
-// ตรวจสอบ error ทั้งหมด
-window.addEventListener('error', function(e) {
-    console.error('🔴 JavaScript Error:', {
-        message: e.message,
-        file: e.filename,
-        line: e.lineno,
-        column: e.colno,
-        error: e.error
-    });
-});
-</script>
 <!-- Course Modal -->
 <div id="courseModal" class="course-modal" style="display: none;">
     <div class="course-modal-content">
@@ -1204,7 +1129,7 @@ console.log('toggleToolsMenu loaded:', typeof toggleToolsMenu);
             </div>
             
             <!-- Preview Section -->
-            <div class="template-preview-section">
+            <div class="template-preview-section" style="display: none;">
                 <h3>👁️ Preview - ดูตัวอย่างโครงสร้าง Prompt</h3>
                 <div class="preview-box" id="templatePreview">
                     <p style="color: #666; text-align: center;">กรอกข้อมูลด้านบนเพื่อดูตัวอย่าง...</p>
@@ -1545,7 +1470,7 @@ function initTemplateFormListeners() {
 
 // Override updateTemplatePreview ให้ทำงานได้ดีขึ้น
 window.updateTemplatePreview = function() {
-    console.log('Updating preview...');
+    console.log('📋 Updating preview...');
     
     try {
         const preview = document.getElementById('templatePreview');
@@ -1568,19 +1493,10 @@ window.updateTemplatePreview = function() {
             cameraMovement: document.getElementById('cameraMovement')?.value || ''
         };
         
-        console.log('Form data:', formData);
-        
-        // ตรวจสอบว่ามีข้อมูลหรือไม่
-        const hasData = Object.values(formData).some(val => val !== '');
-        
-        if (!hasData) {
-            preview.innerHTML = '<p style="color: #666; text-align: center;">กรอกข้อมูลด้านบนเพื่อดูตัวอย่าง...</p>';
-            return;
-        }
-        
-        // สร้าง preview
+        // สร้าง preview HTML
         let previewHTML = '<strong>🔍 Preview - ข้อมูลที่กรอก:</strong><br><br>';
         
+        // แสดงข้อมูลฟอร์ม
         if (formData.videoType) previewHTML += `🎬 <strong>ประเภท:</strong> ${formData.videoType}<br>`;
         if (formData.cameraAngle) previewHTML += `📷 <strong>มุมกล้อง:</strong> ${formData.cameraAngle}<br>`;
         if (formData.timeOfDay) previewHTML += `🌅 <strong>แสง/เวลา:</strong> ${formData.timeOfDay}<br>`;
@@ -1592,11 +1508,33 @@ window.updateTemplatePreview = function() {
         if (formData.sceneType) previewHTML += `🎭 <strong>ประเภทฉาก:</strong> ${formData.sceneType}<br>`;
         if (formData.cameraMovement) previewHTML += `🎬 <strong>การเคลื่อนกล้อง:</strong> ${formData.cameraMovement}<br>`;
         
-        // เช็ค characters
-        const charCount = window.templateCharCount || 2;
-        previewHTML += `👥 <strong>จำนวนตัวละคร:</strong> ${charCount} คน<br>`;
+        // ========== เพิ่มส่วนแสดงตัวละคร ==========
+        const charCount = window.templateCharCount || 0;
+        if (charCount > 0) {
+            previewHTML += `<br>👥 <strong>จำนวนตัวละคร:</strong> ${charCount} คน<br>`;
+            previewHTML += '<strong>รายละเอียดตัวละคร:</strong><br>';
+            
+            let hasCharData = false;
+            for (let i = 1; i <= charCount; i++) {
+                const charField = document.getElementById(`char${i}`);
+                if (charField && charField.value) {
+                    // แสดงข้อมูลตัวละครใน preview (ตัดให้สั้น)
+                    const charPreview = charField.value.length > 100 ? 
+                        charField.value.substring(0, 100) + '...' : 
+                        charField.value;
+                    previewHTML += `<div style="margin-left: 20px; color: #10b981;">${i}. ${charPreview}</div>`;
+                    hasCharData = true;
+                } else {
+                    previewHTML += `<div style="margin-left: 20px; color: #666;">${i}. (ยังไม่ระบุ)</div>`;
+                }
+            }
+            
+            if (hasCharData) {
+                console.log('✅ Character data found in preview');
+            }
+        }
         
-        // เช็ค effects
+        // Effects
         const effects = [];
         document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
             if (cb.nextElementSibling) {
@@ -1604,12 +1542,18 @@ window.updateTemplatePreview = function() {
             }
         });
         if (effects.length > 0) {
-            previewHTML += `✨ <strong>Effects:</strong> ${effects.join(', ')}<br>`;
+            previewHTML += `<br>✨ <strong>Effects:</strong> ${effects.join(', ')}<br>`;
         }
         
-        previewHTML += '<br><em style="color: #10b981;">✓ พร้อมสร้าง prompt แล้ว!</em>';
+        // ตรวจสอบว่ามีข้อมูลหรือไม่
+        const hasData = Object.values(formData).some(val => val !== '') || charCount > 0;
         
-        preview.innerHTML = previewHTML;
+        if (!hasData) {
+            preview.innerHTML = '<p style="color: #666; text-align: center;">กรอกข้อมูลด้านบนเพื่อดูตัวอย่าง...</p>';
+        } else {
+            previewHTML += '<br><em style="color: #10b981;">✓ พร้อมสร้าง prompt แล้ว!</em>';
+            preview.innerHTML = previewHTML;
+        }
         
     } catch (error) {
         console.error('Error in updateTemplatePreview:', error);
@@ -1664,19 +1608,27 @@ window.generateFromTemplate = function() {
             if (soundType) prompt += `🔊 เสียง: ${soundType}\n`;
             if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
             
-            // Effects
-            const effects = [];
-            document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
-                if (cb.nextElementSibling) {
-                    effects.push(cb.nextElementSibling.textContent);
+            // === ส่วนที่แก้ไข: Characters ===
+            // ตรวจสอบจำนวนตัวละครจากหลายแหล่ง
+            let charCount = 0;
+            
+            // 1. ลองจาก window.templateCharCount ก่อน
+            if (window.templateCharCount !== undefined && window.templateCharCount > 0) {
+                charCount = window.templateCharCount;
+                console.log('ใช้จำนวนตัวละครจาก window.templateCharCount:', charCount);
+            }
+            // 2. ถ้าไม่มี ลองนับจากช่อง input ที่มีข้อมูล
+            else {
+                for (let i = 1; i <= 5; i++) {
+                    const charInput = document.getElementById(`char${i}`);
+                    if (charInput && charInput.value && charInput.value.trim() !== '') {
+                        charCount = i;
+                    }
                 }
-            });
-            if (effects.length > 0) {
-                prompt += `✨ Effects: ${effects.join(', ')}\n`;
+                console.log('นับจำนวนตัวละครจาก input fields:', charCount);
             }
             
-            // Characters
-            const charCount = window.templateCharCount || 0;
+            // แสดงข้อมูลตัวละคร
             if (charCount > 0) {
                 prompt += `\n👥 จำนวนตัวละคร: ${charCount} คน\n`;
                 prompt += 'รายละเอียดตัวละคร:\n';
@@ -1685,10 +1637,23 @@ window.generateFromTemplate = function() {
                     const charInput = document.getElementById(`char${i}`);
                     if (charInput && charInput.value) {
                         prompt += `${i}. ${charInput.value}\n`;
+                        console.log(`เพิ่มตัวละคร ${i}: ${charInput.value.substring(0, 50)}...`);
                     } else {
                         prompt += `${i}. (ให้ AI สร้างให้เหมาะกับฉาก)\n`;
                     }
                 }
+            }
+            // === จบส่วนที่แก้ไข ===
+            
+            // Effects
+            const effects = [];
+            document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
+                if (cb.nextElementSibling) {
+                    effects.push(cb.nextElementSibling.textContent);
+                }
+            });
+            if (effects.length > 0) {
+                prompt += `\n✨ Effects: ${effects.join(', ')}\n`;
             }
             
             // Dialogue
@@ -1723,11 +1688,19 @@ window.generateFromTemplate = function() {
             // ปิด modal
             closeTemplateForm();
             
+            // ส่งอัตโนมัติ (ถ้าต้องการ)
+            // setTimeout(() => {
+            //     sendMessage();
+            // }, 500);
+            
             // Scroll to input
             messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
             
             console.log('✅ Prompt generated successfully!');
-            showNotification('📋 สร้าง Prompt สำเร็จ! กด "สร้าง Prompt ✨" เพื่อดำเนินการ', 'success');
+            
+            if (typeof showNotification === 'function') {
+                showNotification('📋 สร้าง Prompt สำเร็จ! กด "สร้าง Prompt ✨" เพื่อดำเนินการ', 'success');
+            }
         }
         
     } catch (error) {
@@ -1735,35 +1708,6 @@ window.generateFromTemplate = function() {
         alert('เกิดข้อผิดพลาด: ' + error.message);
     }
 };
-
-// Initialize เมื่อเปิด Template Form
-const originalShowTemplateForm = window.showTemplateForm;
-window.showTemplateForm = function() {
-    if (originalShowTemplateForm) {
-        originalShowTemplateForm();
-    }
-    
-    // Initialize listeners หลังเปิด form
-    setTimeout(() => {
-        initTemplateFormListeners();
-        updateTemplatePreview(); // Update preview ทันที
-    }, 100);
-};
-
-// Initialize listeners เมื่อโหลดหน้า
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Page loaded, waiting for template form...');
-    
-    // ลองหา form ทุก 1 วินาที
-    const checkForm = setInterval(() => {
-        if (document.getElementById('templateFormModal')) {
-            clearInterval(checkForm);
-            console.log('Template form found!');
-        }
-    }, 1000);
-});
-
-console.log('✅ Template Form Input Fix Loaded!');
 </script>
 
 <!-- Character Template Modal -->
