@@ -1,3 +1,4 @@
+console.log("Script Version: 5.0.1 - Fixed mode issue");
 // Suppress WM Failed warning
 if (typeof window !== 'undefined') {
     window.WM = window.WM || {};
