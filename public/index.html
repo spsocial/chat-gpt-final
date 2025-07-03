@@ -1863,5 +1863,43 @@ window.generateFromTemplate = function() {
     </div>
 </div>
 
+<!-- FAB Menu System -->
+<div class="fab-menu-container">
+    <!-- Backdrop -->
+    <div class="fab-backdrop" onclick="closeFabMenu()"></div>
+    
+    <!-- Main FAB Button -->
+    <button class="fab-main" onclick="toggleFabMenu()">
+        <span class="fab-main-icon">
+            <span class="plus-icon">+</span>
+            <span class="close-icon">×</span>
+        </span>
+        <span class="fab-badge">5</span>
+    </button>
+    
+    <!-- FAB Menu Items -->
+    <div class="fab-menu-items">
+        <button class="fab-item" onclick="showAnnouncement(); closeFabMenu();" data-label="ข่าวสาร">
+            <span class="fab-icon">📢</span>
+        </button>
+        
+        <button class="fab-item" onclick="showCourse(); closeFabMenu();" data-label="คอร์สเรียน">
+            <span class="fab-icon">🎓</span>
+        </button>
+        
+        <button class="fab-item" onclick="toggleToolsMenu(); closeFabMenu();" data-label="เครื่องมือ">
+            <span class="fab-icon">🛠️</span>
+        </button>
+        
+        <button class="fab-item" onclick="showMusicVideoForm(); closeFabMenu();" data-label="Music Video">
+            <span class="fab-icon">🎵</span>
+        </button>
+        
+        <button class="fab-item" onclick="openVideoAnalyzer(); closeFabMenu();" data-label="วิเคราะห์วิดีโอ">
+            <span class="fab-icon">🎬</span>
+        </button>
+    </div>
+</div>
+
 </body>
 </html>

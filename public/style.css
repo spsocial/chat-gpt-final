@@ -1604,12 +1604,13 @@
 
 @media (max-width: 768px) {
     .message-input {
-        height: 60px !important;
-        max-height: 120px !important;
-        min-height: 50px !important;
+        height: 50px !important;        /* ลดจาก 60px */
+        max-height: 100px !important;   /* ลดจาก 120px */
+        min-height: 45px !important;    /* ลดจาก 50px */
+        font-size: 14px !important;     /* เพิ่มใหม่ */
+        padding: 8px 12px !important;   /* เพิ่มใหม่ */
     }
 }
-
 .stop-voice-btn {
     background: #ef4444;
     color: white;
@@ -2052,8 +2053,8 @@
 }
 
 .action-icon {
-    font-size: 18px;
-}
+        font-size: 16px;    /* เพิ่มใหม่ - ลดจาก 18px */
+    }
 
 .favorites-count {
     position: absolute;
@@ -2422,8 +2423,9 @@ line-clamp: 3;
     }
     
     .action-btn {
-        padding: 8px 12px;
-        font-size: 12px;
+        padding: 8px 12px;  /* ลดจาก 10px 16px */
+        font-size: 12px;    /* ลดจาก 14px */
+        border-radius: 6px; /* เพิ่มใหม่ */
     }
     
     .action-text {
@@ -2442,6 +2444,12 @@ line-clamp: 3;
     .category-btn {
         font-size: 12px;
         padding: 6px 12px;
+    }
+    /* เพิ่มใหม่ */
+    .favorites-count {
+        font-size: 10px;
+        padding: 1px 4px;
+        min-width: 16px;
     }
 }
 
@@ -3698,9 +3706,9 @@ line-clamp: 3;
     .share-btn,
     .favorite-btn,
     .continue-btn {
-        min-height: 44px !important;
-        padding: 12px 16px !important;
-        font-size: 14px !important;
+        min-height: 40px !important;    /* ลดจาก 44px */
+        padding: 10px 14px !important;  /* ลดจาก 12px 16px */
+        font-size: 13px !important;     /* ลดจาก 14px */
     }
     
     /* Star Rating */
@@ -3758,22 +3766,23 @@ line-clamp: 3;
     .mobile-mode-dropdown {
         display: block !important;
         width: 100%;
-        padding: 12px 16px;
+        padding: 10px 14px;         /* ลดจาก 12px 16px */
         background: var(--surface-light);
         border: 1px solid var(--border);
-        border-radius: 12px;
+        border-radius: 10px;        /* ลดจาก 12px */
         color: white;
-        font-size: 16px;
+        font-size: 14px;            /* ลดจาก 16px */
         font-family: 'Kanit', sans-serif;
-        margin-bottom: 12px;
+        margin-bottom: 8px;         /* ลดจาก 12px */
         cursor: pointer;
         appearance: none;
         background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
         background-repeat: no-repeat;
         background-position: right 12px center;
-        background-size: 20px;
-        padding-right: 40px;
+        background-size: 16px;      /* ลดจาก 20px */
+        padding-right: 36px;        /* ลดจาก 40px */
     }
+
     
     
     /* Mobile info collapsed */
@@ -5461,3 +5470,1120 @@ body.mode-character #characterTemplateButtonSection {
         width: 100%;
     }
 }
+/* ========== MOBILE BUTTON SIZE OPTIMIZATION ========== */
+@media (max-width: 768px) {
+    /* Scene Builder Button */
+    .scene-builder-btn {
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        margin-top: 12px !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Model Cards in Image Mode */
+    .model-card {
+        padding: 12px !important;
+        border-radius: 10px !important;
+    }
+    
+    .model-name {
+        font-size: 14px !important;
+        margin-bottom: 2px !important;
+    }
+    
+    .model-price {
+        font-size: 13px !important;
+    }
+    
+    .model-desc {
+        font-size: 12px !important;
+        margin-top: 2px !important;
+    }
+    
+    /* Aspect Ratio Buttons */
+    .ratio-btn {
+        padding: 6px 12px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+    }
+    
+    .ratio-selector {
+        gap: 6px !important;
+        margin-top: 8px !important;
+    }
+    
+    /* Upload Section */
+    .upload-section {
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* Send Button */
+    .send-btn {
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Chat Input Area */
+    .chat-input-area {
+        padding: 12px !important;
+    }
+    
+    /* Mode Notice */
+    .mode-notice {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        margin-bottom: 8px !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Mobile Info */
+    .mobile-info-toggle {
+        padding: 10px !important;
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+        border-radius: 6px !important;
+    }
+    
+    .mobile-info-content {
+        padding: 12px !important;
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .mobile-info-content h4 {
+        font-size: 15px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .mobile-info-content p {
+        font-size: 12px !important;
+        margin-bottom: 6px !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* Container and Header */
+    .container {
+        padding: 10px !important;
+    }
+    
+    .header {
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+        border-radius: 12px !important;
+    }
+    
+    /* Logo */
+    .logo-icon {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 20px !important;
+    }
+    
+    .logo-text h1 {
+        font-size: 20px !important;
+    }
+    
+    .logo-text p {
+        font-size: 12px !important;
+    }
+    
+    /* Status Bar */
+    .status-bar {
+        padding: 8px 12px !important;
+        font-size: 11px !important;
+        margin-top: 8px !important;
+        border-radius: 10px !important;
+    }
+    
+    /* Chat Messages */
+    .chat-messages {
+        padding: 12px !important;
+        gap: 12px !important;
+    }
+    
+    .message-avatar {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 18px !important;
+        border-radius: 10px !important;
+    }
+    
+    .message-content {
+        padding: 12px !important;
+        border-radius: 12px !important;
+        font-size: 13px !important;
+    }
+    
+    /* Prompt Actions */
+    .prompt-actions {
+        gap: 6px !important;
+        margin-top: 12px !important;
+    }
+    
+    .prompt-actions button {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+    }
+    
+    /* VEO3 Prompt Box */
+    .veo3-prompt {
+        padding: 16px !important;
+        border-radius: 10px !important;
+        margin-top: 8px !important;
+    }
+    
+    .prompt-header {
+        font-size: 14px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .prompt-content {
+        padding: 12px !important;
+        font-size: 13px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    /* Image Actions */
+    .image-actions {
+        gap: 8px !important;
+        margin-top: 8px !important;
+    }
+    
+    .download-btn, .retry-btn {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Template Buttons */
+    .template-form-btn,
+    .template-form-btn-orange {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Character Template Button */
+    .character-template-btn-inline {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Enhance Button */
+    .enhance-btn {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Input Wrapper */
+    .input-wrapper {
+        gap: 8px !important;
+    }
+    
+    /* Expand Button */
+    .expand-btn {
+        padding: 3px 6px !important;
+        font-size: 11px !important;
+        top: 6px !important;
+        right: 6px !important;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    /* Even smaller adjustments */
+    .action-btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+    }
+    
+    .model-card {
+        padding: 10px !important;
+    }
+    
+    .ratio-btn {
+        padding: 5px 10px !important;
+        font-size: 11px !important;
+    }
+    
+    .message-input {
+        height: 45px !important;
+        min-height: 40px !important;
+    }
+}
+
+/* ========== แก้ไขปุ่ม FAB ให้เล็กลงและเรียงสวยงาม ========== */
+@media (max-width: 768px) {
+    /* ลดขนาดปุ่ม FAB ทั้งหมด */
+    .fab-announcement,
+    .fab-course,
+    .fab-tools,
+    .fab-music,
+    .fab-video-analyzer {
+        width: 48px !important;      /* ลดจาก 56px */
+        height: 48px !important;     /* ลดจาก 56px */
+        right: 15px !important;      /* ขยับเข้ามาหน่อย */
+    }
+    
+    /* ลดขนาด icon */
+    .fab-announcement .fab-icon,
+    .fab-course .fab-icon,
+    .fab-tools .fab-icon,
+    .fab-music .fab-icon,
+    .fab-video-analyzer .fab-icon {
+        font-size: 20px !important;  /* ลดจาก 24px */
+    }
+    
+    /* จัดระยะห่างใหม่ให้สวยงาม */
+    .fab-announcement {
+        bottom: 15px !important;     /* ล่างสุด */
+    }
+    
+    .fab-course {
+        bottom: 70px !important;     /* ห่างจากล่าง 70px */
+    }
+    
+    .fab-tools {
+        bottom: 125px !important;    /* ห่างจากล่าง 125px */
+    }
+    
+    .fab-music {
+        bottom: 180px !important;    /* ห่างจากล่าง 180px */
+    }
+    
+    .fab-video-analyzer {
+        bottom: 235px !important;    /* ห่างจากล่าง 235px */
+    }
+    
+    /* ลด shadow และ effect */
+    .fab-announcement,
+    .fab-course,
+    .fab-tools,
+    .fab-music,
+    .fab-video-analyzer {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    /* ลด animation */
+    .fab-announcement:hover,
+    .fab-course:hover,
+    .fab-tools:hover,
+    .fab-music:hover,
+    .fab-video-analyzer:hover {
+        transform: translateY(-2px) scale(1.05) !important;
+    }
+    
+    /* ซ่อน glow effect บนมือถือ */
+    .fab-announcement::after,
+    .fab-course::after,
+    .fab-tools::after,
+    .fab-music::after,
+    .fab-video-analyzer::after {
+        display: none !important;
+    }
+    
+    /* ปุ่ม Reset ด้านล่าง */
+    #resetBtn {
+        padding: 8px 16px !important;
+        font-size: 13px !important;
+        bottom: 10px !important;
+        right: 10px !important;
+    }
+}
+
+/* สำหรับจอเล็กมาก */
+@media (max-width: 480px) {
+    /* ทำให้ปุ่ม FAB เล็กลงอีก */
+    .fab-announcement,
+    .fab-course,
+    .fab-tools,
+    .fab-music,
+    .fab-video-analyzer {
+        width: 44px !important;
+        height: 44px !important;
+        right: 12px !important;
+    }
+    
+    .fab-announcement .fab-icon,
+    .fab-course .fab-icon,
+    .fab-tools .fab-icon,
+    .fab-music .fab-icon,
+    .fab-video-analyzer .fab-icon {
+        font-size: 18px !important;
+    }
+    
+    /* ลดระยะห่าง */
+    .fab-announcement {
+        bottom: 12px !important;
+    }
+    
+    .fab-course {
+        bottom: 62px !important;
+    }
+    
+    .fab-tools {
+        bottom: 112px !important;
+    }
+    
+    .fab-music {
+        bottom: 162px !important;
+    }
+    
+    .fab-video-analyzer {
+        bottom: 212px !important;
+    }
+}
+
+/* ========== แก้ไขปุ่มอื่นๆ เพิ่มเติม ========== */
+@media (max-width: 768px) {
+    /* ปุ่ม Template Form สีส้ม */
+    #templateButtonSection .template-form-btn-orange {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        margin: 4px !important;
+    }
+    
+    /* ปุ่ม เพิ่ม URL และ พูดเลย */
+    .upload-section {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .upload-btn,
+    .voice-btn {
+        flex: 1 !important;
+        min-width: 120px !important;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+    }
+    
+    /* ปุ่ม สร้าง Prompt */
+    .send-btn {
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        min-height: 40px !important;
+    }
+    
+    /* Status bar ด้านล่าง */
+    .status-bar {
+        padding: 8px 12px !important;
+        font-size: 11px !important;
+        gap: 8px !important;
+    }
+    
+    .status-item {
+        font-size: 11px !important;
+    }
+    
+    /* ช่องพิมพ์ข้อความ */
+    .message-input {
+        font-size: 14px !important;
+        padding: 10px 14px !important;
+        min-height: 45px !important;
+        height: 50px !important;
+    }
+    
+    /* Upload tip */
+    .upload-tip {
+        font-size: 11px !important;
+        margin-left: 8px !important;
+    }
+}
+/* ========== จัดปุ่ม 3 ปุ่มให้อยู่บรรทัดเดียว ========== */
+@media (max-width: 768px) {
+    /* จัด layout ปุ่มทั้ง 3 */
+    .upload-section {
+        display: flex !important;
+        flex-wrap: nowrap !important;  /* บังคับให้อยู่บรรทัดเดียว */
+        gap: 4px !important;
+        margin-bottom: 10px !important;
+        width: 100% !important;
+    }
+    
+    /* ทำให้ปุ่มเล็กลงและเท่ากันทั้ง 3 ปุ่ม */
+    .upload-btn,
+    .voice-btn,
+    #templateButtonSection {
+        flex: 1 !important;
+        min-width: auto !important;
+        max-width: 33.33% !important;
+    }
+    
+    .upload-btn,
+    .voice-btn,
+    .template-form-btn-orange {
+        width: 100% !important;
+        padding: 8px 4px !important;  /* ลด padding ซ้ายขวา */
+        font-size: 11px !important;   /* ลดขนาดตัวอักษร */
+        border-radius: 6px !important;
+        margin: 0 !important;
+        white-space: nowrap !important;  /* ไม่ให้ข้อความขึ้นบรรทัดใหม่ */
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    /* ซ่อน icon ใน template button เพื่อประหยัดพื้นที่ */
+    .template-form-btn-orange::before {
+        display: none !important;
+    }
+    
+    /* ซ่อน upload tip */
+    .upload-tip {
+        display: none !important;
+    }
+}
+
+/* ========== ทำให้ช่องกรอกข้อความเด่นและใหญ่ขึ้น ========== */
+@media (max-width: 768px) {
+    /* ช่องกรอกข้อความหลัก */
+    .message-input {
+        width: 100% !important;
+        min-height: 80px !important;   /* ใหญ่ขึ้น */
+        height: 80px !important;
+        font-size: 16px !important;    /* ตัวอักษรใหญ่ขึ้น */
+        padding: 14px 16px !important;
+        background: #1a1a1a !important;
+        border: 2px solid #9333ea !important;  /* ขอบสีม่วงเด่นชัด */
+        box-shadow: 0 0 10px rgba(147, 51, 234, 0.2) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    /* เมื่อ focus */
+    .message-input:focus {
+        border-color: #ec4899 !important;
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.3) !important;
+        background: #262626 !important;
+    }
+    
+    /* Placeholder text */
+    .message-input::placeholder {
+        color: #9333ea !important;
+        opacity: 0.8 !important;
+        font-size: 14px !important;
+    }
+    
+    /* Input wrapper */
+    .input-wrapper {
+        margin-bottom: 10px !important;
+        position: relative !important;
+    }
+    
+    /* เพิ่ม label บอกว่าให้พิมพ์ตรงนี้ */
+    .input-wrapper::before {
+        content: "👇 พิมพ์ข้อความตรงนี้" !important;
+        position: absolute !important;
+        top: -20px !important;
+        left: 10px !important;
+        font-size: 12px !important;
+        color: #9333ea !important;
+        font-weight: 600 !important;
+        background: #0f0f0f !important;
+        padding: 0 8px !important;
+        border-radius: 4px !important;
+    }
+    
+    /* ปุ่ม Send */
+    .send-btn {
+        padding: 12px 20px !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        min-height: 45px !important;
+        background: linear-gradient(135deg, #9333ea, #ec4899) !important;
+        box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3) !important;
+    }
+    
+    .send-btn:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4) !important;
+    }
+}
+
+/* ========== จัด Layout ใหม่สำหรับมือถือ ========== */
+@media (max-width: 768px) {
+    /* Chat input area */
+    .chat-input-area {
+        padding: 10px !important;
+        background: rgba(147, 51, 234, 0.05) !important;
+        border-top: 2px solid #9333ea !important;
+    }
+    
+    /* Mode notice */
+    .mode-notice {
+        margin-bottom: 8px !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+        background: rgba(147, 51, 234, 0.1) !important;
+        border: 1px solid rgba(147, 51, 234, 0.3) !important;
+    }
+}
+
+/* ========== สำหรับจอเล็กมาก ========== */
+@media (max-width: 480px) {
+    /* ปุ่มเล็กลงอีก */
+    .upload-btn,
+    .voice-btn,
+    .template-form-btn-orange {
+        font-size: 10px !important;
+        padding: 8px 2px !important;
+    }
+    
+    /* ช่องกรอกข้อความ */
+    .message-input {
+        min-height: 70px !important;
+        height: 70px !important;
+        font-size: 15px !important;
+    }
+}
+
+/* ========== Animation เพื่อดึงดูดความสนใจ ========== */
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 10px rgba(147, 51, 234, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.4); }
+    100% { box-shadow: 0 0 10px rgba(147, 51, 234, 0.2); }
+}
+
+@media (max-width: 768px) {
+    /* ทำให้ช่องกรอกข้อความมี animation เบาๆ */
+    .message-input {
+        animation: glowPulse 3s ease-in-out infinite !important;
+    }
+    
+    .message-input:focus {
+        animation: none !important;
+    }
+}
+/* ========== ปรับขนาดปุ่มใน Info Panel บนมือถือ ========== */
+@media (max-width: 768px) {
+    /* ปุ่ม Templates และ Favorites ในทุกโหมด */
+    .quick-actions-bar {
+        padding: 6px !important;
+        gap: 6px !important;
+        margin-top: 8px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    .quick-actions-bar .action-btn {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        border-radius: 6px !important;
+        min-height: 36px !important;
+    }
+    
+    .action-icon {
+        font-size: 14px !important;
+    }
+    
+    .action-text {
+        font-size: 12px !important;
+    }
+    
+    /* ปุ่ม สร้าง Prompt Master สีม่วง */
+    .scene-builder-btn {
+        width: 100% !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+        min-height: 40px !important;
+    }
+    
+    /* ข้อความ bullet points */
+    #multicharInfo ul,
+    #generalInfo ul,
+    #characterInfo ul {
+        margin: 8px 0 !important;
+        padding-left: 20px !important;
+    }
+    
+    #multicharInfo li,
+    #generalInfo li,
+    #characterInfo li {
+        font-size: 12px !important;
+        margin-bottom: 4px !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* หัวข้อ Prompt Master */
+    #multicharInfo h3,
+    #generalInfo h3,
+    #characterInfo h3 {
+        font-size: 16px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    /* ปรับ info section */
+    .info-section {
+        margin-bottom: 16px !important;
+        padding: 12px !important;
+    }
+    
+    /* Tip cards */
+    .tip-card {
+        padding: 10px !important;
+        margin-bottom: 6px !important;
+    }
+    
+    .tip-card h4 {
+        font-size: 14px !important;
+        margin-bottom: 4px !important;
+    }
+    
+    .tip-card p {
+        font-size: 12px !important;
+        line-height: 1.3 !important;
+    }
+}
+
+/* ========== ปรับ Mobile Info Toggle ========== */
+@media (max-width: 768px) {
+    /* ปุ่ม ดูข้อมูล/วิธีใช้ */
+    .mobile-info-toggle {
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        margin-bottom: 8px !important;
+        border-radius: 6px !important;
+        background: var(--surface-light) !important;
+        border: 1px solid var(--border) !important;
+    }
+    
+    /* เนื้อหาเมื่อขยาย */
+    .mobile-info-content {
+        padding: 10px !important;
+        font-size: 12px !important;
+        background: var(--surface) !important;
+        border-radius: 6px !important;
+        margin-bottom: 8px !important;
+    }
+    
+    .mobile-info-content h4 {
+        font-size: 14px !important;
+        margin-bottom: 6px !important;
+        color: var(--primary) !important;
+    }
+    
+    .mobile-info-content p {
+        font-size: 12px !important;
+        margin-bottom: 4px !important;
+        line-height: 1.3 !important;
+    }
+    
+    /* ปุ่มใน mobile info */
+    .mobile-info-content button {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+        margin: 4px !important;
+    }
+}
+
+/* ========== Character Template Button ========== */
+@media (max-width: 768px) {
+    /* ปุ่ม Character Template สีม่วง */
+    .character-template-btn {
+        width: 100% !important;
+        padding: 10px 16px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+        border-radius: 8px !important;
+        min-height: 40px !important;
+    }
+}
+
+/* ========== ปรับ Layout Info Panel ========== */
+@media (max-width: 768px) {
+    /* Info panel container */
+    .info-panel {
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+    
+    /* ลดระยะห่างทั่วไป */
+    #generalInfo,
+    #characterInfo,
+    #multicharInfo,
+    #imageInfo,
+    #chatInfo {
+        padding: 0 !important;
+    }
+    
+    /* Icon ใน info */
+    .info-section .info-icon {
+        font-size: 20px !important;
+        margin-bottom: 8px !important;
+    }
+}
+
+/* ========== Quick Actions ใน Mobile Info ========== */
+@media (max-width: 768px) {
+    /* ปุ่ม Templates/Favorites ใน mobile info */
+    .mobile-info-content .quick-actions-bar {
+        display: flex !important;
+        gap: 6px !important;
+        margin: 8px 0 !important;
+        padding: 0 !important;
+    }
+    
+    .mobile-info-content .action-btn {
+        flex: 1 !important;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+        min-height: 34px !important;
+    }
+}
+
+/* ========== สำหรับจอเล็กมาก ========== */
+@media (max-width: 480px) {
+    /* ทำให้ทุกอย่างเล็กลงอีกนิด */
+    .scene-builder-btn,
+    .character-template-btn {
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        min-height: 36px !important;
+    }
+    
+    .quick-actions-bar .action-btn {
+        padding: 6px 10px !important;
+        font-size: 11px !important;
+        min-height: 32px !important;
+    }
+    
+    .action-icon {
+        font-size: 12px !important;
+    }
+}
+
+/* ========== FAB MENU SYSTEM ========== */
+/* ซ่อน FAB เดิมทั้งหมดบนมือถือ */
+@media (max-width: 768px) {
+    .fab-announcement,
+    .fab-course,
+    .fab-tools,
+    .fab-music,
+    .fab-video-analyzer {
+        display: none !important;
+    }
+}
+
+/* FAB Menu Container */
+.fab-menu-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: none;
+}
+
+/* แสดงเฉพาะบนมือถือ */
+@media (max-width: 768px) {
+    .fab-menu-container {
+        display: block;
+    }
+}
+
+/* Backdrop */
+.fab-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: -1;
+}
+
+.fab-menu-container.active .fab-backdrop {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Main FAB Button - สีฟ้าเทอร์ควอยซ์ */
+.fab-main {
+    position: relative;
+    width: 48px;  /* ลดจาก 56px */
+    height: 48px; /* ลดจาก 56px */
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); /* สีฟ้าเทอร์ควอยซ์ */
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+
+.fab-main:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
+}
+
+.fab-main:active {
+    transform: scale(0.95);
+}
+
+/* Main FAB Icon */
+.fab-main-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.plus-icon,
+.close-icon {
+    position: absolute;
+    font-size: 24px; /* ลดจาก 28px */
+    font-weight: 300;
+    transition: all 0.3s ease;
+}
+
+.close-icon {
+    opacity: 0;
+    transform: rotate(-90deg);
+}
+
+.fab-menu-container.active .plus-icon {
+    opacity: 0;
+    transform: rotate(90deg);
+}
+
+.fab-menu-container.active .close-icon {
+    opacity: 1;
+    transform: rotate(0);
+}
+
+/* Badge - สีส้มแดง */
+.fab-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #f97316; /* สีส้ม */
+    color: white;
+    font-size: 10px; /* ลดจาก 11px */
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+    border: 2px solid #0f0f0f;
+    animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* FAB Menu Items */
+.fab-menu-items {
+    position: absolute;
+    bottom: 60px; /* ลดจาก 70px */
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* ลดจาก 12px */
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.fab-menu-container.active .fab-menu-items {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Individual FAB Items - พื้นหลังเข้ม */
+.fab-item {
+    position: relative;
+    width: 42px; /* ลดจาก 48px */
+    height: 42px; /* ลดจาก 48px */
+    background: #1a1a1a; /* สีเข้มกว่าเดิม */
+    border: 2px solid #06b6d4; /* ขอบสีฟ้า */
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    transform: scale(0) translateY(20px);
+    transition: all 0.3s ease;
+}
+
+.fab-menu-container.active .fab-item {
+    transform: scale(1) translateY(0);
+}
+
+/* Stagger animation */
+.fab-menu-container.active .fab-item:nth-child(1) { transition-delay: 0.05s; }
+.fab-menu-container.active .fab-item:nth-child(2) { transition-delay: 0.1s; }
+.fab-menu-container.active .fab-item:nth-child(3) { transition-delay: 0.15s; }
+.fab-menu-container.active .fab-item:nth-child(4) { transition-delay: 0.2s; }
+.fab-menu-container.active .fab-item:nth-child(5) { transition-delay: 0.25s; }
+
+/* FAB Item Hover - สีฟ้าเข้ม */
+.fab-item:hover {
+    background: #0891b2;
+    border-color: #06b6d4;
+    transform: scale(1.1) translateY(0);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.5);
+}
+
+.fab-item .fab-icon {
+    font-size: 18px; /* ลดจาก 20px */
+}
+
+/* Labels */
+.fab-item::before {
+    content: attr(data-label);
+    position: absolute;
+    right: 52px; /* ปรับตามขนาดใหม่ */
+    background: rgba(0, 0, 0, 0.95);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 11px; /* ลดจาก 12px */
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    font-family: 'Kanit', sans-serif;
+}
+
+.fab-item:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+/* Improved main button animation */
+.fab-menu-container.active .fab-main {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+    transform: rotate(135deg);
+}
+
+/* Pulse effect when closed - สีฟ้า */
+.fab-main::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    border-radius: 50%;
+    opacity: 0.4;
+    animation: fabPulse 2s infinite;
+    z-index: -1;
+}
+
+@keyframes fabPulse {
+    0% { transform: scale(1); opacity: 0.4; }
+    50% { transform: scale(1.4); opacity: 0; }
+    100% { transform: scale(1); opacity: 0.4; }
+}
+
+/* Ripple effect on click */
+.fab-main::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.fab-main:active::before {
+    width: 100px;
+    height: 100px;
+}
+
+/* จัดการ z-index */
+.fab-menu-container {
+    z-index: 999;
+}
+
+.fab-menu-container.active {
+    z-index: 9999;
+}
+
+/* Special colors for specific items */
+.fab-item[data-label="ข่าวสาร"] { 
+    border-color: #8b5cf6; /* สีม่วง */
+}
+.fab-item[data-label="ข่าวสาร"]:hover { 
+    background: #8b5cf6;
+}
+
+.fab-item[data-label="คอร์สเรียน"] { 
+    border-color: #f59e0b; /* สีส้ม */
+}
+.fab-item[data-label="คอร์สเรียน"]:hover { 
+    background: #f59e0b;
+}
+
+.fab-item[data-label="เครื่องมือ"] { 
+    border-color: #3b82f6; /* สีฟ้า */
+}
+.fab-item[data-label="เครื่องมือ"]:hover { 
+    background: #3b82f6;
+}
+
+.fab-item[data-label="Music Video"] { 
+    border-color: #ef4444; /* สีแดง */
+}
+.fab-item[data-label="Music Video"]:hover { 
+    background: #ef4444;
+}
+
+.fab-item[data-label="วิเคราะห์วิดีโอ"] { 
+    border-color: #10b981; /* สีเขียว */
+}
+.fab-item[data-label="วิเคราะห์วิดีโอ"]:hover { 
+    background: #10b981;
+}
+
+/* สำหรับจอเล็กมาก */
+@media (max-width: 480px) {
+    .fab-main {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .fab-item {
+        width: 38px;
+        height: 38px;
+    }
+    
+    .fab-item .fab-icon {
+        font-size: 16px;
+    }
+    
+    .plus-icon,
+    .close-icon {
+        font-size: 22px;
+    }
+    
+    .fab-menu-container {
+        bottom: 15px;
+        right: 15px;
+    }
+}
+/* ========== END MOBILE BUTTON SIZE OPTIMIZATION ========== */

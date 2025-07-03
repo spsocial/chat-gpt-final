@@ -6874,4 +6874,91 @@ window.showTemplateForm = function() {
     }, 100);
 };
 
+// ========== FAB MENU SYSTEM ==========
+let fabMenuOpen = false;
+
+function toggleFabMenu() {
+    const container = document.querySelector('.fab-menu-container');
+    fabMenuOpen = !fabMenuOpen;
+    
+    if (fabMenuOpen) {
+        container.classList.add('active');
+        // Disable scrolling
+        document.body.style.overflow = 'hidden';
+        
+        // Haptic feedback บนมือถือ
+        if (navigator.vibrate) {
+            navigator.vibrate(50);
+        }
+    } else {
+        closeFabMenu();
+    }
+}
+
+function closeFabMenu() {
+    const container = document.querySelector('.fab-menu-container');
+    container.classList.remove('active');
+    fabMenuOpen = false;
+    
+    // Re-enable scrolling
+    document.body.style.overflow = '';
+}
+
+// ปิดเมนูเมื่อ scroll
+let lastScrollY = window.scrollY;
+window.addEventListener('scroll', () => {
+    const currentScrollY = window.scrollY;
+    
+    if (Math.abs(currentScrollY - lastScrollY) > 50 && fabMenuOpen) {
+        closeFabMenu();
+    }
+    
+    lastScrollY = currentScrollY;
+});
+
+// อัพเดท badge count
+function updateFabBadge() {
+    const badge = document.querySelector('.fab-badge');
+    let count = 0;
+    
+    // นับจำนวน features/updates
+    if (!sessionStorage.getItem('announcement_viewed')) count++;
+    if (!sessionStorage.getItem('course_viewed')) count++;
+    // เพิ่มเงื่อนไขอื่นๆ ตามต้องการ
+    
+    if (badge) {
+        if (count > 0) {
+            badge.textContent = count;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+}
+
+// เพิ่ม function สำหรับเปิด video analyzer (ถ้ายังไม่มี)
+function openVideoAnalyzer() {
+    // เปิด video analyzer
+    window.open('https://your-video-analyzer-url.com', '_blank');
+    closeFabMenu();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    updateFabBadge();
+    
+    // Hide individual FABs on mobile
+    if (window.innerWidth <= 768) {
+        document.querySelectorAll('.fab-announcement, .fab-course, .fab-tools, .fab-music, .fab-video-analyzer').forEach(fab => {
+            fab.style.display = 'none';
+        });
+    }
+});
+
+// Export functions
+window.toggleFabMenu = toggleFabMenu;
+window.closeFabMenu = closeFabMenu;
+window.updateFabBadge = updateFabBadge;
+window.openVideoAnalyzer = openVideoAnalyzer;
+
 // ========== END CHARACTER TEMPLATE SYSTEM ==========
