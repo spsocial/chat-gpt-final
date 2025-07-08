@@ -1,0 +1,41 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# JavaScript and JSON files - always use LF
+*.js text eol=lf
+*.json text eol=lf
+*.mjs text eol=lf
+
+# Web files - always use LF
+*.html text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.sass text eol=lf
+
+# Config and documentation files - always use LF
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.editorconfig text eol=lf
+
+# Shell scripts - always use LF
+*.sh text eol=lf
+
+# SQL files - always use LF
+*.sql text eol=lf
+
+# Binary files - treat as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+
+# Node modules should be ignored but just in case
+node_modules/* binary
