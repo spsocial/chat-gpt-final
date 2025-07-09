@@ -72,6 +72,11 @@ let db = null;
 try {
     db = require('./database');
     console.log('✅ Database module loaded');
+    
+    // Run migrations on startup
+    const { runMigrations } = require('./auto-migration');
+    runMigrations().catch(console.error);
+    
 } catch (error) {
     console.log('⚠️  Database module not found, running without rate limiting');
 }
