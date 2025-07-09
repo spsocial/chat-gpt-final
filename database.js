@@ -661,17 +661,7 @@ async function saveUserApiKey(userId, encryptedApiKey) {
     try {
         await client.query('BEGIN');
         
-        // อัพเดท API key และ flag
-        await client.query(
-            `UPDATE users 
-             SET openai_api_key = $2,
-                 is_byok = true,
-                 byok_enabled_at = NOW()
-             WHERE user_id = $1`,
-            [userId, encryptedApiKey]
-        );
-        
-        // สร้าง user ถ้ายังไม่มี
+        // ใช้ UPSERT (INSERT ... ON CONFLICT) แทน
         await client.query(
             `INSERT INTO users (user_id, name, openai_api_key, is_byok, byok_enabled_at)
              VALUES ($1, $1, $2, true, NOW())
