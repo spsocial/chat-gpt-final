@@ -20,6 +20,18 @@ let messageId = 0;
 let characterLibrary = [];
 let currentCharacterProfile = null;
 let userId = '';
+
+// Function to ensure userId is ready
+function ensureUserId() {
+    if (!userId) {
+        userId = localStorage.getItem('userId');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('userId', userId);
+        }
+    }
+    return userId;
+}
 let userCredits = 0;
 let lastPromptData = null;
 
@@ -802,12 +814,8 @@ function showCreditRequiredMessage(data) {
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
-    // Get or generate user ID
-    userId = localStorage.getItem('userId');
-    if (!userId) {
-        userId = 'user_' + Math.random().toString(36).substr(2, 9);
-        localStorage.setItem('userId', userId);
-    }
+    // Get or generate user ID using ensureUserId และอัพเดท global
+    userId = ensureUserId();
     document.addEventListener('change', (e) => {
         if (e.target.name === 'imageModel' || e.target.name === 'mobileImageModel') {
             updateModelSelection(e.target.value);
@@ -852,6 +860,7 @@ function updateModelSelection(selectedModel) {
 }
     
     // Update user ID display
+    console.log('📘 UserId in DOMContentLoaded:', userId);
     document.getElementById('userId').textContent = userId;
     
     // Check API status
@@ -881,8 +890,19 @@ setInterval(loadUserCredits, 30000);
     // Send button
     document.getElementById('sendButton').addEventListener('click', sendMessage);
     
-    // Initialize mode
+    // Initialize mode แต่ยังไม่โหลดประวัติ
+    currentMode = 'general';
     switchMode('general');
+    
+    // รอให้ userId พร้อมจริงๆ แล้วค่อยโหลดประวัติ
+    setTimeout(() => {
+        console.log('🔵 Force reload history after init');
+        console.log('🔵 Current userId:', userId);
+        if (userId && (currentMode === 'general' || currentMode === 'multichar')) {
+            loadChatHistory(currentMode);
+        }
+    }, 1000); // เพิ่มเป็น 1 วินาที
+    
 setTimeout(showAllFABButtons, 500);
 });
 
@@ -975,6 +995,7 @@ case 'general':
     const enhanceSection1 = document.getElementById('enhanceSection');
     if (enhanceSection1) enhanceSection1.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'block';
     document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('general');
@@ -1001,6 +1022,7 @@ case 'character':
     const enhanceSection2 = document.getElementById('enhanceSection');
     if (enhanceSection2) enhanceSection2.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('character');
@@ -1019,6 +1041,7 @@ case 'multichar':
     const enhanceSectionHide = document.getElementById('enhanceSection');
 if (enhanceSectionHide) enhanceSectionHide.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'block';
     document.getElementById('chatInfo').style.display = 'none';
 
     loadChatHistory('multichar');
@@ -1032,6 +1055,7 @@ if (enhanceSectionHide) enhanceSectionHide.style.display = 'none';
     uploadSection.style.display = 'none'; // ซ่อน upload section ใน library
     modeNotice.classList.remove('active'); // ซ่อน mode notice
     document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
     if (window.innerWidth <= 968) {
         document.querySelector('.chat-panel').style.display = 'none';
@@ -1065,6 +1089,7 @@ case 'image':
     const enhanceSection = document.getElementById('enhanceSection');
     if (enhanceSection) enhanceSection.style.display = 'flex';
     document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
 
     // ซ่อนปุ่ม Template Form
@@ -1095,6 +1120,7 @@ case 'image':
     const enhanceSectionChat = document.getElementById('enhanceSection');
     if (enhanceSectionChat) enhanceSectionChat.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'block';
+    document.getElementById('clearHistoryBtn').style.display = 'none';
     
     loadChatHistory('chat');
     break;
@@ -1111,8 +1137,24 @@ function saveChatHistory(mode) {
 }
 
 function loadChatHistory(mode) {
+    console.log(`📘 loadChatHistory called for ${mode} mode`);
     const chatMessages = document.getElementById('chatMessages');
     
+    // ใช้ PromptStorage สำหรับ general และ multichar
+    if (mode === 'general' || mode === 'multichar') {
+        console.log(`📘 Using PromptStorage for ${mode}`);
+        PromptStorage.display(mode);
+        return;
+    }
+    
+    // ใช้ ChatStorage สำหรับ chat
+    if (mode === 'chat') {
+        console.log(`📘 Using ChatStorage for chat mode`);
+        ChatStorage.display();
+        return;
+    }
+    
+    // โหมดอื่นๆ ใช้วิธีเดิม
     if (chatHistory[mode] && chatHistory[mode].length > 0) {
         chatMessages.innerHTML = chatHistory[mode];
     } else {
@@ -1739,6 +1781,13 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
     messagesContainer.appendChild(messageDiv);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
+    // Auto-save after adding any message (both user and assistant)
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        setTimeout(() => {
+            PromptStorage.save(currentMode);
+        }, 100);
+    }
+    
     return id;
 }
 
@@ -1892,12 +1941,28 @@ function copyPrompt(button) {
         return;
     }
     
-    // แปลง HTML เป็น text
-    const fullText = promptElement.innerHTML
-        .replace(/<br><br>/g, '\n\n')
-        .replace(/<br>/g, '\n')
-        .replace(/• /g, '* ')
-        .replace(/<[^>]*>/g, '');
+    // ใช้วิธีที่เข้ากันได้ดีกว่าสำหรับทุก browser
+    let fullText = '';
+    
+    // Clone element เพื่อไม่กระทบ DOM จริง
+    const clonedElement = promptElement.cloneNode(true);
+    
+    // แปลง br tags เป็น newlines
+    const brElements = clonedElement.getElementsByTagName('br');
+    for (let i = brElements.length - 1; i >= 0; i--) {
+        const br = brElements[i];
+        const textNode = document.createTextNode('\n');
+        br.parentNode.replaceChild(textNode, br);
+    }
+    
+    // ดึง text content
+    fullText = clonedElement.textContent || clonedElement.innerText || '';
+    
+    // ทำความสะอาด text
+    fullText = fullText
+        .replace(/•\s/g, '* ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
     
     let finalPrompt = '';
     
@@ -4776,21 +4841,18 @@ window.clearChatHistory = function() {
     }
 };
 
-// แก้ไข switchMode - โหลดประวัติเมื่อเข้า chat mode
+// แก้ไข switchMode - บันทึกประวัติก่อนเปลี่ยนโหมด
 const originalSwitchMode2 = window.switchMode;
 window.switchMode = function(mode) {
-    // เรียก function เดิม
-    originalSwitchMode2(mode);
+    // Save current mode history before switching
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        PromptStorage.save(currentMode);
+    } else if (currentMode === 'chat') {
+        ChatStorage.save();
+    }
     
-    // ถ้าเป็น chat mode ให้โหลดประวัติ
-    if (mode === 'chat') {
-    setTimeout(() => {
-        // เคลียร์ก่อนแสดงใหม่
-        const chatMessages = document.getElementById('chatMessages');
-        chatMessages.innerHTML = '';
-        ChatStorage.display();
-    }, 100);
-}
+    // เรียก function เดิม (ซึ่งจะเรียก loadChatHistory อยู่แล้ว)
+    originalSwitchMode2(mode);
 };
 
 // ========== AUTO SAVE ==========
@@ -4825,6 +4887,353 @@ window.showChatStorageInfo = function() {
 };
 
 console.log('✅ Chat LocalStorage System loaded');
+
+// ========== PROMPT STORAGE SYSTEM ==========
+// Storage system for general and multichar (prompt master) modes
+const PromptStorage = {
+    MAX_MESSAGES: 50,  // เก็บสูงสุด 50 ข้อความต่อโหมด
+    STORAGE_KEYS: {
+        general: 'veo_general_history',
+        multichar: 'veo_multichar_history'
+    },
+    
+    // บันทึกประวัติ
+    save: function(mode) {
+        if (mode !== 'general' && mode !== 'multichar') return;
+        
+        // ใช้ userId โดยตรงเหมือน ChatStorage
+        console.log(`🔵 PromptStorage.save called for ${mode} mode, userId: ${userId}`);
+        
+        if (!userId) {
+            console.error('❌ PromptStorage.save: userId is not set!');
+            return;
+        }
+        
+        try {
+            const messages = [];
+            const chatElements = document.querySelectorAll('#chatMessages .message');
+            console.log(`🔵 Found ${chatElements.length} elements to save`);
+            
+            chatElements.forEach(elem => {
+                const isUser = elem.classList.contains('user');
+                const contentElem = elem.querySelector('.message-content');
+                if (!contentElem) return;
+                
+                let content = '';
+                
+                if (isUser) {
+                    // สำหรับ user message ดึงข้อความตรงๆ
+                    content = contentElem.textContent.trim();
+                } else {
+                    // สำหรับ assistant message เก็บ innerHTML ทั้งหมด
+                    content = contentElem.innerHTML;
+                }
+                
+                // ไม่เก็บ loading, error messages
+                if (content.includes('กำลังสร้าง') || 
+                    content.includes('กำลังคิด') ||
+                    content.includes('❌') || 
+                    content.includes('⚠️ Session หมดอายุ') ||
+                    content.includes('สวัสดีครับ! ผมคือ')) {
+                    return;
+                }
+                
+                messages.push({
+                    role: isUser ? 'user' : 'assistant',
+                    content: content,
+                    timestamp: new Date().toISOString(),
+                    hasPrompt: !isUser && (content.includes('veo3-prompt') || content.includes('character-profile'))
+                });
+            });
+            
+            // เก็บแค่ข้อความล่าสุดตามจำนวนที่กำหนด
+            const recentMessages = messages.slice(-this.MAX_MESSAGES);
+            
+            // บันทึกลง localStorage
+            const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
+            localStorage.setItem(key, JSON.stringify({
+                messages: recentMessages,
+                lastUpdated: new Date().toISOString(),
+                mode: mode
+            }));
+            
+            console.log(`💾 Saved ${recentMessages.length} messages for ${mode} mode`);
+            console.log(`🔵 Saved to key: ${key}`);
+            
+        } catch (error) {
+            console.error(`Failed to save ${mode} history:`, error);
+            if (error.name === 'QuotaExceededError') {
+                this.cleanup(mode);
+            }
+        }
+    },
+    
+    // โหลดประวัติ
+    load: function(mode) {
+        if (mode !== 'general' && mode !== 'multichar') return [];
+        
+        try {
+            const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
+            console.log(`🟡 Loading from key: ${key}`);
+            const saved = localStorage.getItem(key);
+            
+            if (!saved) return [];
+            
+            const data = JSON.parse(saved);
+            console.log(`📂 Loaded ${data.messages.length} messages for ${mode} mode`);
+            
+            return data.messages || [];
+            
+        } catch (error) {
+            console.error(`Failed to load ${mode} history:`, error);
+            return [];
+        }
+    },
+    
+    // แสดงประวัติใน UI
+    display: function(mode) {
+        if (mode !== 'general' && mode !== 'multichar') return;
+        
+        const messages = this.load(mode);
+        
+        // Clear current chat
+        const chatMessages = document.getElementById('chatMessages');
+        chatMessages.innerHTML = '';
+        
+        if (messages.length === 0) {
+            // ไม่มีประวัติ แสดง welcome message
+            addWelcomeMessage(mode);
+            return;
+        }
+        
+        // แสดงประวัติ
+        messages.forEach(msg => {
+            if (msg.role === 'user') {
+                addMessage(msg.content, 'user');
+            } else {
+                // สำหรับ assistant message สร้าง wrapper และใส่ HTML ที่บันทึกไว้
+                const messageId = `msg-${Date.now()}-${Math.random()}`;
+                const messageDiv = document.createElement('div');
+                messageDiv.id = messageId;
+                messageDiv.className = 'message assistant';
+                
+                // ใช้ HTML ที่บันทึกไว้โดยตรง
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-content">${msg.content}</div>
+                `;
+                
+                chatMessages.appendChild(messageDiv);
+            }
+        });
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        // แสดงข้อความว่าโหลดจาก local
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            text-align: center;
+            padding: 8px;
+            margin: 8px auto;
+            background: rgba(147, 51, 234, 0.1);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #a1a1aa;
+        `;
+        infoDiv.innerHTML = `📂 โหลดประวัติ ${messages.length} ข้อความจากเครื่องของคุณ`;
+        chatMessages.insertBefore(infoDiv, chatMessages.firstChild);
+    },
+    
+    // ลบประวัติ
+    clear: function(mode) {
+        if (mode !== 'general' && mode !== 'multichar') return;
+        
+        // ใช้ userId โดยตรงเหมือน ChatStorage
+        try {
+            const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
+            localStorage.removeItem(key);
+            console.log(`🗑️ ${mode} history cleared`);
+        } catch (error) {
+            console.error(`Failed to clear ${mode} history:`, error);
+        }
+    },
+    
+    // ทำความสะอาด localStorage
+    cleanup: function(mode) {
+        // ใช้ userId โดยตรงเหมือน ChatStorage
+        try {
+            const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
+            const saved = localStorage.getItem(key);
+            
+            if (saved) {
+                const data = JSON.parse(saved);
+                // เก็บแค่ครึ่งหนึ่งของข้อความ
+                const halfMessages = data.messages.slice(Math.floor(data.messages.length / 2));
+                
+                localStorage.setItem(key, JSON.stringify({
+                    messages: halfMessages,
+                    lastUpdated: new Date().toISOString(),
+                    mode: mode
+                }));
+                
+                console.log(`🧹 Cleaned up ${mode} history, kept ${halfMessages.length} messages`);
+            }
+        } catch (error) {
+            console.error(`Cleanup failed for ${mode}:`, error);
+        }
+    },
+    
+    // ดูขนาดที่ใช้
+    getSize: function(mode) {
+        // ใช้ userId โดยตรงเหมือน ChatStorage
+        try {
+            const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
+            const data = localStorage.getItem(key) || '';
+            const sizeInBytes = new Blob([data]).size;
+            const sizeInKB = (sizeInBytes / 1024).toFixed(2);
+            return `${sizeInKB} KB`;
+        } catch (error) {
+            return '0 KB';
+        }
+    }
+};
+
+// ========== UPDATE SAVE AND LOAD FUNCTIONS ==========
+
+// แก้ไข saveChatHistory function เดิม
+const originalSaveChatHistory = window.saveChatHistory;
+window.saveChatHistory = function(mode) {
+    if (mode === 'chat') {
+        // ใช้ ChatStorage สำหรับ chat mode
+        originalSaveChatHistory(mode);
+    } else if (mode === 'general' || mode === 'multichar') {
+        // ใช้ PromptStorage สำหรับ general และ multichar
+        PromptStorage.save(mode);
+    } else {
+        // โหมดอื่นๆ ใช้วิธีเดิม
+        originalSaveChatHistory(mode);
+    }
+};
+
+// loadChatHistory ถูกแก้ไขโดยตรงในฟังก์ชันหลักแล้ว ไม่ต้อง override
+
+// แก้ไข clearModeChat function
+const originalClearModeChat = window.clearModeChat;
+window.clearModeChat = function(mode) {
+    if (mode === 'general' || mode === 'multichar') {
+        if (confirm(`ต้องการล้างประวัติ ${mode === 'general' ? 'General Prompt' : 'Prompt Master'} หรือไม่?`)) {
+            PromptStorage.clear(mode);
+            chatHistory[mode] = '';
+            if (currentMode === mode) {
+                clearChat();
+                addWelcomeMessage(mode);
+            }
+            showNotification('🗑️ ล้างประวัติแล้ว', 'success');
+        }
+    } else {
+        originalClearModeChat(mode);
+    }
+};
+
+// แก้ไข sendMessage เพื่อบันทึกหลังส่งข้อความ
+const originalSendMessage = window.sendMessage;
+window.sendMessage = async function() {
+    // เรียก function เดิม
+    await originalSendMessage();
+    
+    // บันทึกหลังส่งข้อความ (รอให้ response มาครบก่อน)
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        setTimeout(() => {
+            PromptStorage.save(currentMode);
+        }, 2000); // เพิ่มเป็น 2 วินาที
+    }
+};
+
+// Auto save ทุก 30 วินาที
+setInterval(() => {
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        PromptStorage.save(currentMode);
+    }
+}, 30000);
+
+// บันทึกก่อนปิดหน้า
+window.addEventListener('beforeunload', () => {
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        PromptStorage.save(currentMode);
+    }
+});
+
+// Utility function สำหรับดูข้อมูล storage
+window.showPromptStorageInfo = function() {
+    const generalSize = PromptStorage.getSize('general');
+    const multicharSize = PromptStorage.getSize('multichar');
+    const generalMessages = PromptStorage.load('general');
+    const multicharMessages = PromptStorage.load('multichar');
+    
+    console.log(`
+📊 Prompt Storage Info:
+- User: ${userId}
+- General Mode: ${generalMessages.length} messages (${generalSize})
+- Multichar Mode: ${multicharMessages.length} messages (${multicharSize})
+- Max allowed: ~5-10 MB per mode
+    `);
+};
+
+console.log('✅ Prompt Storage System loaded');
+
+// Debug function to check localStorage
+window.checkPromptStorage = function() {
+    console.log('=== Checking Prompt Storage ===');
+    console.log('Current userId:', userId);
+    console.log('Current mode:', currentMode);
+    
+    const generalKey = `veo_general_history_${userId}`;
+    const multicharKey = `veo_multichar_history_${userId}`;
+    
+    console.log('\nGeneral Storage:');
+    const generalData = localStorage.getItem(generalKey);
+    if (generalData) {
+        const parsed = JSON.parse(generalData);
+        console.log(`- Key: ${generalKey}`);
+        console.log(`- Messages: ${parsed.messages.length}`);
+        console.log(`- Last updated: ${parsed.lastUpdated}`);
+    } else {
+        console.log('- No data found');
+    }
+    
+    console.log('\nMultichar Storage:');
+    const multicharData = localStorage.getItem(multicharKey);
+    if (multicharData) {
+        const parsed = JSON.parse(multicharData);
+        console.log(`- Key: ${multicharKey}`);
+        console.log(`- Messages: ${parsed.messages.length}`);
+        console.log(`- Last updated: ${parsed.lastUpdated}`);
+    } else {
+        console.log('- No data found');
+    }
+    
+    console.log('\nAll localStorage keys:');
+    Object.keys(localStorage).forEach(key => {
+        if (key.includes('veo_')) {
+            console.log(`- ${key}`);
+        }
+    });
+};
+
+// Function to clear current mode history
+window.clearCurrentModeHistory = function() {
+    if (currentMode === 'general' || currentMode === 'multichar') {
+        const modeName = currentMode === 'general' ? 'General Prompt' : 'Prompt Master';
+        if (confirm(`ต้องการล้างประวัติ ${modeName} ทั้งหมดหรือไม่?\n\nประวัติการสนทนาจะถูกลบถาวร`)) {
+            PromptStorage.clear(currentMode);
+            chatHistory[currentMode] = '';
+            clearChat();
+            addWelcomeMessage(currentMode);
+            showNotification('🗑️ ล้างประวัติเรียบร้อยแล้ว', 'success');
+        }
+    }
+};
 
 // ========== FIX FAB BUTTONS ==========
 // ฟังก์ชันแสดงปุ่ม FAB ทั้งหมด

@@ -325,6 +325,42 @@
             font-size: 14px;
             color: var(--text);
         }
+        
+        /* Mobile Credit Button - Hidden by default */
+        .mobile-credit-btn {
+            display: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(147, 51, 234, 0.3);
+            margin-left: 4px;
+            flex-shrink: 0;
+        }
+        
+        .mobile-credit-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.5);
+        }
+        
+        .mobile-credit-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .credit-plus {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            line-height: 1;
+        }
 
         /* Main Content */
         .main-content {
@@ -6587,3 +6623,107 @@ body.mode-character #characterTemplateButtonSection {
     }
 }
 /* ========== END MOBILE BUTTON SIZE OPTIMIZATION ========== */
+
+/* ========== SUPPORT BUTTON ========== */
+.support-button {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    z-index: 999;
+    animation: supportPulse 2s ease-in-out infinite;
+}
+
+@keyframes supportPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+    }
+}
+
+.support-button:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+    background: linear-gradient(135deg, #2EE65A 0%, #25D366 100%);
+}
+
+.support-icon {
+    font-size: 16px;
+    animation: supportIconBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes supportIconBounce {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-2px); }
+    75% { transform: translateY(2px); }
+}
+
+.support-text {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Responsive - Mobile */
+@media (max-width: 768px) {
+    .support-button {
+        bottom: 15px;
+        left: 15px;
+        padding: 10px;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        justify-content: center;
+    }
+    
+    .support-icon {
+        font-size: 20px;
+    }
+    
+    .support-text {
+        display: none;
+    }
+    
+    /* Show mobile credit button */
+    .mobile-credit-btn {
+        display: flex !important;
+    }
+    
+    /* Adjust usage bar on mobile */
+    .usage-bar {
+        width: 80px;
+    }
+    
+    .usage-text {
+        font-size: 12px;
+    }
+}
+
+/* เลื่อนปุ่มขึ้นเมื่อมี FAB menu เปิด */
+.fab-menu-container.active ~ .support-button {
+    bottom: 320px;
+    transition: bottom 0.3s ease;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .support-button {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+}
+/* ========== END SUPPORT BUTTON ========== */
