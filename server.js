@@ -880,6 +880,8 @@ app.post('/api/test-api-key', async (req, res) => {
 app.post('/api/save-api-key', async (req, res) => {
     const { userId, apiKey } = req.body;
     
+    console.log('📝 Save API Key request:', { userId, hasApiKey: !!apiKey });
+    
     if (!userId || !apiKey) {
         return res.status(400).json({ 
             error: 'Missing required fields' 
@@ -887,6 +889,13 @@ app.post('/api/save-api-key', async (req, res) => {
     }
     
     try {
+        // Check if database is available
+        if (!db) {
+            return res.status(503).json({ 
+                error: 'Database service unavailable' 
+            });
+        }
+
         // Encrypt API key
         const encryptedKey = encrypt(apiKey);
         
@@ -899,15 +908,19 @@ app.post('/api/save-api-key', async (req, res) => {
                 message: 'API Key saved successfully' 
             });
         } else {
+            console.error('Database save failed:', result.error);
             res.status(500).json({ 
-                error: 'Failed to save API key' 
+                error: 'Failed to save API key',
+                details: result.error 
             });
         }
         
     } catch (error) {
         console.error('Save API key error:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ 
-            error: 'Internal server error' 
+            error: 'Internal server error',
+            message: error.message 
         });
     }
 });
