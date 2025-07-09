@@ -659,19 +659,54 @@ async function saveUserApiKey(userId, encryptedApiKey) {
     const client = await pool.connect();
     
     try {
+        // Debug: Check table structure
+        const tableInfo = await client.query(`
+            SELECT column_name, data_type, table_schema
+            FROM information_schema.columns 
+            WHERE table_name = 'users'
+            ORDER BY ordinal_position
+        `);
+        console.log('📊 Users table info:', {
+            rowCount: tableInfo.rowCount,
+            columns: tableInfo.rows
+        });
+        
+        // Also check if table exists
+        const tableExists = await client.query(`
+            SELECT table_name, table_schema
+            FROM information_schema.tables 
+            WHERE table_name = 'users'
+        `);
+        console.log('📊 Users table exists:', tableExists.rows);
+        
         await client.query('BEGIN');
         
-        // ใช้ UPSERT (INSERT ... ON CONFLICT) แทน
-        await client.query(
-            `INSERT INTO users (user_id, name, openai_api_key, is_byok, byok_enabled_at)
-             VALUES ($1, $1, $2, true, NOW())
-             ON CONFLICT (user_id) 
-             DO UPDATE SET 
-                 openai_api_key = $2,
-                 is_byok = true,
-                 byok_enabled_at = NOW()`,
-            [userId, encryptedApiKey]
+        // ตรวจสอบว่า user มีอยู่แล้วหรือไม่
+        const checkUser = await client.query(
+            'SELECT username FROM users WHERE username = $1',
+            [userId]
         );
+        
+        console.log(`🔍 Checking user ${userId}:`, checkUser.rows.length > 0 ? 'exists' : 'not found');
+        
+        if (checkUser.rows.length > 0) {
+            // UPDATE ถ้ามี user อยู่แล้ว
+            await client.query(
+                `UPDATE users 
+                 SET openai_api_key = $2,
+                     is_byok = true,
+                     byok_enabled_at = NOW()
+                 WHERE username = $1`,
+                [userId, encryptedApiKey]
+            );
+        } else {
+            // INSERT user ใหม่พร้อมข้อมูลพื้นฐาน
+            await client.query(
+                `INSERT INTO users (username, email, password_hash, openai_api_key, is_byok, byok_enabled_at, created_at)
+                 VALUES ($1, $2, $3, $4, true, NOW(), NOW())`,
+                [userId, `${userId}@byok.user`, 'byok_user', encryptedApiKey]
+            );
+        }
         
         await client.query('COMMIT');
         
@@ -691,7 +726,7 @@ async function saveUserApiKey(userId, encryptedApiKey) {
 async function getUserApiKey(userId) {
     try {
         const result = await pool.query(
-            'SELECT openai_api_key, is_byok FROM users WHERE user_id = $1',
+            'SELECT openai_api_key, is_byok FROM users WHERE username = $1',
             [userId]
         );
         
@@ -717,7 +752,7 @@ async function removeUserApiKey(userId) {
             `UPDATE users 
              SET openai_api_key = NULL,
                  is_byok = false
-             WHERE user_id = $1`,
+             WHERE username = $1`,
             [userId]
         );
         
