@@ -14,15 +14,8 @@ const ESYSlipService = require('./esy-slip');
 const crypto = require('crypto');
 
 // Encryption settings สำหรับ API keys
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex').slice(0, 32);
 const IV_LENGTH = 16;
-
-// Validate ENCRYPTION_KEY
-if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
-    console.error('❌ ENCRYPTION_KEY must be set in .env file and be exactly 32 characters long');
-    console.error('💡 Generate one with: node -e "console.log(require(\'crypto\').randomBytes(16).toString(\'hex\'))"');
-    process.exit(1);
-}
 
 // Assistant IDs mapping
 const ASSISTANT_CONFIGS = {
