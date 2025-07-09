@@ -652,8 +652,17 @@ async function showCreditPackages() {
         modal.innerHTML = `
             <div class="credit-modal-content">
                 <div class="modal-header">
-                    <h2>💰 เติมเครดิต</h2>
+                    <h2>💖 สนับสนุนเว็บไซต์</h2>
                     <button class="close-btn" onclick="closeCreditModal()">✕</button>
+                </div>
+                
+                <div style="text-align: center; padding: 20px; background: rgba(236, 72, 153, 0.1); border-radius: 12px; margin-bottom: 24px;">
+                    <p style="font-size: 16px; color: var(--text); margin: 0;">
+                        🙏 ขอบคุณที่ใช้บริการของเรา<br>
+                        <span style="font-size: 14px; color: var(--text-secondary);">
+                            การสนับสนุนของคุณช่วยให้เราพัฒนาบริการได้ดียิ่งขึ้น
+                        </span>
+                    </p>
                 </div>
                 
                 <div class="packages-grid">
@@ -669,21 +678,21 @@ async function showCreditPackages() {
                             <div class="price">฿${pkg.price}</div>
                             ${pkg.description ? `<p class="description">${pkg.description}</p>` : ''}
                             <button class="select-package-btn" onclick="selectPackage(${pkg.id}, ${pkg.price})">
-                                เลือกแพ็คเกจนี้
+                                💝 สนับสนุน
                             </button>
                         </div>
                     `).join('')}
                 </div>
                 
                    <div class="payment-info">
-                    <h3>📱 วิธีชำระเงิน</h3>
+                    <h3>💳 ช่องทางสนับสนุน</h3>
                     
                     <!-- QR Code Section -->
                     <div class="qr-section" id="qrSection" style="display: none;">
-                        <h4>สแกน QR Code เพื่อโอนเงิน</h4>
+                        <h4>สแกนเพื่อสนับสนุน</h4>
                         <div class="qr-code" id="qrCodeDisplay"></div>
                         <p style="color: #f59e0b; font-size: 14px; margin-top: 12px;">
-                            ⚠️ โอนให้ตรงจำนวน เพื่อยืนยันอัตโนมัติได้ทันที
+                            💡 โอนตรงจำนวน ระบบจะเพิ่มเครดิตให้ทันที
                         </p>
                     </div>
                     
@@ -704,8 +713,8 @@ async function showCreditPackages() {
                     <div class="upload-slip-section">
                         <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
                             <div class="upload-icon">📤</div>
-                            <div class="upload-text">คลิกเพื่ออัพโหลดสลิป</div>
-                            <div class="upload-hint">หรือลากไฟล์มาวางที่นี่</div>
+                            <div class="upload-text">อัพโหลดสลิป</div>
+                            <div class="upload-hint">คลิกหรือลากไฟล์มาที่นี่</div>
                         </div>
                         
                         <div id="slipPreview" style="display: none;">
@@ -723,7 +732,7 @@ async function showCreditPackages() {
                                 font-size: 16px;
                                 font-weight: 600;
                             ">
-                                ✅ ยืนยันการชำระเงิน
+                                ✨ ยืนยันการสนับสนุน
                             </button>
                         </div>
                         
@@ -734,8 +743,8 @@ async function showCreditPackages() {
                     
                     <div style="margin-top: 20px; padding: 16px; background: rgba(147, 51, 234, 0.1); border-radius: 8px;">
                         <p style="color: var(--text-secondary); font-size: 14px; text-align: center;">
-                            💡 <strong>ระบบอัตโนมัติ:</strong> อัพโหลดสลิปแล้วรับเครดิตทันที!<br>
-                            ✅ ตรวจสอบด้วย AI ภายใน 5 วินาที
+                            🎉 <strong>ขอบคุณล่วงหน้า:</strong> ทุกการสนับสนุนมีความหมายกับเรา<br>
+                            ⚡ ระบบจะเพิ่มเครดิตให้อัตโนมัติภายใน 5 วินาที
                         </p>
                     </div>
                 </div>
@@ -3161,14 +3170,14 @@ async function uploadSlip() {
     }
     
     if (!selectedPackageData) {
-        showNotification('❌ กรุณาเลือกแพ็คเกจก่อน', 'error');
+        showNotification('💝 กรุณาเลือกจำนวนที่ต้องการสนับสนุน', 'error');
         return;
     }
     
     // Show loading status
     const statusDiv = document.getElementById('uploadStatus');
     statusDiv.className = 'upload-status checking';
-    statusDiv.innerHTML = '🔍 กำลังตรวจสอบสลิป...';
+    statusDiv.innerHTML = '🎆 กำลังตรวจสอบการสนับสนุน...';
     statusDiv.style.display = 'block';
     
     // Hide preview
@@ -3194,9 +3203,9 @@ async function uploadSlip() {
             // Success!
             statusDiv.className = 'upload-status success';
             statusDiv.innerHTML = `
-                ✅ ยืนยันการชำระเงินสำเร็จ!<br>
-                💰 เครดิตใหม่: ${data.newBalance} เครดิต<br>
-                📋 Ref: ${data.transactionRef}
+                🎉 ขอบคุณที่สนับสนุนเว็บของเรา!<br>
+                💖 การสนับสนุนของคุณมีค่ามาก<br>
+                ✨ คุณได้รับ ${data.newBalance} เครดิต
             `;
             
             // Update credit display
@@ -3206,7 +3215,7 @@ async function uploadSlip() {
             // Close modal after 3 seconds
             setTimeout(() => {
                 closeCreditModal();
-                showNotification('✅ เติมเครดิตสำเร็จ!', 'success');
+                showNotification('🎆 ขอบคุณที่สนับสนุนค่ะ!', 'success');
             }, 3000);
             
         } else {
