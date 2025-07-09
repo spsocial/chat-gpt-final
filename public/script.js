@@ -359,7 +359,7 @@ const THREE_HOURS = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Current announcement version (change this when you have new announcements)
-const CURRENT_ANNOUNCEMENT_VERSION = '1.4.0';
+const CURRENT_ANNOUNCEMENT_VERSION = '2.0.0';
 
 function shouldShowAnnouncement() {
     const now = new Date().getTime();
