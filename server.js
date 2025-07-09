@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const multer = require('multer');
 const QRCode = require('qrcode');
@@ -12,8 +14,15 @@ const ESYSlipService = require('./esy-slip');
 const crypto = require('crypto');
 
 // Encryption settings สำหรับ API keys
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex').slice(0, 32);
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 const IV_LENGTH = 16;
+
+// Validate ENCRYPTION_KEY
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
+    console.error('❌ ENCRYPTION_KEY must be set in .env file and be exactly 32 characters long');
+    console.error('💡 Generate one with: node -e "console.log(require(\'crypto\').randomBytes(16).toString(\'hex\'))"');
+    process.exit(1);
+}
 
 // Assistant IDs mapping
 const ASSISTANT_CONFIGS = {
@@ -84,10 +93,49 @@ const COST_PER_1K_TOKENS = 0.02; // ประมาณ 0.02 บาท/1K tokens
 // Store user threads (in production, use Redis or database)
 const userThreads = new Map();
 
+// Security middleware
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"]
+        }
+    }
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again later.'
+});
+
+const strictLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // limit each IP to 10 requests per windowMs for sensitive endpoints
+    message: 'Too many requests from this IP, please try again later.'
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
+app.use('/api/', limiter);
+
+// Admin authentication middleware
+const adminAuth = (req, res, next) => {
+    const adminKey = req.headers['x-admin-key'];
+    
+    if (!adminKey || adminKey !== process.env.ADMIN_SECRET_KEY) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    next();
+};
 
 // Serve admin page (optional - ถ้า static ไม่ทำงาน)
 app.get('/admin', (req, res) => {
@@ -1098,10 +1146,8 @@ app.get('/api/credit-packages', async (req, res) => {
 });
 
 // Endpoint เติมเครดิต (Manual - สำหรับ Admin)
-app.post('/api/credits/manual-add', async (req, res) => {
+app.post('/api/credits/manual-add', adminAuth, async (req, res) => {
     const { userId, amount, note } = req.body;
-    
-    // TODO: เพิ่มการตรวจสอบสิทธิ์ admin
     
     try {
         const result = await db.addCredits(
@@ -1128,7 +1174,7 @@ app.post('/api/credits/manual-add', async (req, res) => {
 
 // ========== SLIP VERIFICATION ENDPOINT ==========
 // แทนที่โค้ดเดิมทั้งหมดของ endpoint นี้ (บรรทัด 1193-1318)
-app.post('/api/verify-slip', upload.single('slip'), async (req, res) => {
+app.post('/api/verify-slip', strictLimiter, upload.single('slip'), async (req, res) => {
     console.log('📤 Slip verification request received');
     
     // Debug: ตรวจสอบ API Key
