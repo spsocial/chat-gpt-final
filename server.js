@@ -617,12 +617,18 @@ res.json({
         console.error('❌ Chat error:', error);
         
         // Handle thread errors
-        if (error.message.includes('thread') || 
+        if (error.message && (error.message.includes('thread') || 
             error.message.includes('Thread') ||
-            error.message.includes('assistant')) {
+            error.message.includes('assistant') ||
+            error.status === 404)) {
             
-            const threadKey = `${userId}_${mode}_${isUsingByok ? 'byok' : 'standard'}`;
-            userThreads.delete(threadKey);
+            // Clear all threads for this user to ensure clean state
+            const threadKeys = Array.from(userThreads.keys());
+            threadKeys.forEach(key => {
+                if (key.startsWith(userId)) {
+                    userThreads.delete(key);
+                }
+            });
             
             return res.status(500).json({ 
                 error: 'Session expired. Please try again.',
@@ -1023,6 +1029,19 @@ app.post('/api/remove-api-key', async (req, res) => {
         const result = await db.removeUserApiKey(userId);
         
         if (result.success) {
+            // Clear all user's threads when removing API key
+            const threadKeys = Array.from(userThreads.keys());
+            threadKeys.forEach(key => {
+                if (key.startsWith(userId)) {
+                    userThreads.delete(key);
+                    console.log(`🧹 Cleared thread: ${key}`);
+                }
+            });
+            
+            // Clear cache for this user
+            apiCache.delete(`credits_${userId}`);
+            apiCache.delete(`usage_${userId}`);
+            
             res.json({ 
                 success: true,
                 message: 'API Key removed' 
