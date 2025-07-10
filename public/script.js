@@ -3038,6 +3038,33 @@ function syncChatModelSelection(model) {
 window.updateChatModel = updateChatModel;
 
 // Display chat response
+// Function สำหรับ format markdown เป็น HTML
+function formatMarkdown(text) {
+    // แปลง markdown เป็น HTML
+    return text
+        // Headers
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        // Bold
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        // Lists
+        .replace(/^\* (.+)$/gim, '<li>$1</li>')
+        .replace(/^- (.+)$/gim, '<li>$1</li>')
+        // Wrap lists
+        .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+        // Line breaks
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>')
+        // Wrap in paragraphs
+        .replace(/^(.+)$/gm, '<p>$1</p>')
+        // Clean up
+        .replace(/<p><h/g, '<h')
+        .replace(/<\/h(\d)><\/p>/g, '</h$1>')
+        .replace(/<p><ul>/g, '<ul>')
+        .replace(/<\/ul><\/p>/g, '</ul>');
+}
+
 function displayChatResponse(response, model, cost) {
     const messageId = `chat-${Date.now()}`;
     const messagesContainer = document.getElementById('chatMessages');
@@ -3061,7 +3088,7 @@ function displayChatResponse(response, model, cost) {
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
         <div class="message-content">
-            <div>${response}</div>
+            <div>${formatMarkdown(response)}</div>
             
             <!-- แสดงข้อมูลเล็กๆ ด้านล่าง -->
             <div class="chat-model-info">
@@ -3099,7 +3126,7 @@ function displayChatResponseFromHistory(content, modelData) {
     messageDiv.innerHTML = `
         <div class="message-avatar">🤖</div>
         <div class="message-content">
-            <div>${content}</div>
+            <div>${formatMarkdown(content)}</div>
             
             <!-- แสดงข้อมูลเล็กๆ ด้านล่าง -->
             <div class="chat-model-info">

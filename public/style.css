@@ -554,6 +554,39 @@
             border-radius: 16px;
             background: var(--surface-light);
         }
+        
+        /* Markdown styles for chat messages */
+        .message-content h1, 
+        .message-content h2, 
+        .message-content h3 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        
+        .message-content h1 { font-size: 1.5rem; }
+        .message-content h2 { font-size: 1.3rem; }
+        .message-content h3 { font-size: 1.1rem; }
+        
+        .message-content p {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        
+        .message-content ul {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+        
+        .message-content li {
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+        
+        .message-content strong {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
 
         .message.user .message-content {
             background: var(--primary);
