@@ -99,6 +99,26 @@ const COST_PER_1K_TOKENS = 0.02; // ประมาณ 0.02 บาท/1K tokens
 // Store user threads (in production, use Redis or database)
 const userThreads = new Map();
 
+// Simple memory cache for API responses (15 seconds TTL)
+const apiCache = new Map();
+const CACHE_TTL = 15000; // 15 seconds
+
+function getCached(key) {
+    const cached = apiCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+        return cached.data;
+    }
+    apiCache.delete(key);
+    return null;
+}
+
+function setCache(key, data) {
+    apiCache.set(key, {
+        data,
+        timestamp: Date.now()
+    });
+}
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: false // ปิด CSP ไว้ก่อน เพราะทำให้ inline scripts ไม่ทำงาน
@@ -109,6 +129,13 @@ const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 500, // เพิ่มจาก 100 เป็น 500 requests
     message: 'Too many requests from this IP, please try again later.'
+});
+
+// Stricter rate limit for usage/credits endpoints
+const usageLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 200, // 200 requests per minute (รองรับ ~100 users)
+    message: 'Too many usage requests, please try again later.'
 });
 
 const strictLimiter = rateLimit({
@@ -124,6 +151,11 @@ app.use(express.static('public'));
 
 // Request logging middleware for Railway
 app.use((req, res, next) => {
+    // Skip logging for frequent endpoints
+    if (req.path.includes('/credits/') || req.path.includes('/usage/')) {
+        return next();
+    }
+    
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] ${req.method} ${req.path}`);
     
@@ -748,8 +780,15 @@ app.post('/api/reset/:userId', (req, res) => {
 });
 
 // Get usage stats
-app.get('/api/usage/:userId', async (req, res) => {
+app.get('/api/usage/:userId', usageLimiter, async (req, res) => {
     const { userId } = req.params;
+    const cacheKey = `usage_${userId}`;
+    
+    // Check cache first
+    const cached = getCached(cacheKey);
+    if (cached) {
+        return res.json(cached);
+    }
     
     try {
         if (!db) {
@@ -773,7 +812,7 @@ app.get('/api/usage/:userId', async (req, res) => {
         // ดึงข้อมูลเก่าสำหรับ history
         const stats = await db.getUsageStats(userId);
         
-        res.json({
+        const result = {
             userId,
             today: {
                 used: usedToday.toFixed(2),
@@ -783,7 +822,12 @@ app.get('/api/usage/:userId', async (req, res) => {
                 percentUsed: ((usedToday / DAILY_LIMIT_THB) * 100).toFixed(0)
             },
             history: stats.week
-        });
+        };
+        
+        // Cache the result
+        setCache(cacheKey, result);
+        
+        res.json(result);
     } catch (error) {
         console.error('Error getting usage:', error);
         res.status(500).json({ error: 'Failed to get usage data' });
@@ -1159,17 +1203,29 @@ if (db) {
 // ======== CREDIT SYSTEM ENDPOINTS ========
 
 // Endpoint ดูเครดิตและประวัติ
-app.get('/api/credits/:userId', async (req, res) => {
+app.get('/api/credits/:userId', usageLimiter, async (req, res) => {
     const { userId } = req.params;
+    const cacheKey = `credits_${userId}`;
+    
+    // Check cache first
+    const cached = getCached(cacheKey);
+    if (cached) {
+        return res.json(cached);
+    }
     
     try {
         const credits = await db.getUserCredits(userId);
         const history = await db.getCreditHistory(userId);
         
-        res.json({
+        const result = {
             currentCredits: credits,
             history: history
-        });
+        };
+        
+        // Cache the result
+        setCache(cacheKey, result);
+        
+        res.json(result);
     } catch (error) {
         console.error('Error getting credits:', error);
         res.status(500).json({ error: 'Failed to get credits' });
