@@ -133,6 +133,7 @@ async function getAssistantInfo(assistantId) {
 }
 
 module.exports = {
+    openai,  // Export openai instance
     createThread,
     addMessage,
     runAssistant,

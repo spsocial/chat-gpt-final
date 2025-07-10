@@ -12,6 +12,7 @@ const ESYSlipService = require('./esy-slip');
 
 // เพิ่มหลัง require อื่นๆ
 const crypto = require('crypto');
+const OpenAI = require('openai');
 
 // Encryption settings สำหรับ API keys
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex').slice(0, 32);
@@ -73,6 +74,7 @@ console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTA
 
 // Import modules
 const assistants = require('./assistants');
+const { openai } = assistants; // Get openai instance from assistants module
 const chatAI = require('./chat-ai');
 let db = null;
 try {
@@ -124,6 +126,13 @@ app.use(express.static('public'));
 app.use((req, res, next) => {
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] ${req.method} ${req.path}`);
+    
+    // Log body for POST requests (ยกเว้น sensitive data)
+    if (req.method === 'POST' && req.path.includes('/chat')) {
+        const { userId, mode, model } = req.body || {};
+        console.log(`📝 Chat request: user=${userId}, mode=${mode}, model=${model}`);
+    }
+    
     next();
 });
 
@@ -394,8 +403,8 @@ app.post('/api/chat', async (req, res) => {
         const threadKey = `${userId}_${mode}_${assistantType}`;
         let threadId = userThreads.get(threadKey);
         
-        // Create assistant instance (use user's or default)
-        const openaiInstance = userOpenAI || assistants.openai;
+        // Use user's OpenAI client if BYOK, otherwise use default
+        const activeOpenAI = userOpenAI || openai;
         
         // Temporarily replace global assistants module functions
         const originalFunctions = {
@@ -405,7 +414,7 @@ app.post('/api/chat', async (req, res) => {
             deleteThread: assistants.deleteThread
         };
         
-        if (isUsingByok) {
+        if (isUsingByok && userOpenAI) {
             // Override with user's OpenAI instance
             assistants.createThread = async () => {
                 const thread = await userOpenAI.beta.threads.create();
