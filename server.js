@@ -92,6 +92,9 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (for Railway and other cloud platforms)
+app.set('trust proxy', true);
+
 // Settings
 const DAILY_LIMIT_THB = 5.0;  // 5 บาท/คน/วัน
 const COST_PER_1K_TOKENS = 0.02; // ประมาณ 0.02 บาท/1K tokens
