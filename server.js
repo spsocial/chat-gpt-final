@@ -5,6 +5,11 @@ const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
+// Force flush stdout for Railway logs
+if (process.env.RAILWAY_ENVIRONMENT) {
+    process.stdout._handle.setBlocking(true);
+}
+
 const multer = require('multer');
 const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
@@ -113,6 +118,13 @@ const strictLimiter = rateLimit({
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('public'));
+
+// Request logging middleware for Railway
+app.use((req, res, next) => {
+    const timestamp = new Date().toISOString();
+    console.log(`[${timestamp}] ${req.method} ${req.path}`);
+    next();
+});
 
 // Apply rate limit selectively (ไม่ใช้กับ credits และ usage)
 app.use('/api/', (req, res, next) => {
