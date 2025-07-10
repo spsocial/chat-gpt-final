@@ -38,6 +38,12 @@ const ASSISTANT_CONFIGS = {
     }
 };
 
+// Log Assistant IDs on startup for debugging
+console.log('🔍 Loaded Assistant IDs:', {
+    standard: ASSISTANT_CONFIGS.standard,
+    byok: ASSISTANT_CONFIGS.byok
+});
+
 // Log config
 console.log('🤖 Assistant Configuration:');
 console.log('Standard (4o-mini):', ASSISTANT_CONFIGS.standard);
@@ -187,6 +193,36 @@ function decrypt(text) {
     }
 }
 
+// ======== HEALTH CHECK ENDPOINT ========
+app.get('/health', (req, res) => {
+    const healthInfo = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        assistants: {
+            standard: {},
+            byok: {}
+        },
+        database: db ? 'connected' : 'disconnected'
+    };
+    
+    // Check each assistant ID
+    for (const [mode, id] of Object.entries(ASSISTANT_CONFIGS.standard)) {
+        healthInfo.assistants.standard[mode] = {
+            id: id,
+            valid: id && id.startsWith('asst_') && id.length > 10
+        };
+    }
+    
+    for (const [mode, id] of Object.entries(ASSISTANT_CONFIGS.byok)) {
+        healthInfo.assistants.byok[mode] = {
+            id: id,
+            valid: id && id.startsWith('asst_') && id.length > 10
+        };
+    }
+    
+    res.json(healthInfo);
+});
+
 // ======== ADMIN ENDPOINTS ========
 const ADMIN_KEY = process.env.ADMIN_SECRET_KEY || 'your-secret-admin-key-2025';
 
@@ -303,39 +339,24 @@ app.post('/api/chat', async (req, res) => {
         let assistantId;
         const assistantType = isUsingByok ? 'byok' : 'standard';
         
-        // เลือก Assistant ID ตาม mode และ type
-        if (isUsingByok) {
-    switch(mode) {
-        case 'character':
-            assistantId = process.env.CHARACTER_ASSISTANT_ID_4O;
-            break;
-        case 'multichar':
-            assistantId = process.env.MULTI_CHARACTER_ASSISTANT_ID_4O;
-            break;
-        case 'chat':  // เพิ่ม case นี้
-            assistantId = process.env.CHAT_ASSISTANT_ID_4O;
-            break;
-        default:
-            assistantId = process.env.ASSISTANT_ID_4O;
-    }
-} else {
-    switch(mode) {
-        case 'character':
-            assistantId = process.env.CHARACTER_ASSISTANT_ID;
-            break;
-        case 'multichar':
-            assistantId = process.env.MULTI_CHARACTER_ASSISTANT_ID;
-            break;
-        case 'chat':  // เพิ่ม case นี้
-            assistantId = process.env.CHAT_ASSISTANT_ID;
-            break;
-        default:
-            assistantId = process.env.ASSISTANT_ID;
-    }
-}
+        // ใช้ ASSISTANT_CONFIGS แทนการอ่าน env ตรงๆ
+        assistantId = ASSISTANT_CONFIGS[assistantType][mode] || ASSISTANT_CONFIGS[assistantType].general;
         
-        // Verify assistant ID exists
-        if (!assistantId) {
+        // Validate Assistant ID
+        if (!assistantId || assistantId.length < 10) {
+            console.error(`❌ Invalid Assistant ID for ${assistantType}/${mode}: ${assistantId}`);
+            console.log('Current config:', ASSISTANT_CONFIGS);
+            return res.status(500).json({
+                error: 'Assistant configuration error. Please contact support.'
+            });
+        }
+        
+        console.log(`📌 Using Assistant: ${assistantId} (${assistantType}/${mode})`);
+        
+        // [Old switch case removed - now using ASSISTANT_CONFIGS]
+        
+        // Additional validation already done above
+        if (false) { // Keep this check disabled since we validate above
             return res.status(500).json({ 
                 error: `${mode} Assistant ID not configured for ${assistantType} user` 
             });
