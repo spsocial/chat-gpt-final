@@ -5,11 +5,6 @@ const path = require('path');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
-// Force flush stdout for Railway logs
-if (process.env.RAILWAY_ENVIRONMENT) {
-    process.stdout._handle.setBlocking(true);
-}
-
 const multer = require('multer');
 const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
