@@ -7,9 +7,10 @@ const openai = new OpenAI({
 });
 
 // Create thread for conversation
-async function createThread() {
+async function createThread(openaiClient = null) {
+    const client = openaiClient || openai;
     try {
-        const thread = await openai.beta.threads.create();
+        const thread = await client.beta.threads.create();
         return thread.id;
     } catch (error) {
         console.error('Error creating thread:', error);
@@ -18,7 +19,8 @@ async function createThread() {
 }
 
 // Add message to thread
-async function addMessage(threadId, content, images = []) {
+async function addMessage(threadId, content, images = [], openaiClient = null) {
+    const client = openaiClient || openai;
     try {
         let messageContent;
 
@@ -49,7 +51,7 @@ async function addMessage(threadId, content, images = []) {
 
         console.log('Sending message with', images.length, 'image URLs');
         
-        const message = await openai.beta.threads.messages.create(
+        const message = await client.beta.threads.messages.create(
             threadId,
             {
                 role: "user",
@@ -65,10 +67,13 @@ async function addMessage(threadId, content, images = []) {
 }
 
 // Run assistant and get response
-async function runAssistant(threadId, assistantId) {
+async function runAssistant(threadId, assistantId, openaiClient = null) {
+    // Use provided client or default
+    const client = openaiClient || openai;
+    
     try {
         // Check assistant info first
-        const assistant = await openai.beta.assistants.retrieve(assistantId);
+        const assistant = await client.beta.assistants.retrieve(assistantId);
         console.log('Assistant model:', assistant.model);
         
         // Check if model supports vision
@@ -78,14 +83,14 @@ async function runAssistant(threadId, assistantId) {
         }
         
         // Create and poll run
-        const run = await openai.beta.threads.runs.createAndPoll(
+        const run = await client.beta.threads.runs.createAndPoll(
             threadId,
             { assistant_id: assistantId }
         );
 
         if (run.status === 'completed') {
             // Get messages
-            const messages = await openai.beta.threads.messages.list(threadId);
+            const messages = await client.beta.threads.messages.list(threadId);
             
             // Get the latest assistant message
             const lastMessage = messages.data.find(msg => msg.role === 'assistant');

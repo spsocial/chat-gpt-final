@@ -484,12 +484,12 @@ app.post('/api/chat', async (req, res) => {
         while (retryCount < maxRetries) {
             try {
                 if (!threadId) {
-                    threadId = await assistants.createThread();
+                    threadId = await assistants.createThread(activeOpenAI);
                     userThreads.set(threadKey, threadId);
                     console.log(`✅ New thread created for ${userId}: ${threadId}`);
                 }
                 
-                await assistants.addMessage(threadId, message, images);
+                await assistants.addMessage(threadId, message, images, activeOpenAI);
                 console.log('✅ Message added successfully');
                 break;
                 
@@ -502,7 +502,7 @@ app.post('/api/chat', async (req, res) => {
                     userThreads.delete(threadKey);
                     
                     if (retryCount < maxRetries - 1) {
-                        threadId = await assistants.createThread();
+                        threadId = await assistants.createThread(activeOpenAI);
                         userThreads.set(threadKey, threadId);
                         retryCount++;
                     } else {
@@ -515,13 +515,8 @@ app.post('/api/chat', async (req, res) => {
         }
 
         // Run assistant and get response
-        const result = await assistants.runAssistant(threadId, assistantId);
+        const result = await assistants.runAssistant(threadId, assistantId, activeOpenAI);
         
-        // Restore original functions
-        if (isUsingByok) {
-            Object.assign(assistants, originalFunctions);
-        }
-
         // ========== CALCULATE COST (ONLY FOR NON-BYOK) ==========
         let costTHB = 0;
         let todayTotal = 0;
