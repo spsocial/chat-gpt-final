@@ -654,60 +654,41 @@ async function getPaymentByRef(transactionRef) {
 
 // ========== BYOK (Bring Your Own Key) FUNCTIONS ==========
 
-// บันทึก API Key ของ user
+// บันทึก API Key ของ user - ใช้ตารางแยก
 async function saveUserApiKey(userId, encryptedApiKey) {
     const client = await pool.connect();
     
     try {
-        // Debug: Check table structure
-        const tableInfo = await client.query(`
-            SELECT column_name, data_type, table_schema
-            FROM information_schema.columns 
-            WHERE table_name = 'users'
-            ORDER BY ordinal_position
-        `);
-        console.log('📊 Users table info:', {
-            rowCount: tableInfo.rowCount,
-            columns: tableInfo.rows
-        });
-        
-        // Also check if table exists
-        const tableExists = await client.query(`
-            SELECT table_name, table_schema
-            FROM information_schema.tables 
-            WHERE table_name = 'users'
-        `);
-        console.log('📊 Users table exists:', tableExists.rows);
-        
         await client.query('BEGIN');
         
-        // ตรวจสอบว่า user มีอยู่แล้วหรือไม่
-        const checkUser = await client.query(
-            'SELECT user_id FROM users WHERE user_id = $1',
-            [userId]
-        );
+        // Create table if not exists
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS user_api_keys (
+                id SERIAL PRIMARY KEY,
+                user_id VARCHAR(255) UNIQUE NOT NULL,
+                api_key TEXT NOT NULL,
+                usage_count INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+        `);
         
-        console.log(`🔍 Checking user ${userId}:`, checkUser.rows.length > 0 ? 'exists' : 'not found');
+        // Insert or update
+        await client.query(`
+            INSERT INTO user_api_keys (user_id, api_key, updated_at)
+            VALUES ($1, $2, NOW())
+            ON CONFLICT (user_id) 
+            DO UPDATE SET 
+                api_key = $2,
+                updated_at = NOW()
+        `, [userId, encryptedApiKey]);
         
-        if (checkUser.rows.length > 0) {
-            // UPDATE ถ้ามี user อยู่แล้ว
-            await client.query(
-                `UPDATE users 
-                 SET openai_api_key = $2,
-                     is_byok = true,
-                     byok_enabled_at = NOW(),
-                     byok_usage_count = COALESCE(byok_usage_count, 0)
-                 WHERE user_id = $1`,
-                [userId, encryptedApiKey]
-            );
-        } else {
-            // INSERT user ใหม่พร้อมข้อมูลพื้นฐาน
-            await client.query(
-                `INSERT INTO users (user_id, name, openai_api_key, is_byok, byok_enabled_at, byok_usage_count, created_at)
-                 VALUES ($1, $2, $3, true, NOW(), 0, NOW())`,
-                [userId, userId, encryptedApiKey]
-            );
-        }
+        // Also ensure user exists in users table
+        await client.query(`
+            INSERT INTO users (user_id, name, created_at)
+            VALUES ($1, $2, NOW())
+            ON CONFLICT (user_id) DO NOTHING
+        `, [userId, userId]);
         
         await client.query('COMMIT');
         
@@ -727,13 +708,13 @@ async function saveUserApiKey(userId, encryptedApiKey) {
 async function getUserApiKey(userId) {
     try {
         const result = await pool.query(
-            'SELECT openai_api_key, is_byok FROM users WHERE user_id = $1',
+            'SELECT api_key FROM user_api_keys WHERE user_id = $1',
             [userId]
         );
         
-        if (result.rows.length > 0 && result.rows[0].is_byok) {
+        if (result.rows.length > 0) {
             return {
-                apiKey: result.rows[0].openai_api_key,
+                apiKey: result.rows[0].api_key,
                 isByok: true
             };
         }
@@ -750,11 +731,7 @@ async function getUserApiKey(userId) {
 async function removeUserApiKey(userId) {
     try {
         await pool.query(
-            `UPDATE users 
-             SET openai_api_key = NULL,
-                 is_byok = false,
-                 byok_usage_count = 0
-             WHERE user_id = $1`,
+            'DELETE FROM user_api_keys WHERE user_id = $1',
             [userId]
         );
         
@@ -771,8 +748,8 @@ async function removeUserApiKey(userId) {
 async function incrementByokUsage(userId) {
     try {
         await pool.query(
-            `UPDATE users 
-             SET byok_usage_count = COALESCE(byok_usage_count, 0) + 1
+            `UPDATE user_api_keys 
+             SET usage_count = COALESCE(usage_count, 0) + 1
              WHERE user_id = $1`,
             [userId]
         );
