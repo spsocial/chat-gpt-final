@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Credit Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -204,6 +205,190 @@
             font-size: 12px;
             color: #666;
         }
+        
+        /* Dashboard Styles */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto 24px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #262626;
+        }
+        
+        .stat-label {
+            color: #a1a1aa;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .stat-change {
+            font-size: 14px;
+            color: #10b981;
+        }
+        
+        .chart-container {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            height: 400px;
+            position: relative;
+        }
+        
+        .chart-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .chart-tab {
+            padding: 8px 16px;
+            background: #262626;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            color: #a1a1aa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-tab.active {
+            background: #9333ea;
+            border-color: #9333ea;
+            color: #fff;
+        }
+        
+        .top-spenders {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .spender-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #262626;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .spender-rank {
+            width: 30px;
+            height: 30px;
+            background: #9333ea;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+        
+        .spender-info {
+            flex: 1;
+        }
+        
+        .spender-name {
+            font-weight: 500;
+            color: #fff;
+        }
+        
+        .spender-stats {
+            font-size: 12px;
+            color: #a1a1aa;
+        }
+        
+        .spender-amount {
+            font-weight: 600;
+            color: #10b981;
+        }
+        
+        .recent-transactions {
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #262626;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .transaction-user {
+            color: #9333ea;
+            font-weight: 500;
+        }
+        
+        .transaction-amount {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .transaction-time {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .dashboard-toggle {
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+        
+        .dashboard-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(147, 51, 234, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                padding: 0 10px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .dashboard-container > div:last-child {
+                grid-template-columns: 1fr !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -213,6 +398,53 @@
         <div class="header">
             <h1>💰 Admin Credit Management</h1>
             <p>เติมเครดิตให้ลูกค้า</p>
+        </div>
+        
+        <button class="dashboard-toggle" onclick="toggleDashboard()">📊 Show Revenue Dashboard</button>
+        
+        <div id="revenueDashboard" class="dashboard-container" style="display: none;">
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Revenue This Month</div>
+                    <div class="stat-value" id="monthRevenue">฿0</div>
+                    <div class="stat-change" id="monthChange"></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-value" id="totalRevenue">฿0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Successful Payments</div>
+                    <div class="stat-value" id="paymentCount">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg. Transaction</div>
+                    <div class="stat-value" id="avgTransaction">฿0</div>
+                </div>
+            </div>
+            
+            <!-- Revenue Chart -->
+            <div class="chart-container">
+                <div class="chart-tabs">
+                    <button class="chart-tab active" onclick="switchChart('daily')">Daily</button>
+                    <button class="chart-tab" onclick="switchChart('monthly')">Monthly</button>
+                </div>
+                <canvas id="revenueChart"></canvas>
+            </div>
+            
+            <!-- Top Spenders and Recent Transactions -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div class="top-spenders">
+                    <h3 style="margin-bottom: 16px;">🏆 Top Spenders</h3>
+                    <div id="topSpendersList"></div>
+                </div>
+                
+                <div class="recent-transactions">
+                    <h3 style="margin-bottom: 16px;">💳 Recent Transactions</h3>
+                    <div id="recentTransactionsList"></div>
+                </div>
+            </div>
         </div>
         
         <div class="form-card">
@@ -399,6 +631,238 @@
             result.className = `result ${type}`;
             result.style.display = 'block';
         }
+        
+        // Revenue Dashboard Functions
+        let revenueChart = null;
+        let revenueData = null;
+        let currentChartType = 'daily';
+        
+        function toggleDashboard() {
+            const dashboard = document.getElementById('revenueDashboard');
+            const button = document.querySelector('.dashboard-toggle');
+            
+            if (dashboard.style.display === 'none') {
+                dashboard.style.display = 'block';
+                button.textContent = '📊 Hide Revenue Dashboard';
+                if (!revenueData) {
+                    loadRevenueData();
+                }
+            } else {
+                dashboard.style.display = 'none';
+                button.textContent = '📊 Show Revenue Dashboard';
+            }
+        }
+        
+        async function loadRevenueData() {
+            const adminKey = document.getElementById('adminKey').value || localStorage.getItem('adminKey');
+            
+            if (!adminKey) {
+                alert('Please enter admin key first');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/admin/revenue-stats', {
+                    headers: {
+                        'X-Admin-Key': adminKey
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load revenue data');
+                }
+                
+                const result = await response.json();
+                revenueData = result.data;
+                
+                updateStats();
+                updateChart('daily');
+                updateTopSpenders();
+                updateRecentTransactions();
+                
+            } catch (error) {
+                console.error('Error loading revenue data:', error);
+                alert('Failed to load revenue data');
+            }
+        }
+        
+        function updateStats() {
+            // Month Revenue
+            document.getElementById('monthRevenue').textContent = `฿${revenueData.monthRevenue.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            
+            // Total Revenue
+            document.getElementById('totalRevenue').textContent = `฿${revenueData.totalRevenue.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            
+            // Payment Count
+            document.getElementById('paymentCount').textContent = revenueData.paymentCount.toLocaleString();
+            
+            // Average Transaction
+            const avgTransaction = revenueData.paymentCount > 0 ? revenueData.totalRevenue / revenueData.paymentCount : 0;
+            document.getElementById('avgTransaction').textContent = `฿${avgTransaction.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+        }
+        
+        function switchChart(type) {
+            currentChartType = type;
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            updateChart(type);
+        }
+        
+        function updateChart(type) {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            
+            let labels, data;
+            
+            if (type === 'daily') {
+                labels = revenueData.dailyRevenue.map(d => {
+                    const date = new Date(d.date);
+                    return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+                });
+                data = revenueData.dailyRevenue.map(d => d.revenue);
+            } else {
+                labels = revenueData.monthlyRevenue.map(d => {
+                    const [year, month] = d.month.split('-');
+                    return new Date(year, month - 1).toLocaleDateString('th-TH', { month: 'short', year: '2-digit' });
+                });
+                data = revenueData.monthlyRevenue.map(d => d.revenue);
+            }
+            
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (฿)',
+                        data: data,
+                        borderColor: '#9333ea',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `฿${context.parsed.y.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return `฿${value.toLocaleString()}`;
+                                },
+                                color: '#a1a1aa'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#a1a1aa'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function updateTopSpenders() {
+            const container = document.getElementById('topSpendersList');
+            container.innerHTML = '';
+            
+            revenueData.topSpenders.forEach((spender, index) => {
+                const item = document.createElement('div');
+                item.className = 'spender-item';
+                item.style.display = 'flex';
+                item.style.alignItems = 'center';
+                
+                const lastPayment = new Date(spender.lastPayment).toLocaleDateString('th-TH');
+                
+                item.innerHTML = `
+                    <div class="spender-rank">${index + 1}</div>
+                    <div class="spender-info">
+                        <div class="spender-name">${spender.userId}</div>
+                        <div class="spender-stats">${spender.paymentCount} payments • Last: ${lastPayment}</div>
+                    </div>
+                    <div class="spender-amount">฿${spender.totalSpent.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</div>
+                `;
+                
+                container.appendChild(item);
+            });
+            
+            if (revenueData.topSpenders.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666;">No transactions yet</div>';
+            }
+        }
+        
+        function updateRecentTransactions() {
+            const container = document.getElementById('recentTransactionsList');
+            container.innerHTML = '';
+            
+            revenueData.recentTransactions.slice(0, 10).forEach(trans => {
+                const item = document.createElement('div');
+                item.className = 'transaction-item';
+                
+                const date = new Date(trans.createdAt);
+                const timeAgo = getTimeAgo(date);
+                
+                item.innerHTML = `
+                    <div>
+                        <div class="transaction-user">${trans.userId}</div>
+                        <div class="transaction-time">${timeAgo}</div>
+                    </div>
+                    <div class="transaction-amount">+฿${trans.amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</div>
+                `;
+                
+                container.appendChild(item);
+            });
+            
+            if (revenueData.recentTransactions.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666;">No transactions yet</div>';
+            }
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) return `${days} day${days > 1 ? 's' : ''} ago`;
+            if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+            if (minutes > 0) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+            return 'Just now';
+        }
+        
+        // Auto-refresh dashboard every 30 seconds when visible
+        setInterval(() => {
+            const dashboard = document.getElementById('revenueDashboard');
+            if (dashboard.style.display !== 'none' && revenueData) {
+                loadRevenueData();
+            }
+        }, 30000);
     </script>
 </body>
 </html>

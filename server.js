@@ -249,6 +249,140 @@ app.post('/api/admin/add-credits', checkAdminAuth, async (req, res) => {
     }
 });
 
+// Admin revenue dashboard endpoint
+app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
+    try {
+        if (!db || !db.pool) {
+            return res.status(500).json({ error: 'Database not available' });
+        }
+
+        // Get current date info
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0];
+        
+        // 1. Total revenue this month
+        const monthRevenueResult = await db.pool.query(`
+            SELECT COALESCE(SUM(amount), 0) as total
+            FROM credit_transactions
+            WHERE type = 'ADD' 
+            AND created_at >= $1
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+        `, [firstDayOfMonth]);
+        
+        // 2. Total revenue all time
+        const totalRevenueResult = await db.pool.query(`
+            SELECT COALESCE(SUM(amount), 0) as total
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+        `);
+        
+        // 3. Number of successful payments
+        const paymentCountResult = await db.pool.query(`
+            SELECT COUNT(*) as count
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+        `);
+        
+        // 4. Top spenders
+        const topSpendersResult = await db.pool.query(`
+            SELECT 
+                user_id,
+                COUNT(*) as payment_count,
+                SUM(amount) as total_spent,
+                MAX(created_at) as last_payment
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+            GROUP BY user_id
+            ORDER BY total_spent DESC
+            LIMIT 10
+        `);
+        
+        // 5. Daily revenue for current month
+        const dailyRevenueResult = await db.pool.query(`
+            SELECT 
+                DATE(created_at) as date,
+                SUM(amount) as revenue,
+                COUNT(*) as transaction_count
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND created_at >= $1
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        `, [firstDayOfMonth]);
+        
+        // 6. Monthly revenue for last 12 months
+        const monthlyRevenueResult = await db.pool.query(`
+            SELECT 
+                TO_CHAR(created_at, 'YYYY-MM') as month,
+                SUM(amount) as revenue,
+                COUNT(*) as transaction_count
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND created_at >= NOW() - INTERVAL '12 months'
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+            GROUP BY TO_CHAR(created_at, 'YYYY-MM')
+            ORDER BY month ASC
+        `);
+        
+        // 7. Recent transactions
+        const recentTransactionsResult = await db.pool.query(`
+            SELECT 
+                user_id,
+                amount,
+                description,
+                admin_note,
+                created_at
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
+            ORDER BY created_at DESC
+            LIMIT 20
+        `);
+
+        res.json({
+            success: true,
+            data: {
+                monthRevenue: parseFloat(monthRevenueResult.rows[0].total),
+                totalRevenue: parseFloat(totalRevenueResult.rows[0].total),
+                paymentCount: parseInt(paymentCountResult.rows[0].count),
+                topSpenders: topSpendersResult.rows.map(row => ({
+                    userId: row.user_id,
+                    paymentCount: parseInt(row.payment_count),
+                    totalSpent: parseFloat(row.total_spent),
+                    lastPayment: row.last_payment
+                })),
+                dailyRevenue: dailyRevenueResult.rows.map(row => ({
+                    date: row.date,
+                    revenue: parseFloat(row.revenue),
+                    transactionCount: parseInt(row.transaction_count)
+                })),
+                monthlyRevenue: monthlyRevenueResult.rows.map(row => ({
+                    month: row.month,
+                    revenue: parseFloat(row.revenue),
+                    transactionCount: parseInt(row.transaction_count)
+                })),
+                recentTransactions: recentTransactionsResult.rows.map(row => ({
+                    userId: row.user_id,
+                    amount: parseFloat(row.amount),
+                    description: row.description,
+                    adminNote: row.admin_note,
+                    createdAt: row.created_at
+                }))
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error fetching revenue stats:', error);
+        res.status(500).json({ error: 'Failed to fetch revenue statistics' });
+    }
+});
+
 // Calculate cost (with premium for multichar mode)
 function calculateCost(usage, mode = 'general') {
     const totalTokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
