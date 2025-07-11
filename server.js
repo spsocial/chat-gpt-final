@@ -1036,73 +1036,42 @@ app.post('/api/generate-image', async (req, res) => {
         // Run the model
         const output = await replicate.run(config.model, { input: config.input });
         
-        console.log('🔍 Replicate output:', JSON.stringify(output, null, 2));
+        console.log('🔍 Replicate raw output:', output);
         console.log('🔍 Output type:', typeof output);
+        console.log('🔍 Output stringify:', JSON.stringify(output, null, 2));
         
-        if (!output || (Array.isArray(output) && output.length === 0)) {
-            throw new Error('No image generated');
+        if (!output) {
+            throw new Error('No output from Replicate');
         }
         
-        // Extract image URL properly
+        // Simple extraction - just get the first string we can find
         let imageUrl = null;
         
-        // Handle different output formats from Replicate
-        if (Array.isArray(output)) {
-            // If output is array, take first element
-            const firstOutput = output[0];
-            
-            if (typeof firstOutput === 'string') {
-                // Direct string URL
-                imageUrl = firstOutput;
-            } else if (typeof firstOutput === 'object' && firstOutput !== null) {
-                // Object with URL property
-                console.log('🔍 Output[0] is object, keys:', Object.keys(firstOutput));
-                console.log('🔍 Full object:', JSON.stringify(firstOutput, null, 2));
-                
-                // Try various property names
-                imageUrl = firstOutput.url || 
-                          firstOutput.output || 
-                          firstOutput.image || 
-                          firstOutput.href || 
-                          firstOutput.uri ||
-                          firstOutput.src ||
-                          firstOutput.file_url ||
-                          firstOutput.download_url ||
-                          firstOutput.image_url;
-                
-                // If still no URL and object has exactly one property, use its value
-                if (!imageUrl) {
-                    const keys = Object.keys(firstOutput);
-                    if (keys.length === 1) {
-                        imageUrl = firstOutput[keys[0]];
-                    }
-                }
-            }
-        } else if (typeof output === 'string') {
-            // Direct string output
+        // If output is already a string, use it
+        if (typeof output === 'string') {
             imageUrl = output;
-        } else if (typeof output === 'object' && output !== null) {
-            // Object output (not array)
-            console.log('🔍 Output is object, keys:', Object.keys(output));
-            imageUrl = output.url || output.output || output.image || output[0];
+        }
+        // If it's an array, get first element
+        else if (Array.isArray(output) && output.length > 0) {
+            imageUrl = output[0];
+        }
+        // If it's an object, try to find a URL
+        else if (typeof output === 'object') {
+            // Convert to string to see what we're dealing with
+            const outputStr = JSON.stringify(output);
+            console.log('🔍 Output as string:', outputStr);
+            
+            // Just use the output as is - Replicate sometimes returns the URL directly
+            imageUrl = output.toString();
         }
         
-        // Final validation
-        if (!imageUrl || typeof imageUrl !== 'string') {
-            console.error('❌ Failed to extract image URL from:', output);
-            throw new Error('Could not extract valid image URL from Replicate response');
+        // If we still don't have a URL, use the raw output
+        if (!imageUrl) {
+            imageUrl = String(output);
         }
         
-        // Clean up the URL if needed
-        imageUrl = imageUrl.trim();
-        
-        // Validate URL format
-        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-            console.error('❌ Invalid URL format:', imageUrl);
-            throw new Error('Invalid URL format - must start with http:// or https://');
-        }
-        
-        console.log('✅ Final image URL:', imageUrl);
+        console.log('✅ Extracted image URL:', imageUrl);
+        console.log('✅ URL type:', typeof imageUrl);
         
         // Deduct credits using new system
         if (db) {
@@ -1131,19 +1100,30 @@ app.post('/api/generate-image', async (req, res) => {
         
     } catch (error) {
         console.error('❌ Image generation error:', error);
+        console.error('❌ Error stack:', error.stack);
         
         // Handle specific Replicate errors
         if (error.message && error.message.includes('authentication')) {
             return res.status(500).json({
                 error: 'Image generation authentication failed',
-                message: 'กรุณาตรวจสอบ REPLICATE_API_TOKEN'
+                message: 'กรุณาตรวจสอบ REPLICATE_API_TOKEN',
+                details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
+        
+        if (error.message && error.message.includes('Could not extract valid image URL')) {
+            return res.status(500).json({
+                error: 'Failed to extract image URL',
+                message: 'ไม่สามารถดึง URL ของภาพได้ กรุณาลองใหม่',
+                details: process.env.NODE_ENV === 'development' ? error.message : undefined
             });
         }
         
         res.status(500).json({ 
             error: 'Failed to generate image',
             message: 'ไม่สามารถสร้างภาพได้ กรุณาลองใหม่อีกครั้ง',
-            details: error.message 
+            details: error.message,
+            hint: 'Please check Railway logs for more details'
         });
     }
 });
