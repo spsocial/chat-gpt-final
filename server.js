@@ -9,6 +9,7 @@ const multer = require('multer');
 const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
 const ESYSlipService = require('./esy-slip');
+const Replicate = require('replicate');
 
 
 // Assistant IDs mapping
@@ -934,6 +935,150 @@ app.post('/api/enhance-prompt', async (req, res) => {
         console.error('Enhance prompt error:', error);
         res.status(500).json({ 
             error: 'Failed to enhance prompt',
+            details: error.message 
+        });
+    }
+});
+
+// ======== IMAGE GENERATION ENDPOINT ========
+app.post('/api/generate-image', async (req, res) => {
+    const { prompt, userId = 'guest', model = 'flux-schnell', aspectRatio = '1:1' } = req.body;
+    
+    if (!prompt) {
+        return res.status(400).json({ error: 'Prompt is required' });
+    }
+    
+    // Check if Replicate API key is configured
+    if (!process.env.REPLICATE_API_TOKEN) {
+        return res.status(500).json({ 
+            error: 'Image generation service not configured',
+            message: 'กรุณาตั้งค่า REPLICATE_API_TOKEN'
+        });
+    }
+    
+    try {
+        // Initialize Replicate
+        const replicate = new Replicate({
+            auth: process.env.REPLICATE_API_TOKEN,
+        });
+        
+        // Check credits
+        const modelCosts = {
+            'flux-schnell': 0.15,
+            'flux-dev': 0.50,
+            'sdxl-lightning': 0.20
+        };
+        
+        const estimatedCost = modelCosts[model] || 0.15;
+        
+        if (db) {
+            // Check if user has enough credits
+            const userCredits = await db.getUserCredits(userId);
+            
+            if (userCredits < estimatedCost) {
+                return res.status(429).json({
+                    error: 'Insufficient credits',
+                    message: 'เครดิตไม่เพียงพอสำหรับสร้างภาพ',
+                    credits: {
+                        current: userCredits.toFixed(2),
+                        required: estimatedCost.toFixed(2)
+                    }
+                });
+            }
+        }
+        
+        console.log(`🎨 Generating image with ${model} for user ${userId}`);
+        console.log(`📝 Prompt: ${prompt}`);
+        console.log(`📐 Aspect Ratio: ${aspectRatio}`);
+        
+        // Model configurations
+        const modelConfigs = {
+            'flux-schnell': {
+                model: 'black-forest-labs/flux-schnell',
+                input: {
+                    prompt: prompt,
+                    num_outputs: 1,
+                    aspect_ratio: aspectRatio,
+                    output_format: 'webp',
+                    output_quality: 95,
+                    num_inference_steps: 4
+                }
+            },
+            'flux-dev': {
+                model: 'black-forest-labs/flux-dev',
+                input: {
+                    prompt: prompt,
+                    num_outputs: 1,
+                    aspect_ratio: aspectRatio,
+                    output_format: 'webp',
+                    output_quality: 95,
+                    guidance_scale: 3.5,
+                    num_inference_steps: 28
+                }
+            },
+            'sdxl-lightning': {
+                model: 'bytedance/sdxl-lightning-4step',
+                input: {
+                    prompt: prompt,
+                    num_outputs: 1,
+                    width: aspectRatio === '1:1' ? 1024 : aspectRatio === '16:9' ? 1024 : 768,
+                    height: aspectRatio === '1:1' ? 1024 : aspectRatio === '16:9' ? 576 : 1024,
+                    scheduler: 'K_EULER',
+                    num_inference_steps: 4,
+                    guidance_scale: 0,
+                    disable_safety_checker: false
+                }
+            }
+        };
+        
+        const config = modelConfigs[model] || modelConfigs['flux-schnell'];
+        
+        // Run the model
+        const output = await replicate.run(config.model, { input: config.input });
+        
+        if (!output || !output[0]) {
+            throw new Error('No image generated');
+        }
+        
+        // Deduct credits using new system
+        if (db) {
+            const creditResult = await db.useCreditsNew(
+                userId,
+                estimatedCost,
+                `Image generation - ${model}`
+            );
+            
+            if (!creditResult.success) {
+                console.error('❌ Failed to deduct credits:', creditResult.error);
+                // Still return the image even if credit deduction fails
+            } else {
+                console.log(`✅ Deducted ${estimatedCost} credits for image generation`);
+            }
+        }
+        
+        // Send response
+        res.json({
+            success: true,
+            imageUrl: output[0],
+            model: model,
+            cost: estimatedCost.toFixed(2),
+            aspectRatio: aspectRatio
+        });
+        
+    } catch (error) {
+        console.error('❌ Image generation error:', error);
+        
+        // Handle specific Replicate errors
+        if (error.message && error.message.includes('authentication')) {
+            return res.status(500).json({
+                error: 'Image generation authentication failed',
+                message: 'กรุณาตรวจสอบ REPLICATE_API_TOKEN'
+            });
+        }
+        
+        res.status(500).json({ 
+            error: 'Failed to generate image',
+            message: 'ไม่สามารถสร้างภาพได้ กรุณาลองใหม่อีกครั้ง',
             details: error.message 
         });
     }
