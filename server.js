@@ -1038,26 +1038,68 @@ app.post('/api/generate-image', async (req, res) => {
         
         console.log('🔍 Replicate output:', JSON.stringify(output, null, 2));
         console.log('🔍 Output type:', typeof output);
-        console.log('🔍 Output[0] type:', typeof output[0]);
         
-        if (!output || !output[0]) {
+        if (!output || (Array.isArray(output) && output.length === 0)) {
             throw new Error('No image generated');
         }
         
         // Extract image URL properly
-        let imageUrl = output[0];
+        let imageUrl = null;
         
-        // If output[0] is an object, it might have a url property
-        if (typeof imageUrl === 'object' && imageUrl !== null) {
-            console.log('🔍 Output[0] is object:', imageUrl);
-            // Try common property names
-            imageUrl = imageUrl.url || imageUrl.output || imageUrl.image || imageUrl.href || imageUrl.toString();
+        // Handle different output formats from Replicate
+        if (Array.isArray(output)) {
+            // If output is array, take first element
+            const firstOutput = output[0];
+            
+            if (typeof firstOutput === 'string') {
+                // Direct string URL
+                imageUrl = firstOutput;
+            } else if (typeof firstOutput === 'object' && firstOutput !== null) {
+                // Object with URL property
+                console.log('🔍 Output[0] is object, keys:', Object.keys(firstOutput));
+                console.log('🔍 Full object:', JSON.stringify(firstOutput, null, 2));
+                
+                // Try various property names
+                imageUrl = firstOutput.url || 
+                          firstOutput.output || 
+                          firstOutput.image || 
+                          firstOutput.href || 
+                          firstOutput.uri ||
+                          firstOutput.src ||
+                          firstOutput.file_url ||
+                          firstOutput.download_url ||
+                          firstOutput.image_url;
+                
+                // If still no URL and object has exactly one property, use its value
+                if (!imageUrl) {
+                    const keys = Object.keys(firstOutput);
+                    if (keys.length === 1) {
+                        imageUrl = firstOutput[keys[0]];
+                    }
+                }
+            }
+        } else if (typeof output === 'string') {
+            // Direct string output
+            imageUrl = output;
+        } else if (typeof output === 'object' && output !== null) {
+            // Object output (not array)
+            console.log('🔍 Output is object, keys:', Object.keys(output));
+            imageUrl = output.url || output.output || output.image || output[0];
         }
         
-        // Ensure it's a string
-        if (typeof imageUrl !== 'string') {
-            console.error('❌ Invalid image URL type:', typeof imageUrl, imageUrl);
-            throw new Error('Invalid image URL format from Replicate');
+        // Final validation
+        if (!imageUrl || typeof imageUrl !== 'string') {
+            console.error('❌ Failed to extract image URL from:', output);
+            throw new Error('Could not extract valid image URL from Replicate response');
+        }
+        
+        // Clean up the URL if needed
+        imageUrl = imageUrl.trim();
+        
+        // Validate URL format
+        if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+            console.error('❌ Invalid URL format:', imageUrl);
+            throw new Error('Invalid URL format - must start with http:// or https://');
         }
         
         console.log('✅ Final image URL:', imageUrl);
