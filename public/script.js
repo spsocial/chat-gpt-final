@@ -2701,6 +2701,13 @@ async function generateImage(prompt) {
         
         const data = await response.json();
         
+        // Debug response
+        console.log('API Response:', {
+            ok: response.ok,
+            status: response.status,
+            data: data
+        });
+        
         // Remove loading
         removeMessage(loadingId);
         loadingDiv.remove();
@@ -2714,7 +2721,13 @@ async function generateImage(prompt) {
     // ถ้า imageUrl เป็น array ให้เอาตัวแรก
     let imageUrl = data.imageUrl;
     if (Array.isArray(imageUrl)) {
+        console.log('imageUrl is array, taking first element');
         imageUrl = imageUrl[0];
+    }
+    
+    // Ensure it's a string
+    if (typeof imageUrl !== 'string') {
+        console.error('imageUrl is not a string after processing:', typeof imageUrl, imageUrl);
     }
     
     // แสดงภาพที่สร้างได้
@@ -2760,6 +2773,12 @@ function displayGeneratedImage(imageUrl, prompt, model, cost) {
     const messageId = `img-${Date.now()}`;
     const messagesContainer = document.getElementById('chatMessages');
     const messageDiv = document.createElement('div');
+    
+    // Ensure imageUrl is a string
+    if (typeof imageUrl !== 'string') {
+        console.error('Invalid imageUrl type:', typeof imageUrl, imageUrl);
+        imageUrl = String(imageUrl);
+    }
     
     // Escape quotes สำหรับใช้ใน HTML attributes
     const escapedUrl = imageUrl.replace(/'/g, "\\'");
