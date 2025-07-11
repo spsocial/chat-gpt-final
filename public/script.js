@@ -5552,7 +5552,17 @@ window.closeMusicVideoForm = closeMusicVideoForm;
 window.generateMusicVideoPrompt = generateMusicVideoPrompt;
 window.toggleAdvancedOptions = toggleAdvancedOptions;
 
+// ========== TEMPLATE FORM SYSTEM ==========
+let templateCharCount = 2;
 
+// Show/Hide Template Button based on mode
+function updateTemplateButton() {
+    const templateSection = document.getElementById('templateButtonSection');
+    
+    if (currentMode === 'general' || currentMode === 'multichar' || currentMode === 'chat') {
+        templateSection.style.display = 'block';
+    } else {
+        templateSection.style.display = 'none';
     }
 }
 
