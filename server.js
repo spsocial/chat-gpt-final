@@ -10,13 +10,6 @@ const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
 const ESYSlipService = require('./esy-slip');
 
-// เพิ่มหลัง require อื่นๆ
-const crypto = require('crypto');
-const OpenAI = require('openai');
-
-// Encryption settings สำหรับ API keys
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex').slice(0, 32);
-const IV_LENGTH = 16;
 
 // Assistant IDs mapping
 const ASSISTANT_CONFIGS = {
@@ -25,25 +18,15 @@ const ASSISTANT_CONFIGS = {
         character: process.env.CHARACTER_ASSISTANT_ID,
         multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID,
         chat: process.env.CHAT_ASSISTANT_ID
-    },
-    byok: {
-        general: process.env.ASSISTANT_ID_4O,
-        character: process.env.CHARACTER_ASSISTANT_ID_4O, 
-        multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID_4O,
-        chat: process.env.CHAT_ASSISTANT_ID_4O
     }
 };
 
 // Log Assistant IDs on startup for debugging
-console.log('🔍 Loaded Assistant IDs:', {
-    standard: ASSISTANT_CONFIGS.standard,
-    byok: ASSISTANT_CONFIGS.byok
-});
+console.log('🔍 Loaded Assistant IDs:', ASSISTANT_CONFIGS.standard);
 
 // Log config
 console.log('🤖 Assistant Configuration:');
 console.log('Standard (4o-mini):', ASSISTANT_CONFIGS.standard);
-console.log('BYOK (4o):', ASSISTANT_CONFIGS.byok);
 
 
 // Setup multer for file upload
@@ -76,8 +59,6 @@ console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTA
 const assistants = require('./assistants');
 const { openai } = assistants; // Get openai instance from assistants module
 const chatAI = require('./chat-ai');
-const { getOrCreateByokAssistant } = require('./byok-assistants');
-const byokConnectionManager = require('./byok-connection-manager');
 let db = null;
 try {
     db = require('./database');
@@ -198,41 +179,6 @@ app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// ========== ENCRYPTION FUNCTIONS ==========
-function encrypt(text) {
-    const iv = crypto.randomBytes(IV_LENGTH);
-    const cipher = crypto.createCipheriv(
-        'aes-256-cbc',
-        Buffer.from(ENCRYPTION_KEY),
-        iv
-    );
-    
-    let encrypted = cipher.update(text);
-    encrypted = Buffer.concat([encrypted, cipher.final()]);
-    
-    return iv.toString('hex') + ':' + encrypted.toString('hex');
-}
-
-function decrypt(text) {
-    try {
-        const textParts = text.split(':');
-        const iv = Buffer.from(textParts.shift(), 'hex');
-        const encryptedText = Buffer.from(textParts.join(':'), 'hex');
-        const decipher = crypto.createDecipheriv(
-            'aes-256-cbc',
-            Buffer.from(ENCRYPTION_KEY),
-            iv
-        );
-        
-        let decrypted = decipher.update(encryptedText);
-        decrypted = Buffer.concat([decrypted, decipher.final()]);
-        
-        return decrypted.toString();
-    } catch (error) {
-        console.error('Decryption error:', error);
-        return null;
-    }
-}
 
 // ======== HEALTH CHECK ENDPOINT ========
 app.get('/health', (req, res) => {
@@ -240,8 +186,7 @@ app.get('/health', (req, res) => {
         status: 'healthy',
         timestamp: new Date().toISOString(),
         assistants: {
-            standard: {},
-            byok: {}
+            standard: {}
         },
         database: db ? 'connected' : 'disconnected'
     };
@@ -254,12 +199,6 @@ app.get('/health', (req, res) => {
         };
     }
     
-    for (const [mode, id] of Object.entries(ASSISTANT_CONFIGS.byok)) {
-        healthInfo.assistants.byok[mode] = {
-            id: id,
-            valid: id && id.startsWith('asst_') && id.length > 10
-        };
-    }
     
     res.json(healthInfo);
 });
@@ -341,8 +280,6 @@ app.get('/test', (req, res) => {
 app.post('/api/chat', async (req, res) => {
     const { message, userId = 'guest', images = [], mode = 'general' } = req.body;
     let shouldUseCredits = false;
-    let isUsingByok = false;
-    let userOpenAI = null;
     
 
     // Check configuration
@@ -354,73 +291,24 @@ app.post('/api/chat', async (req, res) => {
     }
 
     try {
-        // ========== CHECK BYOK FIRST ==========
-        const userApiData = await db.getUserApiKey(userId);
+        // ========== SELECT ASSISTANT ==========
+        // Get assistant ID from config
+        let assistantId = ASSISTANT_CONFIGS.standard[mode] || ASSISTANT_CONFIGS.standard.general;
         
-        if (userApiData.isByok && userApiData.apiKey) {
-            // User has BYOK - decrypt and use their key
-            const decryptedKey = decrypt(userApiData.apiKey);
-            
-            if (decryptedKey) {
-                console.log(`🔑 Using BYOK for user: ${userId}`);
-                isUsingByok = true;
-                
-                // Use connection manager to get or create client
-                try {
-                    userOpenAI = byokConnectionManager.getClient(userId, decryptedKey);
-                    
-                    // Increment BYOK usage counter
-                    await db.incrementByokUsage(userId);
-                } catch (error) {
-                    console.error('Failed to create BYOK client:', error);
-                    return res.status(500).json({
-                        error: 'Failed to initialize with your API key',
-                        details: 'Please check your API key is valid'
-                    });
-                }
-            } else {
-                console.error('Failed to decrypt user API key');
-                return res.status(500).json({
-                    error: 'Failed to decrypt API key',
-                    details: 'Please reconnect your API key'
-                });
-            }
+        // Validate Assistant ID
+        if (!assistantId || assistantId.length < 10) {
+            console.error(`❌ Invalid Assistant ID for ${mode}: ${assistantId}`);
+            console.log('Current config:', ASSISTANT_CONFIGS);
+            return res.status(500).json({
+                error: 'Assistant configuration error. Please contact support.'
+            });
         }
         
-        // ========== SELECT ASSISTANT BASED ON USER TYPE ==========
-        let assistantId;
-        const assistantType = isUsingByok ? 'byok' : 'standard';
+        console.log(`📌 Using Assistant: ${assistantId} (${mode})`);
+        const assistantType = 'standard'; // Always use standard now
         
-        // For BYOK users, create assistant in their account
-        if (isUsingByok && userOpenAI) {
-            try {
-                assistantId = await getOrCreateByokAssistant(userOpenAI, userId, mode);
-                console.log(`📌 Using BYOK Assistant: ${assistantId} (${mode})`);
-            } catch (error) {
-                console.error('❌ Failed to create BYOK assistant:', error);
-                return res.status(500).json({
-                    error: 'Failed to create assistant in your OpenAI account',
-                    details: 'Please check your API key permissions'
-                });
-            }
-        } else {
-            // Standard users use pre-configured assistants
-            assistantId = ASSISTANT_CONFIGS[assistantType][mode] || ASSISTANT_CONFIGS[assistantType].general;
-            
-            // Validate Assistant ID
-            if (!assistantId || assistantId.length < 10) {
-                console.error(`❌ Invalid Assistant ID for ${assistantType}/${mode}: ${assistantId}`);
-                console.log('Current config:', ASSISTANT_CONFIGS);
-                return res.status(500).json({
-                    error: 'Assistant configuration error. Please contact support.'
-                });
-            }
-            
-            console.log(`📌 Using Assistant: ${assistantId} (${assistantType}/${mode})`);
-        }
-        
-        // ========== CHECK DAILY LIMIT (ONLY FOR NON-BYOK) ==========
-        if (!isUsingByok && db) {
+        // ========== CHECK DAILY LIMIT ==========
+        if (db) {
             const todayUsage = await db.getTodayUsage(userId);
             const estimatedCost = 0.10;
             const estimatedTotal = todayUsage + estimatedCost;
@@ -442,7 +330,6 @@ app.post('/api/chat', async (req, res) => {
                             limit: DAILY_LIMIT_THB,
                             wouldBe: estimatedTotal.toFixed(2)
                         },
-                        suggestByok: true
                     });
                 }
                 
@@ -454,82 +341,6 @@ app.post('/api/chat', async (req, res) => {
         const threadKey = `${userId}_${mode}_${assistantType}`;
         let threadId = userThreads.get(threadKey);
         
-        // Use user's OpenAI client if BYOK, otherwise use default
-        const activeOpenAI = userOpenAI || openai;
-        
-        // Temporarily replace global assistants module functions
-        const originalFunctions = {
-            createThread: assistants.createThread,
-            addMessage: assistants.addMessage,
-            runAssistant: assistants.runAssistant,
-            deleteThread: assistants.deleteThread
-        };
-        
-        if (isUsingByok && userOpenAI) {
-            // Override with user's OpenAI instance
-            assistants.createThread = async () => {
-                const thread = await userOpenAI.beta.threads.create();
-                // Track this connection
-                byokConnectionManager.trackConnection(userId, thread.id);
-                return thread.id;
-            };
-            
-            assistants.addMessage = async (threadId, content, images) => {
-                let messageContent = content;
-                if (images.length > 0) {
-                    messageContent = [
-                        { type: "text", text: content || "ช่วยสร้าง prompt จากรูปนี้" }
-                    ];
-                    for (const img of images) {
-                        if (img.url) {
-                            messageContent.push({
-                                type: "image_url",
-                                image_url: { url: img.url }
-                            });
-                        }
-                    }
-                }
-                
-                const message = await userOpenAI.beta.threads.messages.create(
-                    threadId,
-                    { role: "user", content: messageContent }
-                );
-                return message.id;
-            };
-            
-            assistants.runAssistant = async (threadId, assistantId) => {
-                const assistant = await userOpenAI.beta.assistants.retrieve(assistantId);
-                console.log('BYOK Assistant model:', assistant.model);
-                
-                const run = await userOpenAI.beta.threads.runs.createAndPoll(
-                    threadId,
-                    { assistant_id: assistantId }
-                );
-                
-                if (run.status === 'completed') {
-                    const messages = await userOpenAI.beta.threads.messages.list(threadId);
-                    const lastMessage = messages.data.find(msg => msg.role === 'assistant');
-                    
-                    if (lastMessage && lastMessage.content[0]) {
-                        return {
-                            response: lastMessage.content[0].text.value,
-                            usage: run.usage || { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
-                        };
-                    }
-                }
-                
-                throw new Error(`Run failed with status: ${run.status}`);
-            };
-            
-            assistants.deleteThread = async (threadId) => {
-                try {
-                    await userOpenAI.beta.threads.del(threadId);
-                } catch (error) {
-                    console.error('Error deleting thread:', error);
-                }
-            };
-        }
-        
         // Thread management with retry logic
         let retryCount = 0;
         const maxRetries = 2;
@@ -537,12 +348,12 @@ app.post('/api/chat', async (req, res) => {
         while (retryCount < maxRetries) {
             try {
                 if (!threadId) {
-                    threadId = await assistants.createThread(activeOpenAI);
+                    threadId = await assistants.createThread();
                     userThreads.set(threadKey, threadId);
                     console.log(`✅ New thread created for ${userId}: ${threadId}`);
                 }
                 
-                await assistants.addMessage(threadId, message, images, activeOpenAI);
+                await assistants.addMessage(threadId, message, images);
                 console.log('✅ Message added successfully');
                 break;
                 
@@ -555,7 +366,7 @@ app.post('/api/chat', async (req, res) => {
                     userThreads.delete(threadKey);
                     
                     if (retryCount < maxRetries - 1) {
-                        threadId = await assistants.createThread(activeOpenAI);
+                        threadId = await assistants.createThread();
                         userThreads.set(threadKey, threadId);
                         retryCount++;
                     } else {
@@ -568,15 +379,14 @@ app.post('/api/chat', async (req, res) => {
         }
 
         // Run assistant and get response
-        const result = await assistants.runAssistant(threadId, assistantId, activeOpenAI);
+        const result = await assistants.runAssistant(threadId, assistantId);
         
-        // ========== CALCULATE COST (ONLY FOR NON-BYOK) ==========
+        // ========== CALCULATE COST ==========
         let costTHB = 0;
         let todayTotal = 0;
         
-        if (!isUsingByok) {
-            costTHB = calculateCost(result.usage, mode);
-            todayTotal = costTHB;
+        costTHB = calculateCost(result.usage, mode);
+        todayTotal = costTHB;
             
             if (db) {
                 console.log(`💰 === PROMPT GENERATION COST ===`);
@@ -601,7 +411,6 @@ app.post('/api/chat', async (req, res) => {
                             current: creditResult.paid_remaining || 0,
                             required: costTHB
                         },
-                        suggestByok: true
                     });
                 }
             }
@@ -611,11 +420,8 @@ app.post('/api/chat', async (req, res) => {
 res.json({
     success: true,  // เพิ่ม field นี้
     response: result.response,
-    model: isUsingByok ? 'gpt-4o' : 'gpt-4o-mini',  // เพิ่ม model
-    cost: isUsingByok ? {
-        message: '🔑 Using your API key',
-        isByok: true
-    } : {
+    model: 'gpt-4o-mini',  // เพิ่ม model
+    cost: {
         this_request: costTHB.toFixed(2),
         today_total: todayTotal.toFixed(2),
         daily_limit: DAILY_LIMIT_THB.toFixed(2),
@@ -628,7 +434,6 @@ res.json({
             total: result.usage.total_tokens
         }
     },
-    usingByok: isUsingByok
 });
 
     } catch (error) {
@@ -646,11 +451,6 @@ res.json({
                 if (key.startsWith(userId)) {
                     const threadId = userThreads.get(key);
                     userThreads.delete(key);
-                    
-                    // Untrack BYOK connections
-                    if (isUsingByok) {
-                        byokConnectionManager.untrackConnection(userId, threadId);
-                    }
                 }
             });
             
@@ -954,303 +754,6 @@ app.post('/api/enhance-prompt', async (req, res) => {
         console.error('Enhance prompt error:', error);
         res.status(500).json({ 
             error: 'Failed to enhance prompt',
-            details: error.message 
-        });
-    }
-});
-
-// ========== BYOK ENDPOINTS ==========
-
-// Test API Key
-app.post('/api/test-api-key', async (req, res) => {
-    const { apiKey } = req.body;
-    
-    if (!apiKey || !apiKey.startsWith('sk-')) {
-        return res.json({ valid: false });
-    }
-    
-    try {
-        // Test with a simple API call
-        const OpenAI = require('openai');
-        const testOpenAI = new OpenAI({ apiKey });
-        const models = await testOpenAI.models.list();
-        
-        // Check if has access to GPT-4o
-        const hasGPT4o = models.data.some(m => m.id.includes('gpt-4o'));
-        
-        res.json({ 
-            valid: true,
-            hasGPT4o: hasGPT4o,
-            message: hasGPT4o ? 'API Key valid with GPT-4o access!' : 'API Key valid (GPT-3.5 only)'
-        });
-        
-    } catch (error) {
-        console.error('API Key test error:', error);
-        res.json({ valid: false });
-    }
-});
-
-// Save API Key
-app.post('/api/save-api-key', async (req, res) => {
-    const { userId, apiKey } = req.body;
-    
-    console.log('📝 Save API Key request:', { userId, hasApiKey: !!apiKey });
-    
-    if (!userId || !apiKey) {
-        return res.status(400).json({ 
-            error: 'Missing required fields' 
-        });
-    }
-    
-    try {
-        // Check if database is available
-        if (!db) {
-            return res.status(503).json({ 
-                error: 'Database service unavailable' 
-            });
-        }
-
-        // Encrypt API key
-        const encryptedKey = encrypt(apiKey);
-        
-        // Save to database
-        const result = await db.saveUserApiKey(userId, encryptedKey);
-        
-        if (result.success) {
-            res.json({ 
-                success: true,
-                message: 'API Key saved successfully' 
-            });
-        } else {
-            console.error('Database save failed:', result.error);
-            res.status(500).json({ 
-                error: 'Failed to save API key',
-                details: result.error 
-            });
-        }
-        
-    } catch (error) {
-        console.error('Save API key error:', error);
-        console.error('Error stack:', error.stack);
-        res.status(500).json({ 
-            error: 'Internal server error',
-            message: error.message 
-        });
-    }
-});
-
-// Get BYOK Stats (for debugging)
-app.get('/api/byok/stats', (req, res) => {
-    const stats = byokConnectionManager.getStats();
-    res.json(stats);
-});
-
-// Remove API Key
-app.post('/api/remove-api-key', async (req, res) => {
-    const { userId } = req.body;
-    
-    if (!userId) {
-        return res.status(400).json({ 
-            error: 'User ID required' 
-        });
-    }
-    
-    try {
-        const result = await db.removeUserApiKey(userId);
-        
-        if (result.success) {
-            // Clear all user's threads when removing API key
-            const threadKeys = Array.from(userThreads.keys());
-            threadKeys.forEach(key => {
-                if (key.startsWith(userId)) {
-                    userThreads.delete(key);
-                    console.log(`🧹 Cleared thread: ${key}`);
-                }
-            });
-            
-            // Clear BYOK connection manager
-            byokConnectionManager.removeClient(userId);
-            console.log(`🔌 Removed BYOK client for ${userId}`);
-            
-            // Clear cache for this user
-            apiCache.delete(`credits_${userId}`);
-            apiCache.delete(`usage_${userId}`);
-            
-            res.json({ 
-                success: true,
-                message: 'API Key removed' 
-            });
-        } else {
-            res.status(500).json({ 
-                error: 'Failed to remove API key' 
-            });
-        }
-        
-    } catch (error) {
-        console.error('Remove API key error:', error);
-        res.status(500).json({ 
-            error: 'Internal server error' 
-        });
-    }
-});
-
-// Get BYOK Status
-app.get('/api/byok-status/:userId', async (req, res) => {
-    const { userId } = req.params;
-    
-    try {
-        const userData = await db.getUserApiKey(userId);
-        
-        res.json({
-            hasByok: userData.isByok,
-            isActive: userData.isByok
-        });
-        
-    } catch (error) {
-        console.error('Get BYOK status error:', error);
-        res.json({
-            hasByok: false,
-            isActive: false
-        });
-    }
-});
-
-// ========== IMAGE GENERATION ENDPOINT ==========
-app.post('/api/generate-image', async (req, res) => {
-    const { prompt, userId, model = 'flux-schnell', aspectRatio = '1:1' } = req.body;
-    
-    // Check if Replicate API key exists
-    if (!process.env.REPLICATE_API_TOKEN) {
-        return res.status(500).json({ 
-            error: 'Replicate API key not configured' 
-        });
-    }
-    
-    // Model pricing
-    const modelPricing = {
-        'flux-schnell': 0.15,
-        'flux-dev': 0.20,
-        'sdxl-lightning': 0.50
-    };
-    
-    const cost = modelPricing[model] || 0.15;
-    
-    try {
-        // Check daily limit and credits
-        if (db) {
-            const todayUsage = await db.getTodayUsage(userId);
-            const dailyRemaining = Math.max(0, 5 - todayUsage);
-            
-            if (dailyRemaining >= cost) {
-                // Use daily limit
-                console.log('Using daily limit');
-            } else {
-                // Need to use credits
-                const creditsNeeded = cost - dailyRemaining;
-                const userCredits = await db.getUserCredits(userId);
-                
-                if (userCredits < creditsNeeded) {
-                    return res.status(429).json({
-                        error: 'Insufficient credits',
-                        message: 'เครดิตไม่เพียงพอ',
-                        credits: {
-                            current: userCredits.toFixed(2),
-                            required: creditsNeeded.toFixed(2)
-                        }
-                    });
-                }
-            }
-        }
-        
-        try {
-    // สร้าง prediction แทนการ run โดยตรง
-    const Replicate = require('replicate');
-    const replicate = new Replicate({
-        auth: process.env.REPLICATE_API_TOKEN
-    });
-    
-    // กำหนด model version ตาม model ที่เลือก
-    let modelVersion = '';
-    if (model === 'flux-schnell') {
-        modelVersion = 'black-forest-labs/flux-schnell';
-    } else if (model === 'flux-dev') {
-        modelVersion = 'black-forest-labs/flux-dev';
-    } else {
-        modelVersion = 'playgroundai/playground-v2.5-1024px-aesthetic:42fe626e41cc811eaf02c94b892774839268ce1994ea778eba97103fe1ef51b8';
-}
-    
-    console.log('Creating prediction for:', modelVersion);
-    
-    // สร้าง prediction
-    const prediction = await replicate.predictions.create({
-        model: modelVersion,
-        input: {
-            prompt: prompt,
-            aspect_ratio: aspectRatio || '1:1',
-            output_format: 'webp',
-            output_quality: 90
-        }
-    });
-    
-    console.log('Prediction created:', prediction.id);
-    
-    // รอผลลัพธ์
-    let result = prediction;
-    while (result.status !== 'succeeded' && result.status !== 'failed') {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // รอ 1 วินาที
-        result = await replicate.predictions.get(prediction.id);
-        console.log('Status:', result.status);
-    }
-    
-    if (result.status === 'succeeded') {
-        const imageUrl = result.output[0] || result.output;
-        console.log('Image URL:', imageUrl);
-        
-        // Save usage และหักเครดิต
-if (db) {
-    console.log(`💰 === NEW CREDIT SYSTEM ===`);
-    console.log(`💰 Image cost: ฿${cost}`);
-    
-    // ใช้ระบบใหม่
-    const creditResult = await db.useCreditsNew(
-        userId,
-        cost,
-        `Image generation - ${model}`
-    );
-    
-    if (creditResult.success) {
-        console.log(`✅ Used ฿${cost}:`);
-        console.log(`   - From free: ฿${creditResult.used_from_free.toFixed(2)}`);
-        console.log(`   - From paid: ฿${creditResult.used_from_paid.toFixed(2)}`);
-        console.log(`   - Free remaining: ฿${creditResult.free_remaining.toFixed(2)}`);
-        console.log(`   - Paid remaining: ฿${creditResult.paid_remaining.toFixed(2)}`);
-    } else {
-        console.error('❌ Failed to deduct credits:', creditResult.error);
-    }
-}
-        
-        res.json({
-            success: true,
-            imageUrl: imageUrl,
-            model: model,
-            cost: cost
-        });
-    } else {
-        throw new Error('Image generation failed');
-    }
-    
-} catch (error) {
-    console.error('Image generation error:', error);
-    res.status(500).json({ 
-        error: 'Failed to generate image',
-        details: error.message 
-    });
-}
-        
-    } catch (error) {
-        console.error('Image generation error:', error);
-        res.status(500).json({ 
-            error: 'Failed to generate image',
             details: error.message 
         });
     }
@@ -1564,32 +1067,24 @@ app.listen(PORT, () => {
         
 ╔═══════════════════════════════════════╗
 ║     Veo 3 Prompt Generator Server     ║
-║        with BYOK Support 🔑           ║
 ╚═══════════════════════════════════════╝
 
 ✅ Server running on port ${PORT}
 📌 API Key: ${process.env.OPENAI_API_KEY ? 'Configured ✓' : 'Not configured ✗'}
 
-Standard Assistants (GPT-4o-mini):
+Assistants (GPT-4o-mini):
 📌 General: ${process.env.ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
 📌 Character: ${process.env.CHARACTER_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
 📌 Multichar: ${process.env.MULTI_CHARACTER_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
-💬 Chat: ${process.env.CHAT_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}  // เพิ่ม
-
-BYOK Assistants (GPT-4o):
-🔑 General: ${process.env.ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}
-🔑 Character: ${process.env.CHARACTER_ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}
-🔑 Multichar: ${process.env.MULTI_CHARACTER_ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}
-💬 Chat: ${process.env.CHAT_ASSISTANT_ID_4O ? 'Configured ✓' : 'Not configured ✗'}  // เพิ่ม
+💬 Chat: ${process.env.CHAT_ASSISTANT_ID ? 'Configured ✓' : 'Not configured ✗'}
 
 📌 Database: ${db ? 'Connected ✓' : 'Not connected ✗'}
 💰 Daily Limit: ${DAILY_LIMIT_THB} THB per user
-🔐 Encryption Key: ${ENCRYPTION_KEY ? 'Set ✓' : 'Not set ✗'}
 🌐 URL: http://localhost:${PORT}
 
 Available Features:
-- Standard Mode (GPT-4o-mini with credits)
-- BYOK Mode (GPT-4o with user's API key)
+- GPT-4o-mini with credits system
 - Auto Payment Verification
+- Multiple prompt modes
     `);
 });
