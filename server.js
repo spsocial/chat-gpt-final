@@ -249,6 +249,19 @@ app.post('/api/admin/add-credits', checkAdminAuth, async (req, res) => {
     }
 });
 
+// Function to convert credits to actual payment amount in THB
+function creditsToPaymentAmount(credits) {
+    switch(credits) {
+        case 5: return 5;      // 5 บาท = 5 credits
+        case 60: return 50;    // 50 บาท = 60 credits
+        case 150: return 100;  // 100 บาท = 150 credits
+        default: 
+            // For other amounts, estimate based on base rate (1 credit = 1 baht)
+            // This handles refunds or custom amounts
+            return credits;
+    }
+}
+
 // Admin revenue dashboard endpoint
 app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
     try {
@@ -262,22 +275,30 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         const currentYear = now.getFullYear();
         const firstDayOfMonth = new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0];
         
-        // 1. Total revenue this month
+        // 1. Total revenue this month (convert credits to actual payment amounts)
         const monthRevenueResult = await db.pool.query(`
-            SELECT COALESCE(SUM(amount), 0) as total
+            SELECT amount
             FROM credit_transactions
             WHERE type = 'ADD' 
             AND created_at >= $1
             AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
         `, [firstDayOfMonth]);
         
-        // 2. Total revenue all time
+        const monthRevenue = monthRevenueResult.rows.reduce((sum, row) => {
+            return sum + creditsToPaymentAmount(row.amount);
+        }, 0);
+        
+        // 2. Total revenue all time (convert credits to actual payment amounts)
         const totalRevenueResult = await db.pool.query(`
-            SELECT COALESCE(SUM(amount), 0) as total
+            SELECT amount
             FROM credit_transactions
             WHERE type = 'ADD'
             AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
         `);
+        
+        const totalRevenue = totalRevenueResult.rows.reduce((sum, row) => {
+            return sum + creditsToPaymentAmount(row.amount);
+        }, 0);
         
         // 3. Number of successful payments
         const paymentCountResult = await db.pool.query(`
@@ -287,26 +308,37 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
             AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
         `);
         
-        // 4. Top spenders
+        // 4. Top spenders (convert credits to actual payment amounts)
         const topSpendersResult = await db.pool.query(`
             SELECT 
                 user_id,
                 COUNT(*) as payment_count,
-                SUM(amount) as total_spent,
-                MAX(created_at) as last_payment
+                MAX(created_at) as last_payment,
+                array_agg(amount) as amounts
             FROM credit_transactions
             WHERE type = 'ADD'
             AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%' OR admin_note IS NOT NULL)
             GROUP BY user_id
-            ORDER BY total_spent DESC
-            LIMIT 10
+            ORDER BY user_id
         `);
         
-        // 5. Daily revenue for current month
+        const topSpenders = topSpendersResult.rows.map(row => {
+            const totalSpent = row.amounts.reduce((sum, amount) => {
+                return sum + creditsToPaymentAmount(amount);
+            }, 0);
+            return {
+                userId: row.user_id,
+                paymentCount: parseInt(row.payment_count),
+                totalSpent: totalSpent,
+                lastPayment: row.last_payment
+            };
+        }).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 10);
+        
+        // 5. Daily revenue for current month (convert credits to actual payment amounts)
         const dailyRevenueResult = await db.pool.query(`
             SELECT 
                 DATE(created_at) as date,
-                SUM(amount) as revenue,
+                array_agg(amount) as amounts,
                 COUNT(*) as transaction_count
             FROM credit_transactions
             WHERE type = 'ADD'
@@ -316,11 +348,22 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
             ORDER BY date ASC
         `, [firstDayOfMonth]);
         
-        // 6. Monthly revenue for last 12 months
+        const dailyRevenue = dailyRevenueResult.rows.map(row => {
+            const revenue = row.amounts.reduce((sum, amount) => {
+                return sum + creditsToPaymentAmount(amount);
+            }, 0);
+            return {
+                date: row.date,
+                revenue: revenue,
+                transactionCount: parseInt(row.transaction_count)
+            };
+        });
+        
+        // 6. Monthly revenue for last 12 months (convert credits to actual payment amounts)
         const monthlyRevenueResult = await db.pool.query(`
             SELECT 
                 TO_CHAR(created_at, 'YYYY-MM') as month,
-                SUM(amount) as revenue,
+                array_agg(amount) as amounts,
                 COUNT(*) as transaction_count
             FROM credit_transactions
             WHERE type = 'ADD'
@@ -330,7 +373,18 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
             ORDER BY month ASC
         `);
         
-        // 7. Recent transactions
+        const monthlyRevenue = monthlyRevenueResult.rows.map(row => {
+            const revenue = row.amounts.reduce((sum, amount) => {
+                return sum + creditsToPaymentAmount(amount);
+            }, 0);
+            return {
+                month: row.month,
+                revenue: revenue,
+                transactionCount: parseInt(row.transaction_count)
+            };
+        });
+        
+        // 7. Recent transactions (show both credits and actual payment amount)
         const recentTransactionsResult = await db.pool.query(`
             SELECT 
                 user_id,
@@ -344,36 +398,26 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
             ORDER BY created_at DESC
             LIMIT 20
         `);
+        
+        const recentTransactions = recentTransactionsResult.rows.map(row => ({
+            userId: row.user_id,
+            credits: row.amount,
+            paymentAmount: creditsToPaymentAmount(row.amount),
+            description: row.description,
+            adminNote: row.admin_note,
+            createdAt: row.created_at
+        }));
 
         res.json({
             success: true,
             data: {
-                monthRevenue: parseFloat(monthRevenueResult.rows[0].total),
-                totalRevenue: parseFloat(totalRevenueResult.rows[0].total),
+                monthRevenue: monthRevenue,
+                totalRevenue: totalRevenue,
                 paymentCount: parseInt(paymentCountResult.rows[0].count),
-                topSpenders: topSpendersResult.rows.map(row => ({
-                    userId: row.user_id,
-                    paymentCount: parseInt(row.payment_count),
-                    totalSpent: parseFloat(row.total_spent),
-                    lastPayment: row.last_payment
-                })),
-                dailyRevenue: dailyRevenueResult.rows.map(row => ({
-                    date: row.date,
-                    revenue: parseFloat(row.revenue),
-                    transactionCount: parseInt(row.transaction_count)
-                })),
-                monthlyRevenue: monthlyRevenueResult.rows.map(row => ({
-                    month: row.month,
-                    revenue: parseFloat(row.revenue),
-                    transactionCount: parseInt(row.transaction_count)
-                })),
-                recentTransactions: recentTransactionsResult.rows.map(row => ({
-                    userId: row.user_id,
-                    amount: parseFloat(row.amount),
-                    description: row.description,
-                    adminNote: row.admin_note,
-                    createdAt: row.created_at
-                }))
+                topSpenders: topSpenders,
+                dailyRevenue: dailyRevenue,
+                monthlyRevenue: monthlyRevenue,
+                recentTransactions: recentTransactions
             }
         });
         

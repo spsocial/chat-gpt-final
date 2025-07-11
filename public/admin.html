@@ -859,7 +859,10 @@
                         <div class="transaction-user">${trans.userId}</div>
                         <div class="transaction-time">${timeAgo}</div>
                     </div>
-                    <div class="transaction-amount">+฿${trans.amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</div>
+                    <div>
+                        <div class="transaction-amount">+฿${trans.paymentAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</div>
+                        <div style="font-size: 12px; color: #888;">${trans.credits} เครดิต</div>
+                    </div>
                 `;
                 
                 container.appendChild(item);
