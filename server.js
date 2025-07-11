@@ -139,7 +139,9 @@ app.use(express.static('public'));
 // Request logging middleware for Railway
 app.use((req, res, next) => {
     // Skip logging for frequent endpoints
-    if (req.path.includes('/credits/') || req.path.includes('/usage/')) {
+    if (req.path.includes('/credits/') || 
+        req.path.includes('/usage/') || 
+        req.path.includes('/user-credits-info/')) {
         return next();
     }
     
