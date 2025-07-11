@@ -643,7 +643,7 @@
                     },
                     body: JSON.stringify({
                         userId,
-                        credits: parseInt(credits),
+                        amount: parseInt(credits),
                         note: note || `ชำระเงิน ${selectedPrice} บาท - เครดิต ${credits}`
                     })
                 });
@@ -651,7 +651,7 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    showResult(`✅ เติมเครดิตสำเร็จ! ${data.userId} มีเครดิต ${data.newBalance} (เพิ่ม ${data.creditsAdded})`, 'success');
+                    showResult(`✅ เติมเครดิตสำเร็จ! ${userId} มีเครดิต ${data.newBalance} (เพิ่ม ${credits} เครดิต)`, 'success');
                     
                     // Clear form
                     document.getElementById('userId').value = '';
