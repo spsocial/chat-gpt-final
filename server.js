@@ -76,6 +76,8 @@ console.log('MULTI_CHARACTER_ASSISTANT_ID:', process.env.MULTI_CHARACTER_ASSISTA
 const assistants = require('./assistants');
 const { openai } = assistants; // Get openai instance from assistants module
 const chatAI = require('./chat-ai');
+const { getOrCreateByokAssistant } = require('./byok-assistants');
+const byokConnectionManager = require('./byok-connection-manager');
 let db = null;
 try {
     db = require('./database');
@@ -363,14 +365,25 @@ app.post('/api/chat', async (req, res) => {
                 console.log(`🔑 Using BYOK for user: ${userId}`);
                 isUsingByok = true;
                 
-                // สร้าง OpenAI instance ใหม่ด้วย user's key
-                const OpenAI = require('openai');
-                userOpenAI = new OpenAI({ apiKey: decryptedKey });
-                
-                // Increment BYOK usage counter
-                await db.incrementByokUsage(userId);
+                // Use connection manager to get or create client
+                try {
+                    userOpenAI = byokConnectionManager.getClient(userId, decryptedKey);
+                    
+                    // Increment BYOK usage counter
+                    await db.incrementByokUsage(userId);
+                } catch (error) {
+                    console.error('Failed to create BYOK client:', error);
+                    return res.status(500).json({
+                        error: 'Failed to initialize with your API key',
+                        details: 'Please check your API key is valid'
+                    });
+                }
             } else {
                 console.error('Failed to decrypt user API key');
+                return res.status(500).json({
+                    error: 'Failed to decrypt API key',
+                    details: 'Please reconnect your API key'
+                });
             }
         }
         
@@ -378,30 +391,33 @@ app.post('/api/chat', async (req, res) => {
         let assistantId;
         const assistantType = isUsingByok ? 'byok' : 'standard';
         
-        // ใช้ ASSISTANT_CONFIGS แทนการอ่าน env ตรงๆ
-        assistantId = ASSISTANT_CONFIGS[assistantType][mode] || ASSISTANT_CONFIGS[assistantType].general;
-        
-        // Validate Assistant ID
-        if (!assistantId || assistantId.length < 10) {
-            console.error(`❌ Invalid Assistant ID for ${assistantType}/${mode}: ${assistantId}`);
-            console.log('Current config:', ASSISTANT_CONFIGS);
-            return res.status(500).json({
-                error: 'Assistant configuration error. Please contact support.'
-            });
+        // For BYOK users, create assistant in their account
+        if (isUsingByok && userOpenAI) {
+            try {
+                assistantId = await getOrCreateByokAssistant(userOpenAI, userId, mode);
+                console.log(`📌 Using BYOK Assistant: ${assistantId} (${mode})`);
+            } catch (error) {
+                console.error('❌ Failed to create BYOK assistant:', error);
+                return res.status(500).json({
+                    error: 'Failed to create assistant in your OpenAI account',
+                    details: 'Please check your API key permissions'
+                });
+            }
+        } else {
+            // Standard users use pre-configured assistants
+            assistantId = ASSISTANT_CONFIGS[assistantType][mode] || ASSISTANT_CONFIGS[assistantType].general;
+            
+            // Validate Assistant ID
+            if (!assistantId || assistantId.length < 10) {
+                console.error(`❌ Invalid Assistant ID for ${assistantType}/${mode}: ${assistantId}`);
+                console.log('Current config:', ASSISTANT_CONFIGS);
+                return res.status(500).json({
+                    error: 'Assistant configuration error. Please contact support.'
+                });
+            }
+            
+            console.log(`📌 Using Assistant: ${assistantId} (${assistantType}/${mode})`);
         }
-        
-        console.log(`📌 Using Assistant: ${assistantId} (${assistantType}/${mode})`);
-        
-        // [Old switch case removed - now using ASSISTANT_CONFIGS]
-        
-        // Additional validation already done above
-        if (false) { // Keep this check disabled since we validate above
-            return res.status(500).json({ 
-                error: `${mode} Assistant ID not configured for ${assistantType} user` 
-            });
-        }
-        
-        console.log(`📌 Mode: ${mode}, Type: ${assistantType}, Assistant: ${assistantId}`);
         
         // ========== CHECK DAILY LIMIT (ONLY FOR NON-BYOK) ==========
         if (!isUsingByok && db) {
@@ -453,6 +469,8 @@ app.post('/api/chat', async (req, res) => {
             // Override with user's OpenAI instance
             assistants.createThread = async () => {
                 const thread = await userOpenAI.beta.threads.create();
+                // Track this connection
+                byokConnectionManager.trackConnection(userId, thread.id);
                 return thread.id;
             };
             
@@ -626,7 +644,13 @@ res.json({
             const threadKeys = Array.from(userThreads.keys());
             threadKeys.forEach(key => {
                 if (key.startsWith(userId)) {
+                    const threadId = userThreads.get(key);
                     userThreads.delete(key);
+                    
+                    // Untrack BYOK connections
+                    if (isUsingByok) {
+                        byokConnectionManager.untrackConnection(userId, threadId);
+                    }
                 }
             });
             
@@ -1015,6 +1039,12 @@ app.post('/api/save-api-key', async (req, res) => {
     }
 });
 
+// Get BYOK Stats (for debugging)
+app.get('/api/byok/stats', (req, res) => {
+    const stats = byokConnectionManager.getStats();
+    res.json(stats);
+});
+
 // Remove API Key
 app.post('/api/remove-api-key', async (req, res) => {
     const { userId } = req.body;
@@ -1037,6 +1067,10 @@ app.post('/api/remove-api-key', async (req, res) => {
                     console.log(`🧹 Cleared thread: ${key}`);
                 }
             });
+            
+            // Clear BYOK connection manager
+            byokConnectionManager.removeClient(userId);
+            console.log(`🔌 Removed BYOK client for ${userId}`);
             
             // Clear cache for this user
             apiCache.delete(`credits_${userId}`);

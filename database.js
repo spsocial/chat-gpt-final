@@ -683,7 +683,7 @@ async function saveUserApiKey(userId, encryptedApiKey) {
         
         // ตรวจสอบว่า user มีอยู่แล้วหรือไม่
         const checkUser = await client.query(
-            'SELECT username FROM users WHERE username = $1',
+            'SELECT user_id FROM users WHERE user_id = $1',
             [userId]
         );
         
@@ -695,16 +695,17 @@ async function saveUserApiKey(userId, encryptedApiKey) {
                 `UPDATE users 
                  SET openai_api_key = $2,
                      is_byok = true,
-                     byok_enabled_at = NOW()
-                 WHERE username = $1`,
+                     byok_enabled_at = NOW(),
+                     byok_usage_count = COALESCE(byok_usage_count, 0)
+                 WHERE user_id = $1`,
                 [userId, encryptedApiKey]
             );
         } else {
             // INSERT user ใหม่พร้อมข้อมูลพื้นฐาน
             await client.query(
-                `INSERT INTO users (username, email, password_hash, openai_api_key, is_byok, byok_enabled_at, created_at)
-                 VALUES ($1, $2, $3, $4, true, NOW(), NOW())`,
-                [userId, `${userId}@byok.user`, 'byok_user', encryptedApiKey]
+                `INSERT INTO users (user_id, name, openai_api_key, is_byok, byok_enabled_at, byok_usage_count, created_at)
+                 VALUES ($1, $2, $3, true, NOW(), 0, NOW())`,
+                [userId, userId, encryptedApiKey]
             );
         }
         
@@ -726,7 +727,7 @@ async function saveUserApiKey(userId, encryptedApiKey) {
 async function getUserApiKey(userId) {
     try {
         const result = await pool.query(
-            'SELECT openai_api_key, is_byok FROM users WHERE username = $1',
+            'SELECT openai_api_key, is_byok FROM users WHERE user_id = $1',
             [userId]
         );
         
@@ -751,8 +752,9 @@ async function removeUserApiKey(userId) {
         await pool.query(
             `UPDATE users 
              SET openai_api_key = NULL,
-                 is_byok = false
-             WHERE username = $1`,
+                 is_byok = false,
+                 byok_usage_count = 0
+             WHERE user_id = $1`,
             [userId]
         );
         
@@ -770,7 +772,7 @@ async function incrementByokUsage(userId) {
     try {
         await pool.query(
             `UPDATE users 
-             SET byok_usage_count = byok_usage_count + 1
+             SET byok_usage_count = COALESCE(byok_usage_count, 0) + 1
              WHERE user_id = $1`,
             [userId]
         );
