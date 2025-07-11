@@ -387,32 +387,31 @@ app.post('/api/chat', async (req, res) => {
         
         costTHB = calculateCost(result.usage, mode);
         todayTotal = costTHB;
+        
+        if (db) {
+            console.log(`💰 === PROMPT GENERATION COST ===`);
+            console.log(`💰 Mode: ${mode}`);
+            console.log(`💰 Cost: ฿${costTHB.toFixed(2)}`);
             
-            if (db) {
-                console.log(`💰 === PROMPT GENERATION COST ===`);
-                console.log(`💰 Mode: ${mode}`);
-                console.log(`💰 Cost: ฿${costTHB.toFixed(2)}`);
-                
-                const creditResult = await db.useCreditsNew(
-                    userId,
-                    costTHB,
-                    `${mode} prompt generation`
-                );
-                
-                if (creditResult.success) {
-                    console.log(`✅ Used ฿${costTHB.toFixed(2)}`);
-                    todayTotal = DAILY_LIMIT_THB - creditResult.free_remaining;
-                } else {
-                    console.error('❌ Failed to deduct credits:', creditResult.error);
-                    return res.status(429).json({
-                        error: 'Insufficient credits',
-                        message: 'เครดิตไม่เพียงพอ',
-                        credits: {
-                            current: creditResult.paid_remaining || 0,
-                            required: costTHB
-                        },
-                    });
-                }
+            const creditResult = await db.useCreditsNew(
+                userId,
+                costTHB,
+                `${mode} prompt generation`
+            );
+            
+            if (creditResult.success) {
+                console.log(`✅ Used ฿${costTHB.toFixed(2)}`);
+                todayTotal = DAILY_LIMIT_THB - creditResult.free_remaining;
+            } else {
+                console.error('❌ Failed to deduct credits:', creditResult.error);
+                return res.status(429).json({
+                    error: 'Insufficient credits',
+                    message: 'เครดิตไม่เพียงพอ',
+                    credits: {
+                        current: creditResult.paid_remaining || 0,
+                        required: costTHB
+                    },
+                });
             }
         }
 
