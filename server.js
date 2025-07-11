@@ -1036,9 +1036,31 @@ app.post('/api/generate-image', async (req, res) => {
         // Run the model
         const output = await replicate.run(config.model, { input: config.input });
         
+        console.log('🔍 Replicate output:', JSON.stringify(output, null, 2));
+        console.log('🔍 Output type:', typeof output);
+        console.log('🔍 Output[0] type:', typeof output[0]);
+        
         if (!output || !output[0]) {
             throw new Error('No image generated');
         }
+        
+        // Extract image URL properly
+        let imageUrl = output[0];
+        
+        // If output[0] is an object, it might have a url property
+        if (typeof imageUrl === 'object' && imageUrl !== null) {
+            console.log('🔍 Output[0] is object:', imageUrl);
+            // Try common property names
+            imageUrl = imageUrl.url || imageUrl.output || imageUrl.image || imageUrl.href || imageUrl.toString();
+        }
+        
+        // Ensure it's a string
+        if (typeof imageUrl !== 'string') {
+            console.error('❌ Invalid image URL type:', typeof imageUrl, imageUrl);
+            throw new Error('Invalid image URL format from Replicate');
+        }
+        
+        console.log('✅ Final image URL:', imageUrl);
         
         // Deduct credits using new system
         if (db) {
@@ -1059,7 +1081,7 @@ app.post('/api/generate-image', async (req, res) => {
         // Send response
         res.json({
             success: true,
-            imageUrl: output[0],
+            imageUrl: imageUrl,  // Use the extracted string URL
             model: model,
             cost: estimatedCost.toFixed(2),
             aspectRatio: aspectRatio
