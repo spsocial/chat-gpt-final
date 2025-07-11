@@ -974,16 +974,20 @@ app.post('/api/generate-image', async (req, res) => {
         const estimatedCost = modelCosts[model] || 0.15;
         
         if (db) {
-            // Check if user has enough credits
-            const userCredits = await db.getUserCredits(userId);
+            // Check if user has enough credits (free + paid)
+            const freeCredits = await db.getFreeCredits(userId);
+            const paidCredits = await db.getUserCredits(userId);
+            const totalCredits = freeCredits + paidCredits;
             
-            if (userCredits < estimatedCost) {
+            if (totalCredits < estimatedCost) {
                 return res.status(429).json({
                     error: 'Insufficient credits',
                     message: 'เครดิตไม่เพียงพอสำหรับสร้างภาพ',
                     credits: {
-                        current: userCredits.toFixed(2),
-                        required: estimatedCost.toFixed(2)
+                        current: totalCredits.toFixed(2),
+                        required: estimatedCost.toFixed(2),
+                        free: freeCredits.toFixed(2),
+                        paid: paidCredits.toFixed(2)
                     }
                 });
             }
