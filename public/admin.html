@@ -580,9 +580,17 @@
         
         // Check if already authenticated on page load
         window.addEventListener('DOMContentLoaded', () => {
+            // Clear any existing key on page load for security
+            // Uncomment this line to force login every time
+            localStorage.removeItem('adminKey');
+            
             const savedKey = localStorage.getItem('adminKey');
             if (savedKey) {
                 checkAdminKey(savedKey);
+            } else {
+                // Make sure auth screen is visible
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('mainContainer').style.display = 'none';
             }
             
             // Enter key to submit
