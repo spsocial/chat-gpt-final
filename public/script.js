@@ -4669,11 +4669,34 @@ const ChatStorage = {
                 
                 // ดึงข้อความหลัก (ไม่รวม model info)
                 let mainContent = '';
+                let htmlContent = '';
                 const contentDiv = contentElem.querySelector('div:first-child');
-                if (contentDiv) {
-                    mainContent = contentDiv.textContent.trim();
+                
+                if (isUser) {
+                    // สำหรับ user message เก็บเป็น text ธรรมดา
+                    if (contentDiv) {
+                        mainContent = contentDiv.textContent.trim();
+                    } else {
+                        mainContent = contentElem.textContent.trim();
+                    }
                 } else {
-                    mainContent = contentElem.textContent.trim();
+                    // สำหรับ assistant message เก็บเป็น HTML เพื่อรักษา format
+                    if (contentDiv) {
+                        mainContent = contentDiv.textContent.trim();
+                        htmlContent = contentDiv.innerHTML;
+                    } else {
+                        mainContent = contentElem.textContent.trim();
+                        htmlContent = contentElem.innerHTML;
+                    }
+                    
+                    // ลบ model info ออกจาก htmlContent ถ้ามี
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = htmlContent;
+                    const modelInfoElem = tempDiv.querySelector('.chat-model-info');
+                    if (modelInfoElem) {
+                        modelInfoElem.remove();
+                    }
+                    htmlContent = tempDiv.innerHTML;
                 }
                 
                 // ไม่เก็บ loading, error, หรือ welcome message
@@ -4705,6 +4728,7 @@ if (modelInfo && !isUser) {
                 messages.push({
                     role: isUser ? 'user' : 'assistant',
                     content: mainContent,
+                    htmlContent: htmlContent,  // เพิ่ม HTML content สำหรับ assistant
                     timestamp: new Date().toISOString(),
                     modelData: modelData  // เพิ่มข้อมูล model
                 });
@@ -4767,11 +4791,34 @@ if (modelInfo && !isUser) {
         
         // แสดงประวัติ
         messages.forEach(msg => {
-            if (msg.role === 'assistant' && msg.modelData) {
-                // ถ้ามีข้อมูล model ให้แสดงแบบพิเศษ
-                displayChatResponseFromHistory(msg.content, msg.modelData);
+            if (msg.role === 'assistant') {
+                // สำหรับ assistant ใช้ HTML content ที่เก็บไว้
+                if (msg.htmlContent) {
+                    // แสดงด้วย HTML format ที่เก็บไว้
+                    const messageId = `msg-${Date.now()}-${Math.random()}`;
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message assistant';
+                    messageDiv.innerHTML = `
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <div>${msg.htmlContent}</div>
+                            ${msg.modelData ? `
+                            <div class="chat-model-info">
+                                <span>${msg.modelData.model}</span>
+                                <span>${msg.modelData.cost} เครดิต</span>
+                            </div>` : ''}
+                        </div>
+                    `;
+                    chatMessages.appendChild(messageDiv);
+                } else if (msg.modelData) {
+                    // ถ้ามีข้อมูล model แต่ไม่มี HTML (ข้อมูลเก่า)
+                    displayChatResponseFromHistory(msg.content, msg.modelData);
+                } else {
+                    // ถ้าไม่มีข้อมูลเลย
+                    addMessage(msg.content, msg.role);
+                }
             } else {
-                // ถ้าไม่มีข้อมูล model ให้แสดงแบบปกติ
+                // User message แสดงแบบปกติ
                 addMessage(msg.content, msg.role);
             }
         });
