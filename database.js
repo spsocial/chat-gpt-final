@@ -652,3 +652,32 @@ async function getPaymentByRef(transactionRef) {
     }
 }
 
+// อย่าลืม export!
+module.exports = {
+    pool,
+    getTodayUsage,
+    saveUsage,
+    getUsageStats,
+    getCharacters,
+    saveCharacter,
+    getCharacter,
+    deleteCharacter,
+    saveRating,
+    getUserRatings,
+    getUserAverageRating,
+    getRatingStats,
+    // เพิ่มฟังก์ชันใหม่
+    getUserCredits,
+    addCredits,
+    useCredits,
+    getCreditPackages,
+    getCreditHistory,
+    forceRefreshUserData,
+    getFreeCredits,
+    useCreditsNew,
+    // เพิ่ม payment verification functions
+    savePaymentVerification,
+    checkDuplicatePayment,
+    getPaymentByRef
+};
+
