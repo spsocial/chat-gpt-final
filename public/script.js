@@ -2705,7 +2705,7 @@ async function generateImage(prompt) {
         removeMessage(loadingId);
         loadingDiv.remove();
         
-        if (response.ok && data.success) {
+        if (response.ok && data.imageUrl) {
     // Debug
     console.log('Full response:', data);
     console.log('Image URL type:', typeof data.imageUrl);
