@@ -3041,30 +3041,13 @@ function updateChatModel(model) {
 }
 
 function getSelectedChatModel() {
-    // ตรวจสอบ mobile dropdown ในส่วน info ก่อน
-    const mobileSelectInInfo = document.getElementById('mobileChatModelSelect');
-    if (mobileSelectInInfo && window.innerWidth <= 968) {
-        return mobileSelectInInfo.value;
-    }
-    
-    // ถ้าไม่มี ให้ใช้ desktop dropdown
-    const desktopSelect = document.getElementById('chatModelSelect');
-    return desktopSelect ? desktopSelect.value : 'gpt-3.5-turbo';
+    // Always return gpt-4o-mini as it's the only model now
+    return 'gpt-4o-mini';
 }
 
-// Sync desktop และ mobile model selection
+// Sync desktop และ mobile model selection (no longer needed)
 function syncChatModelSelection(model) {
-    // Update desktop dropdown
-    const desktopSelect = document.getElementById('chatModelSelect');
-    if (desktopSelect && desktopSelect.value !== model) {
-        desktopSelect.value = model;
-    }
-    
-    // Update mobile dropdown in info
-    const mobileSelect = document.getElementById('mobileChatModelSelect');
-    if (mobileSelect && mobileSelect.value !== model) {
-        mobileSelect.value = model;
-    }
+    // Do nothing as we only have one model now
 }
 
 // Export function
@@ -4435,30 +4418,13 @@ function loadMobileInfo(mode) {
     infoHTML = quickActionsHTML + `
         <h4>💬 AI Chat Assistant</h4>
         
-        <div style="margin: 16px 0;">
-            <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
-                ✨ เลือก Model:
-            </label>
-            <select id="mobileChatModelSelect" onchange="updateChatModel(this.value)" style="
-                width: 100%;
-                padding: 12px 16px;
-                background: #262626;
-                border: 1px solid #404040;
-                border-radius: 8px;
-                color: white;
-                font-size: 16px;
-                font-family: 'Kanit', sans-serif;
-            ">
-                <optgroup label="OpenAI Models">
-                    <option value="gpt-3.5-turbo" ${getSelectedChatModel() === 'gpt-3.5-turbo' ? 'selected' : ''}>GPT-3.5 Turbo - เร็ว ประหยัด</option>
-                    <option value="gpt-4o-mini" ${getSelectedChatModel() === 'gpt-4o-mini' ? 'selected' : ''}>GPT-4o Mini - คุ้มค่า ฉลาด</option>
-                    <option value="gpt-4o" ${getSelectedChatModel() === 'gpt-4o' ? 'selected' : ''}>GPT-4o - ฉลาดที่สุด</option>
-                </optgroup>
-                <optgroup label="Google Models">
-                    <option value="gemini-1.5-flash" ${getSelectedChatModel() === 'gemini-1.5-flash' ? 'selected' : ''}>Gemini Flash - เร็วมาก</option>
-                    <option value="gemini-1.5-pro" ${getSelectedChatModel() === 'gemini-1.5-pro' ? 'selected' : ''}>Gemini Pro - แม่นยำ</option>
-                </optgroup>
-            </select>
+        <div style="margin: 16px 0; padding: 12px; background: rgba(147, 51, 234, 0.1); border-radius: 8px;">
+            <div style="color: #9333ea; font-weight: 600; margin-bottom: 4px;">
+                🤖 Model ที่ใช้งาน
+            </div>
+            <div style="font-size: 14px;">
+                <strong>⚡ GPT-4o-mini</strong>
+            </div>
         </div>
         
         <div style="margin-top: 16px;">
