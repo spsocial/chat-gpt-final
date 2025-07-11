@@ -612,6 +612,20 @@ async function loadUserCredits() {
         console.error('Error loading credits:', error);
     }
 }
+
+async function loadTotalPurchasedCredits() {
+    try {
+        const response = await fetch(`${API_URL}/user-credits-info/${userId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const totalPurchased = data.totalPurchased || 0;
+            document.getElementById('totalPurchasedCredits').textContent = totalPurchased;
+        }
+    } catch (error) {
+        console.error('Error loading total purchased credits:', error);
+    }
+}
 function updateCreditDisplay() {
     const creditDisplay = document.getElementById('creditDisplay');
     if (!creditDisplay) {
@@ -869,6 +883,8 @@ function updateModelSelection(selectedModel) {
     updateUsageDisplay();
     // Load user credits
 loadUserCredits();
+    // Load total purchased credits
+    loadTotalPurchasedCredits();
     
     // Load character library
     loadCharacterLibrary();
@@ -877,6 +893,8 @@ loadUserCredits();
     setInterval(updateUsageDisplay, 30000);
     // Refresh credits every 30 seconds
 setInterval(loadUserCredits, 30000);
+    // Refresh total purchased credits every 30 seconds
+    setInterval(loadTotalPurchasedCredits, 30000);
     
     // Enter key to send
     document.getElementById('messageInput').addEventListener('keypress', (e) => {
@@ -1672,6 +1690,7 @@ async function sendMessage() {
             updateUsageDisplay();
             // โหลดเครดิตใหม่หลังใช้งาน
 loadUserCredits();
+            loadTotalPurchasedCredits();
             
             window.imageUrls = [];
             displayImagePreview();
@@ -2704,6 +2723,7 @@ async function generateImage(prompt) {
             // Update usage และ credits
             updateUsageDisplay();
             loadUserCredits();
+            loadTotalPurchasedCredits();
             
         } else if (response.status === 429) {
             // เครดิตไม่พอ
@@ -2925,6 +2945,7 @@ async function sendChatMessage(message) {
             // Update usage และ credits
             updateUsageDisplay();
             loadUserCredits();
+            loadTotalPurchasedCredits();
             
             // Clear images
             window.imageUrls = [];

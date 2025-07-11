@@ -243,6 +243,33 @@ async function getUserCredits(userId) {
     }
 }
 
+async function getUserCreditsInfo(userId) {
+    try {
+        const result = await pool.query(
+            'SELECT credits, total_purchased FROM user_credits WHERE user_id = $1',
+            [userId]
+        );
+        
+        if (result.rows.length > 0) {
+            return {
+                credits: parseFloat(result.rows[0].credits || 0),
+                totalPurchased: parseFloat(result.rows[0].total_purchased || 0)
+            };
+        }
+        
+        return {
+            credits: 0,
+            totalPurchased: 0
+        };
+    } catch (error) {
+        console.error('Error getting user credits info:', error);
+        return {
+            credits: 0,
+            totalPurchased: 0
+        };
+    }
+}
+
 async function addCredits(userId, amount, description, reference = null, adminNote = null) {
     const client = await pool.connect();
     
@@ -668,6 +695,7 @@ module.exports = {
     getRatingStats,
     // เพิ่มฟังก์ชันใหม่
     getUserCredits,
+    getUserCreditsInfo,
     addCredits,
     useCredits,
     getCreditPackages,

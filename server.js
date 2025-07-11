@@ -251,14 +251,17 @@ app.post('/api/admin/add-credits', checkAdminAuth, async (req, res) => {
 
 // Function to convert credits to actual payment amount in THB
 function creditsToPaymentAmount(credits) {
-    switch(credits) {
+    // Ensure credits is a number
+    const creditAmount = parseFloat(credits);
+    
+    switch(creditAmount) {
         case 5: return 5;      // 5 บาท = 5 credits
         case 60: return 50;    // 50 บาท = 60 credits
         case 150: return 100;  // 100 บาท = 150 credits
         default: 
             // For other amounts, estimate based on base rate (1 credit = 1 baht)
             // This handles refunds or custom amounts
-            return credits;
+            return creditAmount;
     }
 }
 
@@ -285,7 +288,7 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         `, [firstDayOfMonth]);
         
         const monthRevenue = monthRevenueResult.rows.reduce((sum, row) => {
-            return sum + creditsToPaymentAmount(row.amount);
+            return sum + creditsToPaymentAmount(parseFloat(row.amount));
         }, 0);
         
         // 2. Total revenue all time (convert credits to actual payment amounts)
@@ -297,7 +300,7 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         `);
         
         const totalRevenue = totalRevenueResult.rows.reduce((sum, row) => {
-            return sum + creditsToPaymentAmount(row.amount);
+            return sum + creditsToPaymentAmount(parseFloat(row.amount));
         }, 0);
         
         // 3. Number of successful payments
@@ -324,7 +327,7 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         
         const topSpenders = topSpendersResult.rows.map(row => {
             const totalSpent = row.amounts.reduce((sum, amount) => {
-                return sum + creditsToPaymentAmount(amount);
+                return sum + creditsToPaymentAmount(parseFloat(amount));
             }, 0);
             return {
                 userId: row.user_id,
@@ -350,7 +353,7 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         
         const dailyRevenue = dailyRevenueResult.rows.map(row => {
             const revenue = row.amounts.reduce((sum, amount) => {
-                return sum + creditsToPaymentAmount(amount);
+                return sum + creditsToPaymentAmount(parseFloat(amount));
             }, 0);
             return {
                 date: row.date,
@@ -375,7 +378,7 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         
         const monthlyRevenue = monthlyRevenueResult.rows.map(row => {
             const revenue = row.amounts.reduce((sum, amount) => {
-                return sum + creditsToPaymentAmount(amount);
+                return sum + creditsToPaymentAmount(parseFloat(amount));
             }, 0);
             return {
                 month: row.month,
@@ -401,8 +404,8 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
         
         const recentTransactions = recentTransactionsResult.rows.map(row => ({
             userId: row.user_id,
-            credits: row.amount,
-            paymentAmount: creditsToPaymentAmount(row.amount),
+            credits: parseFloat(row.amount),
+            paymentAmount: creditsToPaymentAmount(parseFloat(row.amount)),
             description: row.description,
             adminNote: row.admin_note,
             createdAt: row.created_at
@@ -937,6 +940,22 @@ app.post('/api/enhance-prompt', async (req, res) => {
 });
 
 // ======== CREDIT SYSTEM ENDPOINTS ========
+
+// Endpoint ดูข้อมูลเครดิตรวม (ใช้งาน + เติม)
+app.get('/api/user-credits-info/:userId', usageLimiter, async (req, res) => {
+    const { userId } = req.params;
+    
+    try {
+        const creditsInfo = await db.getUserCreditsInfo(userId);
+        res.json({
+            success: true,
+            ...creditsInfo
+        });
+    } catch (error) {
+        console.error('Error getting user credits info:', error);
+        res.status(500).json({ error: 'Failed to get credits info' });
+    }
+});
 
 // Endpoint ดูเครดิตและประวัติ
 app.get('/api/credits/:userId', usageLimiter, async (req, res) => {

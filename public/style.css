@@ -361,6 +361,24 @@
             height: 100%;
             line-height: 1;
         }
+        
+        /* Mobile Total Credits Display */
+        .mobile-total-credits {
+            display: none;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #888;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .mobile-total-credits .credit-icon {
+            font-size: 12px;
+        }
+        
+        .mobile-total-credits .credit-text {
+            font-weight: 300;
+        }
 
         /* Main Content */
         .main-content {
@@ -6741,6 +6759,11 @@ body.mode-character #characterTemplateButtonSection {
     
     /* Show mobile credit button */
     .mobile-credit-btn {
+        display: flex !important;
+    }
+    
+    /* Show mobile total credits */
+    .mobile-total-credits {
         display: flex !important;
     }
     

@@ -20,57 +20,6 @@
             padding: 20px;
         }
         
-        /* Authentication Screen Styles */
-        .auth-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0f0f0f;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        
-        .auth-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-        
-        .auth-card {
-            background: #1a1a1a;
-            padding: 40px;
-            border-radius: 16px;
-            text-align: center;
-            border: 1px solid #262626;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-        
-        .auth-card h1 {
-            color: #9333ea;
-            margin-bottom: 16px;
-            font-size: 28px;
-        }
-        
-        .auth-card p {
-            color: #a1a1aa;
-            margin-bottom: 32px;
-        }
-        
-        .auth-error {
-            color: #ef4444;
-            margin-top: 16px;
-            font-size: 14px;
-            display: none;
-        }
-        
-        .auth-error.show {
-            display: block;
-        }
-        
         .container {
             max-width: 600px;
             margin: 0 auto;
@@ -200,46 +149,132 @@
             color: #ef4444;
         }
         
-        /* Revenue Dashboard Styles */
-        .dashboard-container {
+        .history-card {
             background: #1a1a1a;
-            border-radius: 16px;
             padding: 24px;
-            margin-bottom: 24px;
+            border-radius: 16px;
+        }
+        
+        .history-item {
+            background: #262626;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .check-btn {
+            background: #262626;
+            border: 1px solid #404040;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .check-btn:hover {
+            border-color: #9333ea;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .secret-key {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #262626;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Dashboard Styles */
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto 24px;
         }
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 16px;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
         
         .stat-card {
-            background: #262626;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
+            background: linear-gradient(135deg, #1a1a1a 0%, #262626 100%);
+            padding: 24px;
+            border-radius: 16px;
             border: 1px solid #333;
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
         
-        .stat-card h3 {
-            color: #a78bfa;
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.2);
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #8b5cf6, #a78bfa, #8b5cf6);
+            background-size: 200% 100%;
+            animation: shimmer 2s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .stat-label {
+            color: #a1a1aa;
             font-size: 14px;
-            font-weight: 400;
             margin-bottom: 8px;
         }
         
-        .stat-card .value {
-            font-size: 28px;
+        .stat-value {
+            font-size: 32px;
             font-weight: 600;
             color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .stat-change {
+            font-size: 14px;
+            color: #10b981;
         }
         
         .chart-container {
-            background: #262626;
-            padding: 20px;
-            border-radius: 12px;
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
             margin-bottom: 24px;
             height: 400px;
             position: relative;
@@ -247,30 +282,30 @@
         
         .chart-tabs {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             margin-bottom: 20px;
         }
         
         .chart-tab {
             padding: 8px 16px;
-            background: #333;
-            border: none;
+            background: #262626;
+            border: 1px solid #404040;
             border-radius: 8px;
             color: #a1a1aa;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-family: 'Kanit', sans-serif;
         }
         
         .chart-tab.active {
             background: #9333ea;
-            color: white;
+            border-color: #9333ea;
+            color: #fff;
         }
         
         .top-spenders {
-            background: #262626;
-            padding: 20px;
-            border-radius: 12px;
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
             margin-bottom: 24px;
         }
         
@@ -278,39 +313,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
-        }
-        
-        .spender-item:last-child {
-            border-bottom: none;
-        }
-        
-        .spender-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            padding: 12px;
+            background: #262626;
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
         
         .spender-rank {
-            width: 32px;
-            height: 32px;
+            width: 30px;
+            height: 30px;
             background: #9333ea;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
+            margin-right: 12px;
         }
         
-        .spender-details .user-id {
+        .spender-info {
+            flex: 1;
+        }
+        
+        .spender-name {
             font-weight: 500;
             color: #fff;
         }
         
-        .spender-details .payment-count {
+        .spender-stats {
             font-size: 12px;
-            color: #666;
+            color: #a1a1aa;
         }
         
         .spender-amount {
@@ -319,25 +351,24 @@
         }
         
         .recent-transactions {
-            background: #262626;
-            padding: 20px;
-            border-radius: 12px;
+            background: #1a1a1a;
+            padding: 24px;
+            border-radius: 16px;
         }
         
         .transaction-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #333;
-        }
-        
-        .transaction-item:last-child {
-            border-bottom: none;
+            padding: 12px;
+            background: #262626;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
         
         .transaction-user {
-            color: #a78bfa;
+            color: #9333ea;
             font-weight: 500;
         }
         
@@ -388,74 +419,51 @@
     </style>
 </head>
 <body>
-    <!-- Authentication Screen -->
-    <div id="authScreen" class="auth-screen">
-        <div class="auth-container">
-            <div class="auth-card">
-                <h1>🔒 Admin Authentication</h1>
-                <p>กรุณาใส่รหัสผ่านแอดมินเพื่อเข้าใช้งาน</p>
-                
-                <div class="form-group">
-                    <label>Admin Secret Key</label>
-                    <input type="password" id="authKey" placeholder="ใส่รหัสผ่านแอดมิน" autofocus>
-                </div>
-                
-                <button class="submit-btn" onclick="authenticateAdmin()">เข้าสู่ระบบ</button>
-                
-                <div id="authError" class="auth-error"></div>
-            </div>
-        </div>
-    </div>
+    <div class="secret-key" style="font-family: 'Kanit', sans-serif;">🔑 Admin Key: your-secret-admin-key-2025</div>
     
-    <!-- Main Container (Hidden by default) -->
-    <div class="container" id="mainContainer" style="display: none;">
+    <div class="container">
         <div class="header">
             <h1>🛡️ ระบบจัดการ Admin</h1>
             <p style="color: #a78bfa;">จัดการเครดิตและดูรายงานรายได้</p>
         </div>
         
-        <!-- Revenue Dashboard Toggle -->
-        <button class="dashboard-toggle" onclick="toggleDashboard()">📊 แสดงแดชบอร์ดรายได้</button>
+        <button class="dashboard-toggle" onclick="toggleDashboard()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Kanit', sans-serif;">📊 แสดงแดชบอร์ดรายได้</button>
         
-        <!-- Revenue Dashboard (Initially Hidden) -->
         <div id="revenueDashboard" class="dashboard-container" style="display: none;">
-            <h2 style="margin-bottom: 24px; text-align: center; color: #a78bfa;">📊 แดชบอร์ดรายได้</h2>
-            
             <!-- Stats Cards -->
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3>📅 รายได้เดือนนี้</h3>
-                    <div class="value" id="monthRevenue">฿0</div>
+                    <div class="stat-label" style="font-family: 'Kanit', sans-serif;">📅 รายได้เดือนนี้</div>
+                    <div class="stat-value" id="monthRevenue" style="color: #10b981;">฿0</div>
+                    <div class="stat-change" id="monthChange"></div>
                 </div>
                 <div class="stat-card">
-                    <h3>💰 รายได้ทั้งหมด</h3>
-                    <div class="value" id="totalRevenue">฿0</div>
+                    <div class="stat-label" style="font-family: 'Kanit', sans-serif;">💰 รายได้ทั้งหมด</div>
+                    <div class="stat-value" id="totalRevenue" style="color: #8b5cf6;">฿0</div>
                 </div>
                 <div class="stat-card">
-                    <h3>✅ การชำระเงินสำเร็จ</h3>
-                    <div class="value" id="paymentCount">0</div>
+                    <div class="stat-label" style="font-family: 'Kanit', sans-serif;">✅ การชำระเงินสำเร็จ</div>
+                    <div class="stat-value" id="paymentCount" style="color: #3b82f6;">0</div>
                 </div>
                 <div class="stat-card">
-                    <h3>📊 ค่าเฉลี่ยต่อรายการ</h3>
-                    <div class="value" id="avgTransaction">฿0</div>
+                    <div class="stat-label" style="font-family: 'Kanit', sans-serif;">📊 ค่าเฉลี่ยต่อรายการ</div>
+                    <div class="stat-value" id="avgTransaction" style="color: #f59e0b;">฿0</div>
                 </div>
             </div>
             
-            <!-- Chart Section -->
-            <div style="margin-bottom: 24px;">
+            <!-- Revenue Chart -->
+            <div class="chart-container">
                 <div class="chart-tabs">
-                    <button class="chart-tab active" onclick="switchChart('daily')">รายวัน</button>
-                    <button class="chart-tab" onclick="switchChart('monthly')">รายเดือน</button>
+                    <button class="chart-tab active" onclick="switchChart('daily')" style="font-family: 'Kanit', sans-serif;">📆 รายวัน</button>
+                    <button class="chart-tab" onclick="switchChart('monthly')" style="font-family: 'Kanit', sans-serif;">📅 รายเดือน</button>
                 </div>
-                <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
-                </div>
+                <canvas id="revenueChart"></canvas>
             </div>
             
             <!-- Top Spenders and Recent Transactions -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
                 <div class="top-spenders">
-                    <h3 style="margin-bottom: 16px; font-family: 'Kanit', sans-serif; color: #a78bfa;">🏆 ลูกค้าที่จ่ายสูงสุด</h3>
+                    <h3 style="margin-bottom: 16px; font-family: 'Kanit', sans-serif; color: #a78bfa;">🏆 ผู้เติมเครดิตสูงสุด 10 อันดับ</h3>
                     <div id="topSpendersList"></div>
                 </div>
                 
@@ -491,34 +499,36 @@
             </div>
             
             <div class="form-group">
-                <label>จำนวนเครดิต</label>
+                <label>จำนวนเครดิต (ปรับได้)</label>
                 <input type="number" id="credits" value="60" min="1">
             </div>
             
             <div class="form-group">
-                <label>หมายเหตุ (ไม่บังคับ)</label>
-                <textarea id="note" rows="3" placeholder="เช่น Payment via PromptPay - Ref: 12345"></textarea>
+                <label>หมายเหตุ</label>
+                <textarea id="note" rows="2" placeholder="Payment 50 THB - TxID 12345"></textarea>
             </div>
             
-            <!-- Hidden admin key field -->
-            <input type="hidden" id="adminKey">
+            <div class="form-group">
+                <label>Admin Secret Key</label>
+                <input type="password" id="adminKey" placeholder="Enter admin key">
+            </div>
             
-            <button class="submit-btn" onclick="addCredits()">เติมเครดิต</button>
+            <button class="submit-btn" onclick="addCredits()">
+                เติมเครดิต
+            </button>
             
             <div id="result" class="result"></div>
         </div>
         
-        <!-- Check User Credits Section -->
         <div class="form-card">
-            <h2>ตรวจสอบเครดิต</h2>
-            
+            <h2>เช็คเครดิต</h2>
             <div class="form-group">
                 <label>User ID</label>
-                <input type="text" id="checkUserId" placeholder="user_xxx">
+                <div style="display: flex; gap: 12px;">
+                    <input type="text" id="checkUserId" placeholder="user_xxx" style="flex: 1;">
+                    <button class="check-btn" onclick="checkCredits()">เช็ค</button>
+                </div>
             </div>
-            
-            <button class="submit-btn" onclick="checkUserCredits()">ตรวจสอบ</button>
-            
             <div id="checkResult" class="result"></div>
         </div>
     </div>
@@ -526,152 +536,81 @@
     <script>
         let selectedCredits = 60;
         let selectedPrice = 50;
-        let isAuthenticated = false;
-        let adminKeyStored = '';
         
-        // Authentication function
-        function authenticateAdmin() {
-            const authKey = document.getElementById('authKey').value;
-            const authError = document.getElementById('authError');
-            
-            if (!authKey) {
-                authError.textContent = 'กรุณาใส่รหัสผ่านแอดมิน';
-                authError.classList.add('show');
-                return;
-            }
-            
-            // Save to memory and localStorage
-            adminKeyStored = authKey;
-            localStorage.setItem('adminKey', authKey);
-            
-            // Test the key by making a request
-            checkAdminKey(authKey);
+        // Check if admin key is saved
+        const savedKey = localStorage.getItem('adminKey');
+        if (savedKey) {
+            document.getElementById('adminKey').value = savedKey;
         }
-        
-        async function checkAdminKey(key) {
-            try {
-                const response = await fetch('/api/admin/revenue-stats', {
-                    headers: {
-                        'X-Admin-Key': key
-                    }
-                });
-                
-                if (response.ok) {
-                    isAuthenticated = true;
-                    adminKeyStored = key;
-                    document.getElementById('authScreen').style.display = 'none';
-                    document.getElementById('mainContainer').style.display = 'block';
-                    document.getElementById('adminKey').value = key;
-                    
-                    // Initialize dashboard
-                    checkAPIStatus();
-                } else {
-                    const authError = document.getElementById('authError');
-                    authError.textContent = 'รหัสผ่านแอดมินไม่ถูกต้อง';
-                    authError.classList.add('show');
-                    localStorage.removeItem('adminKey');
-                }
-            } catch (error) {
-                const authError = document.getElementById('authError');
-                authError.textContent = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
-                authError.classList.add('show');
-            }
-        }
-        
-        // Check if already authenticated on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedKey = localStorage.getItem('adminKey');
-            if (savedKey) {
-                checkAdminKey(savedKey);
-            }
-            
-            // Enter key to submit
-            document.getElementById('authKey').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    authenticateAdmin();
-                }
-            });
-        });
         
         function selectPackage(credits, price) {
             selectedCredits = credits;
             selectedPrice = price;
+            document.getElementById('credits').value = credits;
+            document.getElementById('note').value = `Payment ${price} THB`;
             
-            // Update UI
+            // Update active state
             document.querySelectorAll('.package-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             event.target.closest('.package-btn').classList.add('active');
-            
-            // Update credits input
-            document.getElementById('credits').value = credits;
         }
         
         async function addCredits() {
-            if (!isAuthenticated) {
-                alert('กรุณาเข้าสู่ระบบก่อน');
-                return;
-            }
-            
             const userId = document.getElementById('userId').value.trim();
             const credits = document.getElementById('credits').value;
             const note = document.getElementById('note').value.trim();
+            const adminKey = document.getElementById('adminKey').value;
             
-            if (!userId || !credits) {
+            if (!userId || !credits || !adminKey) {
                 showResult('กรุณากรอกข้อมูลให้ครบ', 'error');
                 return;
             }
             
+            // Save admin key
+            localStorage.setItem('adminKey', adminKey);
+            
             const button = document.querySelector('.submit-btn');
             button.disabled = true;
-            button.textContent = 'กำลังเติมเครดิต...';
+            button.innerHTML = 'กำลังเติมเครดิต... <span class="loading"></span>';
             
             try {
                 const response = await fetch('/api/admin/add-credits', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Admin-Key': adminKeyStored
+                        'X-Admin-Key': adminKey
                     },
                     body: JSON.stringify({
                         userId,
-                        credits: parseInt(credits),
-                        note: note || `ชำระเงิน ${selectedPrice} บาท - เครดิต ${credits}`
+                        amount: parseFloat(credits),
+                        note
                     })
                 });
                 
                 const data = await response.json();
                 
-                if (response.ok) {
-                    showResult(`✅ เติมเครดิตสำเร็จ! ${data.userId} มีเครดิต ${data.newBalance} (เพิ่ม ${data.creditsAdded})`, 'success');
-                    
+                if (response.ok && data.success) {
+                    showResult(`✅ เติมเครดิตสำเร็จ! เครดิตใหม่: ${data.newBalance}`, 'success');
                     // Clear form
                     document.getElementById('userId').value = '';
                     document.getElementById('note').value = '';
-                    
-                    // Reset to default package
-                    selectPackage(60, 50);
                 } else {
-                    showResult(`❌ ${data.error}`, 'error');
+                    showResult(`❌ Error: ${data.error || 'Failed to add credits'}`, 'error');
                 }
             } catch (error) {
-                showResult('❌ ไม่สามารถเชื่อมต่อ server ได้', 'error');
+                showResult(`❌ Error: ${error.message}`, 'error');
             } finally {
                 button.disabled = false;
-                button.textContent = 'เติมเครดิต';
+                button.innerHTML = 'เติมเครดิต';
             }
         }
         
-        async function checkUserCredits() {
-            if (!isAuthenticated) {
-                alert('กรุณาเข้าสู่ระบบก่อน');
-                return;
-            }
-            
+        async function checkCredits() {
             const userId = document.getElementById('checkUserId').value.trim();
             
             if (!userId) {
-                showCheckResult('กรุณากรอก User ID', 'error');
+                showCheckResult('กรุณาใส่ User ID', 'error');
                 return;
             }
             
@@ -680,30 +619,23 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    let html = `
-                        <div style="margin-bottom: 16px;">
-                            <strong>User ID:</strong> ${userId}<br>
-                            <strong>เครดิตคงเหลือ:</strong> ${data.credits} เครดิต
-                        </div>
-                    `;
+                    let html = `<strong>💰 เครดิตปัจจุบัน: ${data.currentCredits}</strong><br><br>`;
                     
                     if (data.history && data.history.length > 0) {
-                        html += '<div style="margin-top: 16px;"><strong>ประวัติล่าสุด:</strong></div>';
-                        data.history.forEach(tx => {
-                            const date = new Date(tx.created_at).toLocaleString('th-TH');
-                            const type = tx.type === 'ADD' ? '+' : '-';
-                            html += `<div style="margin: 8px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
-                                ${date} - ${type}${tx.amount} - ${tx.description}
-                            </div>`;
+                        html += '<strong>ประวัติล่าสุด:</strong><br>';
+                        data.history.slice(0, 5).forEach(h => {
+                            const date = new Date(h.created_at).toLocaleString('th-TH');
+                            const type = h.type === 'ADD' ? '➕' : '➖';
+                            html += `${type} ${date} - ${h.amount} credits<br>`;
                         });
                     }
                     
                     showCheckResult(html, 'success');
                 } else {
-                    showCheckResult(`❌ ${data.error || 'ไม่พบข้อมูล'}`, 'error');
+                    showCheckResult('ไม่พบข้อมูล', 'error');
                 }
             } catch (error) {
-                showCheckResult('❌ ไม่สามารถเชื่อมต่อ server ได้', 'error');
+                showCheckResult(`❌ Error: ${error.message}`, 'error');
             }
         }
         
@@ -713,7 +645,6 @@
             result.className = `result ${type}`;
             result.style.display = 'block';
             
-            // Auto hide after 5 seconds
             if (type === 'success') {
                 setTimeout(() => {
                     result.style.display = 'none';
@@ -750,15 +681,17 @@
         }
         
         async function loadRevenueData() {
-            if (!isAuthenticated) {
-                alert('กรุณาเข้าสู่ระบบก่อน');
+            const adminKey = document.getElementById('adminKey').value || localStorage.getItem('adminKey');
+            
+            if (!adminKey) {
+                alert('กรุณาใส่ Admin Key ก่อน');
                 return;
             }
             
             try {
                 const response = await fetch('/api/admin/revenue-stats', {
                     headers: {
-                        'X-Admin-Key': adminKeyStored
+                        'X-Admin-Key': adminKey
                     }
                 });
                 
@@ -828,15 +761,16 @@
             }
             
             revenueChart = new Chart(ctx, {
-                type: 'bar',
+                type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'รายได้ (บาท)',
+                        label: 'รายได้ (฿)',
                         data: data,
-                        backgroundColor: 'rgba(147, 51, 234, 0.5)',
-                        borderColor: 'rgba(147, 51, 234, 1)',
-                        borderWidth: 1
+                        borderColor: '#9333ea',
+                        backgroundColor: 'rgba(147, 51, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
                     }]
                 },
                 options: {
@@ -845,27 +779,34 @@
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `฿${context.parsed.y.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return `฿${value.toLocaleString()}`;
+                                },
+                                color: '#a1a1aa'
+                            },
                             grid: {
                                 color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#a1a1aa',
-                                callback: function(value) {
-                                    return '฿' + value.toLocaleString();
-                                }
                             }
                         },
                         x: {
-                            grid: {
-                                display: false
-                            },
                             ticks: {
                                 color: '#a1a1aa'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
                             }
                         }
                     }
@@ -880,14 +821,16 @@
             revenueData.topSpenders.forEach((spender, index) => {
                 const item = document.createElement('div');
                 item.className = 'spender-item';
+                item.style.display = 'flex';
+                item.style.alignItems = 'center';
+                
+                const lastPayment = new Date(spender.lastPayment).toLocaleDateString('th-TH');
                 
                 item.innerHTML = `
+                    <div class="spender-rank">${index + 1}</div>
                     <div class="spender-info">
-                        <div class="spender-rank">${index + 1}</div>
-                        <div class="spender-details">
-                            <div class="user-id">${spender.userId}</div>
-                            <div class="payment-count">${spender.paymentCount} ครั้ง</div>
-                        </div>
+                        <div class="spender-name">${spender.userId}</div>
+                        <div class="spender-stats">เติม ${spender.paymentCount} ครั้ง • ล่าสุด: ${lastPayment}</div>
                     </div>
                     <div class="spender-amount">฿${spender.totalSpent.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</div>
                 `;
@@ -946,24 +889,10 @@
         // Auto-refresh dashboard every 30 seconds when visible
         setInterval(() => {
             const dashboard = document.getElementById('revenueDashboard');
-            if (dashboard.style.display !== 'none' && revenueData && isAuthenticated) {
+            if (dashboard.style.display !== 'none' && revenueData) {
                 loadRevenueData();
             }
         }, 30000);
-        
-        // Check API Status
-        async function checkAPIStatus() {
-            try {
-                const response = await fetch('/api/health');
-                if (response.ok) {
-                    console.log('API is online');
-                } else {
-                    console.log('API is offline');
-                }
-            } catch (error) {
-                console.log('API is offline');
-            }
-        }
     </script>
 </body>
 </html>
