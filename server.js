@@ -1033,45 +1033,80 @@ app.post('/api/generate-image', async (req, res) => {
         
         const config = modelConfigs[model] || modelConfigs['flux-schnell'];
         
-        // Run the model
-        const output = await replicate.run(config.model, { input: config.input });
+        // Run the model with wait: true to ensure we get the final result
+        const output = await replicate.run(config.model, { 
+            input: config.input,
+            wait: true  // Wait for the model to finish
+        });
         
         console.log('🔍 Replicate raw output:', output);
         console.log('🔍 Output type:', typeof output);
-        console.log('🔍 Output stringify:', JSON.stringify(output, null, 2));
         
         if (!output) {
             throw new Error('No output from Replicate');
         }
         
-        // Simple extraction - just get the first string we can find
+        // Handle different output formats
         let imageUrl = null;
         
+        // Check if output is a ReadableStream
+        if (output && output[0] && output[0].constructor && output[0].constructor.name === 'ReadableStream') {
+            console.log('🔍 Output is ReadableStream, reading data...');
+            
+            try {
+                // For Replicate streams, the URL is typically the first item when converted to array
+                // But since it's a stream, we need to handle it differently
+                // Replicate usually returns the URL directly, not as a stream
+                // This might be a logging artifact
+                
+                // Try to get the actual URL from the prediction
+                // Sometimes Replicate returns a stream object but the URL is available immediately
+                imageUrl = await output[0];
+                
+                if (typeof imageUrl !== 'string') {
+                    // If still not a string, try to read the stream
+                    const reader = output[0].getReader();
+                    const { value, done } = await reader.read();
+                    if (value) {
+                        imageUrl = new TextDecoder().decode(value);
+                    }
+                }
+            } catch (streamError) {
+                console.error('Error reading stream:', streamError);
+                // Fallback: sometimes the URL is just the first element
+                imageUrl = output[0];
+            }
+        }
         // If output is already a string, use it
-        if (typeof output === 'string') {
+        else if (typeof output === 'string') {
             imageUrl = output;
         }
         // If it's an array, get first element
         else if (Array.isArray(output) && output.length > 0) {
-            imageUrl = output[0];
-        }
-        // If it's an object, try to find a URL
-        else if (typeof output === 'object') {
-            // Convert to string to see what we're dealing with
-            const outputStr = JSON.stringify(output);
-            console.log('🔍 Output as string:', outputStr);
+            const firstElement = output[0];
             
-            // Just use the output as is - Replicate sometimes returns the URL directly
-            imageUrl = output.toString();
+            if (typeof firstElement === 'string') {
+                imageUrl = firstElement;
+            } else if (firstElement && typeof firstElement === 'object') {
+                // Try to extract URL from object
+                imageUrl = firstElement.url || firstElement.output || firstElement.href || String(firstElement);
+            }
         }
         
-        // If we still don't have a URL, use the raw output
-        if (!imageUrl) {
-            imageUrl = String(output);
+        // Final fallback - convert to string
+        if (!imageUrl || typeof imageUrl !== 'string') {
+            console.log('🔍 Using fallback conversion');
+            imageUrl = String(output[0] || output);
         }
         
         console.log('✅ Extracted image URL:', imageUrl);
         console.log('✅ URL type:', typeof imageUrl);
+        
+        // Basic URL validation
+        if (!imageUrl.includes('http')) {
+            console.error('❌ Invalid URL format:', imageUrl);
+            throw new Error('Generated image URL is invalid');
+        }
         
         // Deduct credits using new system
         if (db) {
