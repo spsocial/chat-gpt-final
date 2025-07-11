@@ -965,7 +965,7 @@ app.post('/api/generate-image', async (req, res) => {
         // Check credits
         const modelCosts = {
             'flux-schnell': 0.15,
-            'flux-dev': 0.50,
+            'flux-dev': 0.20,  // ลดจาก 0.50 เป็น 0.20
             'sdxl-lightning': 0.20
         };
         

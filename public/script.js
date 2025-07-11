@@ -2809,6 +2809,9 @@ function displayGeneratedImage(imageUrl, prompt, model, cost) {
             <div style="margin-top: 12px; font-size: 14px; color: var(--text-secondary);">
                 📊 Model: ${getModelDisplayName(model)} | 💰 ใช้เครดิต: ${cost}
             </div>
+            <div style="margin-top: 8px; font-size: 12px; color: var(--text-secondary); word-break: break-all;">
+                🔗 URL: ${imageUrl}
+            </div>
         </div>
     `;
     
