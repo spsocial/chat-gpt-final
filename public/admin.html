@@ -580,18 +580,14 @@
         
         // Check if already authenticated on page load
         window.addEventListener('DOMContentLoaded', () => {
-            // Clear any existing key on page load for security
-            // Uncomment this line to force login every time
+            // Force fresh login every time
             localStorage.removeItem('adminKey');
+            adminKeyStored = '';
+            isAuthenticated = false;
             
-            const savedKey = localStorage.getItem('adminKey');
-            if (savedKey) {
-                checkAdminKey(savedKey);
-            } else {
-                // Make sure auth screen is visible
-                document.getElementById('authScreen').style.display = 'flex';
-                document.getElementById('mainContainer').style.display = 'none';
-            }
+            // Make sure auth screen is visible
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('mainContainer').style.display = 'none';
             
             // Enter key to submit
             document.getElementById('authKey').addEventListener('keypress', (e) => {
@@ -634,12 +630,14 @@
             button.disabled = true;
             button.textContent = 'กำลังเติมเครดิต...';
             
+            console.log('Sending request with key:', adminKeyStored ? 'Key exists' : 'No key!');
+            
             try {
                 const response = await fetch('/api/admin/add-credits', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-Admin-Key': adminKeyStored
+                        'X-Admin-Key': adminKeyStored || localStorage.getItem('adminKey')
                     },
                     body: JSON.stringify({
                         userId,
@@ -766,7 +764,7 @@
             try {
                 const response = await fetch('/api/admin/revenue-stats', {
                     headers: {
-                        'X-Admin-Key': adminKeyStored
+                        'X-Admin-Key': adminKeyStored || localStorage.getItem('adminKey')
                     }
                 });
                 
