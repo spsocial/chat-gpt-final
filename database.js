@@ -692,18 +692,18 @@ async function getUserAnalytics(startDate, endDate) {
             if (startDate) {
                 params.push(startDate);
                 dateFilter = ` WHERE uc.last_updated >= $${params.length}`;
-                usageLogDateFilter = ` WHERE ul.created_at >= $1`;
+                usageLogDateFilter = ` WHERE ul.timestamp >= $1`;
                 creditDateFilter = ` AND ct.created_at >= $1`;
             }
             if (endDate) {
                 params.push(endDate);
                 if (startDate) {
                     dateFilter += ` AND uc.last_updated <= $${params.length}`;
-                    usageLogDateFilter += ` AND ul.created_at <= $2`;
+                    usageLogDateFilter += ` AND ul.timestamp <= $2`;
                     creditDateFilter += ` AND ct.created_at <= $2`;
                 } else {
                     dateFilter = ` WHERE uc.last_updated <= $${params.length}`;
-                    usageLogDateFilter = ` WHERE ul.created_at <= $1`;
+                    usageLogDateFilter = ` WHERE ul.timestamp <= $1`;
                     creditDateFilter = ` AND ct.created_at <= $1`;
                 }
             }
@@ -774,7 +774,7 @@ async function getUserAnalytics(startDate, endDate) {
                     ${creditDateFilter}
                 ) as total_paid_credits,
                 (
-                    SELECT MAX(ul.created_at)
+                    SELECT MAX(ul.timestamp)
                     FROM usage_logs ul
                     WHERE ul.user_id = uc.user_id
                     ${usageLogDateFilter}
@@ -818,11 +818,11 @@ async function getTopUsers(startDate, endDate, limit = 20) {
         
         if (startDate) {
             params.push(startDate);
-            dateFilter += ` AND ul.created_at >= $${params.length}`;
+            dateFilter += ` AND ul.timestamp >= $${params.length}`;
         }
         if (endDate) {
             params.push(endDate);
-            dateFilter += ` AND ul.created_at <= $${params.length}`;
+            dateFilter += ` AND ul.timestamp <= $${params.length}`;
         }
 
         const result = await pool.query(`
@@ -839,7 +839,7 @@ async function getTopUsers(startDate, endDate, limit = 20) {
                     AND ct.type = 'ADD'
                     AND (ct.description LIKE '%ชำระ%' OR ct.description LIKE '%Payment%')
                 ), 0) as total_paid_credits,
-                MAX(ul.created_at) as last_usage
+                MAX(ul.timestamp) as last_usage
             FROM user_credits uc
             LEFT JOIN usage_logs ul ON uc.user_id = ul.user_id ${dateFilter}
             WHERE EXISTS (
