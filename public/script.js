@@ -14,6 +14,11 @@ const MAX_IMAGE_SIZE = 800;
 let isProcessing = false;
 let processingMode = null;
 
+// Feature flags
+const FEATURES = {
+    GOOGLE_AUTH: false  // Set to true when ready to enable Google Sign-In
+};
+
 // ========== GLOBAL VARIABLES ==========
 let currentMode = 'general';
 let messageId = 0;
@@ -933,6 +938,11 @@ function signOut() {
 }
 
 function updateAuthUI() {
+    // Skip if Google Auth is disabled
+    if (!FEATURES.GOOGLE_AUTH) {
+        return;
+    }
+    
     const signInWrapper = document.getElementById('googleSignInWrapper');
     const userProfile = document.getElementById('userProfile');
     
@@ -1027,9 +1037,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Initialize Google Sign-In with proper configuration
     const initializeGoogleSignIn = () => {
+        // Check if feature is enabled
+        if (!FEATURES.GOOGLE_AUTH) {
+            console.log('🔒 Google Auth is disabled');
+            return;
+        }
+        
+        // Show auth section if enabled
+        const authSection = document.getElementById('authSection');
+        if (authSection) {
+            authSection.style.display = 'flex';
+        }
         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
             console.log('✅ Google Sign-In library loaded');
             console.log('📍 Current origin:', window.location.origin);
+            console.log('🌐 Full URL:', window.location.href);
+            console.log('🔗 Protocol:', window.location.protocol);
+            console.log('🏠 Hostname:', window.location.hostname);
             
             try {
                 // Initialize
