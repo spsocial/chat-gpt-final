@@ -6902,4 +6902,36 @@ body.mode-character #characterTemplateButtonSection {
         border-color: rgba(255, 255, 255, 0.1);
     }
 }
+/* Manual Google Sign-In Button */
+.manual-google-signin {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #4285f4;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.manual-google-signin:hover {
+    background: #357ae8;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.manual-google-signin img {
+    width: 18px;
+    height: 18px;
+}
+
+/* Hide manual button when official button loads */
+#googleSignInButton:not(:empty) ~ .manual-google-signin {
+    display: none;
+}
 /* ========== END GOOGLE SIGN-IN STYLES ========== */

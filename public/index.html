@@ -16,6 +16,13 @@
     <link rel="stylesheet" href="style.css">
     <!-- Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer onload="console.log('Google Identity Services loaded')"></script>
+    
+    <!-- Initialize Google Sign-In immediately -->
+    <script>
+        window.onGoogleLibraryLoad = function() {
+            console.log('Google library ready for initialization');
+        };
+    </script>
 </head>
 <body>
     <div class="container">
@@ -51,22 +58,12 @@
                     <div id="authSection" style="display: flex; align-items: center; gap: 10px;">
                         <!-- Sign In Button -->
                         <div id="googleSignInWrapper">
-                            <div id="g_id_onload"
-                                 data-client_id="1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com"
-                                 data-callback="handleGoogleSignIn"
-                                 data-auto_prompt="false"
-                                 data-auto_select="false"
-                                 data-itp_support="true">
-                            </div>
-                            <div class="g_id_signin"
-                                 data-type="standard"
-                                 data-size="medium"
-                                 data-theme="filled_blue"
-                                 data-text="sign_in_with"
-                                 data-shape="rectangular"
-                                 data-logo_alignment="left"
-                                 data-width="200">
-                            </div>
+                            <div id="googleSignInButton"></div>
+                            <!-- Fallback manual button -->
+                            <button class="manual-google-signin" onclick="manualGoogleSignIn()" style="display: none;" id="manualSignInBtn">
+                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                                <span>Sign in with Google</span>
+                            </button>
                         </div>
                         
                         <!-- User Profile (hidden by default) -->

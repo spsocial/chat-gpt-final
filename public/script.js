@@ -838,7 +838,8 @@ function showCreditRequiredMessage(data) {
 }
 
 // ========== GOOGLE AUTH FUNCTIONS ==========
-async function handleGoogleSignIn(response) {
+// Global callback for Google Sign-In
+function handleGoogleSignIn(response) {
     console.log('Google Sign-In response received:', response);
     
     // Check if response has credential
@@ -847,6 +848,12 @@ async function handleGoogleSignIn(response) {
         showNotification('❌ ไม่ได้รับข้อมูลจาก Google', 'error');
         return;
     }
+    
+    // Process the sign-in
+    processGoogleSignIn(response);
+}
+
+async function processGoogleSignIn(response) {
     
     try {
         const currentUserId = ensureUserId();
@@ -961,9 +968,53 @@ function updateCreditsDisplay() {
     loadTotalPurchasedCredits();
 }
 
+// Manual Google Sign-In function
+function manualGoogleSignIn() {
+    console.log('Manual Google Sign-In clicked');
+    
+    if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        try {
+            // Try to trigger sign-in programmatically
+            google.accounts.id.prompt((notification) => {
+                console.log('Prompt notification:', notification);
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    // If prompt fails, try OAuth2 redirect flow
+                    console.log('Prompt failed, trying redirect flow...');
+                    initiateOAuth2Flow();
+                }
+            });
+        } catch (error) {
+            console.error('Error with manual sign-in:', error);
+            initiateOAuth2Flow();
+        }
+    } else {
+        console.error('Google library not loaded');
+        showNotification('❌ Google Sign-In ยังไม่พร้อม กรุณาลองใหม่', 'error');
+    }
+}
+
+// OAuth2 redirect flow as last resort
+function initiateOAuth2Flow() {
+    const clientId = '1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com';
+    const redirectUri = encodeURIComponent(window.location.origin);
+    const scope = encodeURIComponent('openid email profile');
+    const responseType = 'token id_token';
+    
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${redirectUri}&` +
+        `response_type=${responseType}&` +
+        `scope=${scope}&` +
+        `nonce=${Math.random().toString(36).substring(2)}`;
+    
+    console.log('Redirecting to:', authUrl);
+    window.location.href = authUrl;
+}
+
 // Make functions global (MUST be before DOMContentLoaded)
 window.handleGoogleSignIn = handleGoogleSignIn;
 window.signOut = signOut;
+window.manualGoogleSignIn = manualGoogleSignIn;
 
 // Debug: Verify function is accessible
 console.log('handleGoogleSignIn function registered:', typeof window.handleGoogleSignIn);
@@ -974,59 +1025,62 @@ document.addEventListener('DOMContentLoaded', async () => {
     userId = ensureUserId();
     updateAuthUI();
     
-    // Initialize Google Sign-In with retry
-    let retryCount = 0;
-    const maxRetries = 10;
-    
+    // Initialize Google Sign-In with proper configuration
     const initializeGoogleSignIn = () => {
-        if (window.google && window.google.accounts && window.google.accounts.id) {
-            console.log('✅ Google Sign-In library loaded successfully');
-            console.log('Current origin:', window.location.origin);
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+            console.log('✅ Google Sign-In library loaded');
+            console.log('📍 Current origin:', window.location.origin);
+            
             try {
-                window.google.accounts.id.initialize({
+                // Initialize
+                google.accounts.id.initialize({
                     client_id: '1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com',
-                    callback: window.handleGoogleSignIn,
+                    callback: handleGoogleSignIn,
                     auto_select: false,
-                    cancel_on_tap_outside: true,
-                    ux_mode: 'popup',
-                    context: 'signin',
-                    itp_support: true
+                    cancel_on_tap_outside: true
                 });
                 
-                // Render the sign-in button
-                const buttonContainer = document.querySelector('.g_id_signin');
-                if (buttonContainer) {
-                    window.google.accounts.id.renderButton(
-                        buttonContainer,
-                        { 
+                // Render button
+                const buttonDiv = document.getElementById('googleSignInButton');
+                if (buttonDiv) {
+                    google.accounts.id.renderButton(
+                        buttonDiv,
+                        {
+                            type: 'standard',
                             theme: 'filled_blue',
                             size: 'medium',
-                            width: '200',
                             text: 'signin_with',
                             shape: 'rectangular',
-                            logo_alignment: 'left'
+                            logo_alignment: 'left',
+                            width: 200
                         }
                     );
                     console.log('✅ Google Sign-In button rendered');
+                    // Hide manual button if official button renders
+                    document.getElementById('manualSignInBtn').style.display = 'none';
                 } else {
                     console.error('❌ Button container not found');
+                    // Show manual button as fallback
+                    document.getElementById('manualSignInBtn').style.display = 'flex';
                 }
+                
             } catch (error) {
                 console.error('❌ Error initializing Google Sign-In:', error);
+                // Show manual button as fallback
+                document.getElementById('manualSignInBtn').style.display = 'flex';
             }
         } else {
-            retryCount++;
-            if (retryCount < maxRetries) {
-                console.log(`⏳ Waiting for Google Sign-In library... (attempt ${retryCount}/${maxRetries})`);
-                setTimeout(initializeGoogleSignIn, 500);
-            } else {
-                console.error('❌ Google Sign-In library failed to load after maximum retries');
-            }
+            console.log('⏳ Waiting for Google library...');
+            // Show manual button while waiting
+            const manualBtn = document.getElementById('manualSignInBtn');
+            if (manualBtn) manualBtn.style.display = 'flex';
+            
+            setTimeout(initializeGoogleSignIn, 1000);
         }
     };
     
-    // Start initialization
-    initializeGoogleSignIn();
+    // Wait a bit then initialize
+    setTimeout(initializeGoogleSignIn, 1000);
     
     document.addEventListener('change', (e) => {
         if (e.target.name === 'imageModel' || e.target.name === 'mobileImageModel') {
