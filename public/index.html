@@ -14,6 +14,8 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <div class="container">
@@ -27,7 +29,7 @@
 <p>AI-Powered Prompt Generator</p>
                     </div>
                 </div>
-                <div class="usage-display">
+                <div class="usage-display" style="display: flex; align-items: center; gap: 15px;">
                     <div class="user-info">
                         <div class="user-id" id="userId">user_xxx</div>
                         <div class="usage-info">
@@ -42,6 +44,43 @@
                         <div class="mobile-total-credits" id="mobileTotalCredits">
                             <span class="credit-icon">💰</span>
                             <span class="credit-text">เติมไปแล้ว: <span id="totalPurchasedCredits">0</span> เครดิต</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Google Sign In Section -->
+                    <div id="authSection" style="display: flex; align-items: center; gap: 10px;">
+                        <!-- Sign In Button -->
+                        <div id="googleSignInWrapper">
+                            <div id="g_id_onload"
+                                 data-client_id="1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com"
+                                 data-callback="handleGoogleSignIn"
+                                 data-auto_prompt="false">
+                            </div>
+                            <div class="g_id_signin"
+                                 data-type="standard"
+                                 data-size="medium"
+                                 data-theme="filled_blue"
+                                 data-text="sign_in_with"
+                                 data-shape="rectangular"
+                                 data-logo_alignment="left"
+                                 data-width="200">
+                            </div>
+                        </div>
+                        
+                        <!-- User Profile (hidden by default) -->
+                        <div id="userProfile" style="display: none; align-items: center; gap: 10px;">
+                            <img id="userAvatar" src="" alt="User" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid #9333ea;">
+                            <div style="display: flex; flex-direction: column;">
+                                <span id="userName" style="color: #fff; font-size: 14px; font-weight: 500;"></span>
+                                <span id="userEmail" style="color: #a1a1aa; font-size: 12px;"></span>
+                            </div>
+                            <button onclick="signOut()" class="sign-out-btn" title="ออกจากระบบ">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 </div>

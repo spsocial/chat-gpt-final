@@ -858,6 +858,107 @@ async function getTopUsers(startDate, endDate, limit = 20) {
     }
 }
 
+// Google Auth Functions
+async function findOrCreateGoogleUser(googleProfile) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // Check if user exists
+        const existingUser = await client.query(
+            'SELECT * FROM user_accounts WHERE email = $1',
+            [googleProfile.email]
+        );
+        
+        if (existingUser.rows.length > 0) {
+            // Update last login
+            await client.query(
+                'UPDATE user_accounts SET last_login = NOW() WHERE email = $1',
+                [googleProfile.email]
+            );
+            await client.query('COMMIT');
+            return existingUser.rows[0];
+        }
+        
+        // Create new user
+        const newUser = await client.query(
+            `INSERT INTO user_accounts (email, google_id, name, picture, local_user_id) 
+             VALUES ($1, $2, $3, $4, $5) 
+             RETURNING *`,
+            [
+                googleProfile.email,
+                googleProfile.sub,
+                googleProfile.name,
+                googleProfile.picture,
+                null // Will be linked later if user has existing data
+            ]
+        );
+        
+        // Create user_credits entry for new user
+        const userId = `google_${googleProfile.sub}`;
+        await client.query(
+            `INSERT INTO user_credits (user_id, credits, total_purchased, total_used, email) 
+             VALUES ($1, 5, 0, 0, $2) 
+             ON CONFLICT (user_id) DO NOTHING`,
+            [userId, googleProfile.email]
+        );
+        
+        await client.query('COMMIT');
+        return newUser.rows[0];
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error in findOrCreateGoogleUser:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+async function linkGoogleAccount(localUserId, googleProfile) {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // Update user_accounts with local_user_id
+        await client.query(
+            `UPDATE user_accounts 
+             SET local_user_id = $1 
+             WHERE email = $2`,
+            [localUserId, googleProfile.email]
+        );
+        
+        // Update user_credits with email
+        await client.query(
+            `UPDATE user_credits 
+             SET email = $2 
+             WHERE user_id = $1`,
+            [localUserId, googleProfile.email]
+        );
+        
+        await client.query('COMMIT');
+        return { success: true };
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('Error linking account:', error);
+        throw error;
+    } finally {
+        client.release();
+    }
+}
+
+async function getUserByEmail(email) {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM user_accounts WHERE email = $1',
+            [email]
+        );
+        return result.rows[0] || null;
+    } catch (error) {
+        console.error('Error getting user by email:', error);
+        return null;
+    }
+}
+
 // อย่าลืม export!
 module.exports = {
     pool,
@@ -888,6 +989,10 @@ module.exports = {
     getPaymentByRef,
     // เพิ่ม user analytics functions
     getUserAnalytics,
-    getTopUsers
+    getTopUsers,
+    // เพิ่ม Google auth functions
+    findOrCreateGoogleUser,
+    linkGoogleAccount,
+    getUserByEmail
 };
 

@@ -10,6 +10,7 @@ const QRCode = require('qrcode');
 const generatePayload = require('promptpay-qr');
 const ESYSlipService = require('./esy-slip');
 const Replicate = require('replicate');
+const { OAuth2Client } = require('google-auth-library');
 
 
 // Assistant IDs mapping
@@ -44,6 +45,9 @@ const upload = multer({
 
 // Initialize ESY Slip service
 const esySlip = new ESYSlipService(process.env.ESY_SLIP_API_KEY);
+
+// Initialize Google OAuth client
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // เพิ่ม debug log
 console.log('ENV Check:');
@@ -1620,6 +1624,90 @@ app.get('/api/admin/sync-users', checkAdminAuth, async (req, res) => {
     } catch (error) {
         console.error('Sync users error:', error);
         res.status(500).json({ error: 'Failed to sync users' });
+    }
+});
+
+// Google Auth endpoints
+app.post('/api/auth/google', async (req, res) => {
+    const { credential, currentUserId } = req.body;
+    
+    try {
+        // Verify Google token
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        
+        const payload = ticket.getPayload();
+        console.log('Google user:', payload.email);
+        
+        // Find or create user
+        const googleUser = await db.findOrCreateGoogleUser(payload);
+        
+        // Determine userId
+        let userId;
+        if (googleUser.local_user_id) {
+            // User has logged in before, use their linked userId
+            userId = googleUser.local_user_id;
+        } else if (currentUserId && currentUserId.startsWith('user_')) {
+            // First time login with existing local data, link accounts
+            await db.linkGoogleAccount(currentUserId, payload);
+            userId = currentUserId;
+        } else {
+            // New user or no local data
+            userId = `google_${payload.sub}`;
+        }
+        
+        // Get user credits info
+        const creditsInfo = await db.getUserCreditsInfo(userId);
+        
+        res.json({
+            success: true,
+            user: {
+                userId,
+                email: payload.email,
+                name: payload.name,
+                picture: payload.picture
+            },
+            credits: creditsInfo
+        });
+        
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(401).json({ error: 'Authentication failed' });
+    }
+});
+
+// Get user info endpoint
+app.get('/api/auth/user', async (req, res) => {
+    const { email } = req.query;
+    
+    if (!email) {
+        return res.status(400).json({ error: 'Email required' });
+    }
+    
+    try {
+        const user = await db.getUserByEmail(email);
+        if (user) {
+            const userId = user.local_user_id || `google_${user.google_id}`;
+            const creditsInfo = await db.getUserCreditsInfo(userId);
+            
+            res.json({
+                success: true,
+                user: {
+                    userId,
+                    email: user.email,
+                    name: user.name,
+                    picture: user.picture
+                },
+                credits: creditsInfo
+            });
+        } else {
+            res.status(404).json({ error: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Get user error:', error);
+        res.status(500).json({ error: 'Failed to get user info' });
     }
 });
 

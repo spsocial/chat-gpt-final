@@ -6790,3 +6790,116 @@ body.mode-character #characterTemplateButtonSection {
     }
 }
 /* ========== END SUPPORT BUTTON ========== */
+
+/* ========== GOOGLE SIGN-IN STYLES ========== */
+#authSection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#googleSignInWrapper {
+    display: block;
+}
+
+/* Override Google Sign-In button styles */
+.g_id_signin {
+    overflow: hidden;
+    border-radius: 8px;
+}
+
+#userProfile {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface-light);
+    padding: 8px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+#userAvatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    object-fit: cover;
+}
+
+#userName {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#userEmail {
+    color: var(--text-secondary);
+    font-size: 12px;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sign-out-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sign-out-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.sign-out-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    #authSection {
+        width: 100%;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    #userProfile {
+        flex: 1;
+        justify-content: space-between;
+    }
+    
+    #userName, #userEmail {
+        max-width: 120px;
+    }
+    
+    .g_id_signin {
+        width: 100% !important;
+    }
+    
+    #googleSignInWrapper {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* Dark mode compatibility */
+@media (prefers-color-scheme: dark) {
+    #userProfile {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+}
+/* ========== END GOOGLE SIGN-IN STYLES ========== */

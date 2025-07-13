@@ -20,14 +20,23 @@ let messageId = 0;
 let characterLibrary = [];
 let currentCharacterProfile = null;
 let userId = '';
+let googleUser = null;
 
 // Function to ensure userId is ready
 function ensureUserId() {
     if (!userId) {
-        userId = localStorage.getItem('userId');
-        if (!userId) {
-            userId = 'user_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('userId', userId);
+        // Check if we have a Google user stored
+        const storedGoogleUser = localStorage.getItem('googleUser');
+        if (storedGoogleUser) {
+            googleUser = JSON.parse(storedGoogleUser);
+            userId = googleUser.userId;
+        } else {
+            // Fall back to regular user ID
+            userId = localStorage.getItem('userId');
+            if (!userId) {
+                userId = 'user_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('userId', userId);
+            }
         }
     }
     return userId;
@@ -828,10 +837,130 @@ function showCreditRequiredMessage(data) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
+// ========== GOOGLE AUTH FUNCTIONS ==========
+async function handleGoogleSignIn(response) {
+    console.log('Google Sign-In response received');
+    
+    try {
+        const currentUserId = ensureUserId();
+        
+        // Send token to backend
+        const res = await fetch('/api/auth/google', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                credential: response.credential,
+                currentUserId: currentUserId
+            })
+        });
+        
+        const data = await res.json();
+        
+        if (data.success) {
+            // Store user info
+            googleUser = data.user;
+            localStorage.setItem('googleUser', JSON.stringify(googleUser));
+            
+            // Update userId if changed
+            if (data.user.userId !== currentUserId) {
+                userId = data.user.userId;
+                localStorage.setItem('userId', userId);
+                
+                // Reload chat histories with new userId
+                ChatStorage.init();
+                MasterChatHistory.init();
+                MultiCharChatHistory.init();
+                AIChatHistory.init();
+                CharacterChatHistory.init();
+            }
+            
+            // Update UI
+            updateAuthUI();
+            updateUserId();
+            updateCreditsDisplay();
+            
+            showNotification('✅ เข้าสู่ระบบสำเร็จ!', 'success');
+        } else {
+            showNotification('❌ เข้าสู่ระบบไม่สำเร็จ', 'error');
+        }
+    } catch (error) {
+        console.error('Sign-in error:', error);
+        showNotification('❌ เกิดข้อผิดพลาดในการเข้าสู่ระบบ', 'error');
+    }
+}
+
+function signOut() {
+    // Clear Google user data
+    googleUser = null;
+    localStorage.removeItem('googleUser');
+    
+    // Generate new local userId
+    userId = 'user_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('userId', userId);
+    
+    // Reload chat histories
+    ChatStorage.init();
+    MasterChatHistory.init();
+    MultiCharChatHistory.init();
+    AIChatHistory.init();
+    CharacterChatHistory.init();
+    
+    // Update UI
+    updateAuthUI();
+    updateUserId();
+    updateCreditsDisplay();
+    
+    showNotification('👋 ออกจากระบบแล้ว', 'info');
+}
+
+function updateAuthUI() {
+    const signInWrapper = document.getElementById('googleSignInWrapper');
+    const userProfile = document.getElementById('userProfile');
+    
+    if (googleUser) {
+        // Hide sign in button, show profile
+        signInWrapper.style.display = 'none';
+        userProfile.style.display = 'flex';
+        
+        // Update profile info
+        document.getElementById('userAvatar').src = googleUser.picture || '/default-avatar.png';
+        document.getElementById('userName').textContent = googleUser.name || 'User';
+        document.getElementById('userEmail').textContent = googleUser.email || '';
+    } else {
+        // Show sign in button, hide profile
+        signInWrapper.style.display = 'block';
+        userProfile.style.display = 'none';
+    }
+}
+
+// Helper function to update userId display
+function updateUserId() {
+    const userIdElement = document.getElementById('userId');
+    if (userIdElement) {
+        userIdElement.textContent = userId;
+    }
+}
+
+// Helper function to update credits display
+function updateCreditsDisplay() {
+    // Refresh both usage and credits
+    updateUsageDisplay();
+    loadUserCredits();
+    loadTotalPurchasedCredits();
+}
+
+// Make functions global
+window.handleGoogleSignIn = handleGoogleSignIn;
+window.signOut = signOut;
+
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
     // Get or generate user ID using ensureUserId และอัพเดท global
     userId = ensureUserId();
+    updateAuthUI();
+    
     document.addEventListener('change', (e) => {
         if (e.target.name === 'imageModel' || e.target.name === 'mobileImageModel') {
             updateModelSelection(e.target.value);
