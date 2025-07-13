@@ -679,44 +679,68 @@ async function getPaymentByRef(transactionRef) {
     }
 }
 
-// Get user analytics for admin
+// Get user analytics for admin with proper date filtering
 async function getUserAnalytics(startDate, endDate) {
     try {
         let dateFilter = '';
+        let usageLogDateFilter = '';
+        let creditDateFilter = '';
         const params = [];
         
-        if (startDate) {
-            params.push(startDate);
-            dateFilter += ` AND uc.last_updated >= $${params.length}`;
-        }
-        if (endDate) {
-            params.push(endDate);
-            dateFilter += ` AND uc.last_updated <= $${params.length}`;
+        // Build date filters for different queries
+        if (startDate || endDate) {
+            if (startDate) {
+                params.push(startDate);
+                dateFilter = ` WHERE uc.last_updated >= $${params.length}`;
+                usageLogDateFilter = ` WHERE ul.created_at >= $1`;
+                creditDateFilter = ` AND ct.created_at >= $1`;
+            }
+            if (endDate) {
+                params.push(endDate);
+                if (startDate) {
+                    dateFilter += ` AND uc.last_updated <= $${params.length}`;
+                    usageLogDateFilter += ` AND ul.created_at <= $2`;
+                    creditDateFilter += ` AND ct.created_at <= $2`;
+                } else {
+                    dateFilter = ` WHERE uc.last_updated <= $${params.length}`;
+                    usageLogDateFilter = ` WHERE ul.created_at <= $1`;
+                    creditDateFilter = ` AND ct.created_at <= $1`;
+                }
+            }
         }
 
-        // Get all unique users from all sources - count from user_credits only for now
+        // Get total users (all time, not affected by date filter)
         const allUsers = await pool.query(`
             SELECT COUNT(DISTINCT user_id) as count FROM user_credits
         `);
-
         const totalUsers = parseInt(allUsers.rows[0].count);
 
-        // Get active users (have usage logs)
-        const activeUsers = await pool.query(`
+        // Get active users within date range
+        let activeUsersQuery = `
             SELECT COUNT(DISTINCT user_id) as count
-            FROM usage_logs
-        `);
+            FROM usage_logs ul
+            ${usageLogDateFilter}
+        `;
+        const activeUsers = await pool.query(
+            activeUsersQuery, 
+            params.length > 0 ? params : undefined
+        );
 
-        // Get paid users
-        const paidUsers = await pool.query(`
+        // Get paid users within date range
+        let paidUsersQuery = `
             SELECT COUNT(DISTINCT user_id) as count
-            FROM credit_transactions
+            FROM credit_transactions ct
             WHERE type = 'ADD'
             AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%')
-        `);
+            ${creditDateFilter}
+        `;
+        const paidUsers = await pool.query(
+            paidUsersQuery,
+            params.length > 0 ? params : undefined
+        );
 
-        // Get detailed user list
-        const userList = await pool.query(`
+        // Get users that were active in the date range
+        let userListQuery = `
             SELECT 
                 uc.user_id,
                 uc.last_updated as created_at,
@@ -727,16 +751,19 @@ async function getUserAnalytics(startDate, endDate) {
                         WHERE ct.user_id = uc.user_id 
                         AND ct.type = 'ADD'
                         AND (ct.description LIKE '%ชำระ%' OR ct.description LIKE '%Payment%')
+                        ${creditDateFilter}
                     ) THEN 'paid'
                     WHEN EXISTS (
                         SELECT 1 FROM usage_logs ul
                         WHERE ul.user_id = uc.user_id
+                        ${usageLogDateFilter}
                     ) THEN 'active'
                     ELSE 'inactive'
                 END as category,
                 (
                     SELECT COUNT(*) FROM usage_logs ul
                     WHERE ul.user_id = uc.user_id
+                    ${usageLogDateFilter}
                 ) as usage_count,
                 (
                     SELECT COALESCE(SUM(amount), 0) 
@@ -744,20 +771,38 @@ async function getUserAnalytics(startDate, endDate) {
                     WHERE ct.user_id = uc.user_id 
                     AND ct.type = 'ADD'
                     AND (ct.description LIKE '%ชำระ%' OR ct.description LIKE '%Payment%')
-                ) as total_paid_credits
+                    ${creditDateFilter}
+                ) as total_paid_credits,
+                (
+                    SELECT MAX(ul.created_at)
+                    FROM usage_logs ul
+                    WHERE ul.user_id = uc.user_id
+                    ${usageLogDateFilter}
+                ) as last_activity
             FROM user_credits uc
-            WHERE 1=1 ${dateFilter}
-            ORDER BY uc.last_updated DESC
-        `, params);
+            ${dateFilter}
+            ORDER BY last_activity DESC NULLS LAST
+        `;
+
+        const userList = await pool.query(userListQuery, params.length > 0 ? params : undefined);
+
+        // Filter to only show users who had activity in the date range
+        const filteredUsers = startDate || endDate 
+            ? userList.rows.filter(user => user.usage_count > 0 || user.total_paid_credits > 0)
+            : userList.rows;
 
         return {
             summary: {
-                totalUsers: totalUsers,
+                totalUsers: totalUsers, // Always show total registered users
                 activeUsers: parseInt(activeUsers.rows[0].count),
                 paidUsers: parseInt(paidUsers.rows[0].count),
-                inactiveUsers: totalUsers - parseInt(activeUsers.rows[0].count)
+                inactiveUsers: Math.max(0, totalUsers - parseInt(activeUsers.rows[0].count))
             },
-            users: userList.rows
+            users: filteredUsers,
+            dateRange: {
+                start: startDate || 'all time',
+                end: endDate || 'now'
+            }
         };
     } catch (error) {
         console.error('Error in getUserAnalytics:', error);

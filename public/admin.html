@@ -473,15 +473,19 @@
         <div id="userAnalyticsDashboard" class="dashboard-container" style="display: none;">
             <h2 style="margin-bottom: 24px; text-align: center; color: #a78bfa;">👥 User Analytics</h2>
             
-            <!-- Date Filter -->
-            <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center;">
+            <!-- Date Filter and Sync -->
+            <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center; flex-wrap: wrap;">
                 <label style="color: #a1a1aa; margin: 0;">จาก:</label>
                 <input type="date" id="startDate" style="width: auto; background: #262626;">
                 <label style="color: #a1a1aa; margin: 0;">ถึง:</label>
                 <input type="date" id="endDate" style="width: auto; background: #262626;">
                 <button class="submit-btn" style="width: auto; padding: 12px 24px;" onclick="loadUserAnalytics()">🔍 ค้นหา</button>
                 <button class="submit-btn" style="width: auto; padding: 12px 24px; background: #666;" onclick="clearDateFilter()">🔄 ล้าง</button>
+                <button class="submit-btn" style="width: auto; padding: 12px 24px; background: #10b981;" onclick="syncUsers()">🔄 Sync Users</button>
             </div>
+            
+            <!-- Date Range Info -->
+            <div id="dateRangeInfo" style="text-align: center; color: #a1a1aa; margin-bottom: 20px; font-size: 14px;"></div>
             
             <!-- User Summary Stats -->
             <div class="stats-grid">
@@ -1109,6 +1113,16 @@
             document.getElementById('activeUsers').textContent = userAnalyticsData.summary.activeUsers.toLocaleString();
             document.getElementById('paidUsers').textContent = userAnalyticsData.summary.paidUsers.toLocaleString();
             document.getElementById('inactiveUsers').textContent = userAnalyticsData.summary.inactiveUsers.toLocaleString();
+            
+            // Update date range info
+            const dateInfo = document.getElementById('dateRangeInfo');
+            if (userAnalyticsData.dateRange) {
+                const start = userAnalyticsData.dateRange.start === 'all time' ? 'ทั้งหมด' : new Date(userAnalyticsData.dateRange.start).toLocaleDateString('th-TH');
+                const end = userAnalyticsData.dateRange.end === 'now' ? 'ปัจจุบัน' : new Date(userAnalyticsData.dateRange.end).toLocaleDateString('th-TH');
+                dateInfo.textContent = `กำลังแสดงข้อมูล: ${start} - ${end}`;
+            } else {
+                dateInfo.textContent = 'กำลังแสดงข้อมูลทั้งหมด';
+            }
         }
         
         function filterUserCategory(category) {
@@ -1250,6 +1264,48 @@
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
             loadUserAnalytics();
+        }
+        
+        // Sync users function
+        async function syncUsers() {
+            if (!isAuthenticated) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                return;
+            }
+            
+            if (!confirm('ต้องการ sync users จากทุกตารางหรือไม่? กระบวนการนี้อาจใช้เวลาสักครู่')) {
+                return;
+            }
+            
+            const button = event.target;
+            button.disabled = true;
+            button.textContent = '🔄 กำลัง sync...';
+            
+            try {
+                const response = await fetch('/api/admin/sync-users', {
+                    headers: {
+                        'X-Admin-Key': adminKeyStored || localStorage.getItem('adminKey')
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to sync users');
+                }
+                
+                const result = await response.json();
+                
+                alert(`✅ Sync สำเร็จ!\n\nก่อน sync:\n- users table: ${result.before.users_table}\n- user_credits: ${result.before.credits_table}\n- usage_logs: ${result.before.usage_logs}\n\nSynced: ${result.synced} users\n\nหลัง sync:\n- Total users: ${result.after.total_users}`);
+                
+                // Reload analytics
+                loadUserAnalytics();
+                
+            } catch (error) {
+                console.error('Sync error:', error);
+                alert('❌ ไม่สามารถ sync users ได้');
+            } finally {
+                button.disabled = false;
+                button.textContent = '🔄 Sync Users';
+            }
         }
         
         // Check API Status

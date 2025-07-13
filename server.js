@@ -1545,6 +1545,84 @@ app.get('/api/admin/top-users', checkAdminAuth, async (req, res) => {
     }
 });
 
+// Sync users endpoint for admin
+app.get('/api/admin/sync-users', checkAdminAuth, async (req, res) => {
+    try {
+        if (!db || !db.pool) {
+            return res.status(500).json({ error: 'Database not available' });
+        }
+
+        const client = await db.pool.connect();
+        
+        try {
+            // 1. นับ users จากทุกแหล่ง
+            const usersInUsersTable = await client.query('SELECT COUNT(*) FROM users');
+            const usersInCreditsTable = await client.query('SELECT COUNT(*) FROM user_credits');
+            const uniqueInLogs = await client.query('SELECT COUNT(DISTINCT user_id) FROM usage_logs');
+            
+            // 2. หา users ที่ขาดหาย
+            const missingFromUsers = await client.query(`
+                SELECT u.user_id, u.created_at
+                FROM users u
+                LEFT JOIN user_credits uc ON u.user_id = uc.user_id
+                WHERE uc.user_id IS NULL
+            `);
+
+            const missingFromLogs = await client.query(`
+                SELECT DISTINCT ul.user_id
+                FROM usage_logs ul
+                LEFT JOIN user_credits uc ON ul.user_id = uc.user_id
+                WHERE uc.user_id IS NULL
+            `);
+
+            let syncedCount = 0;
+
+            // 3. Sync จาก users table
+            for (const user of missingFromUsers.rows) {
+                await client.query(`
+                    INSERT INTO user_credits (user_id, credits, total_purchased, total_used, last_updated)
+                    VALUES ($1, 5, 0, 0, $2)
+                    ON CONFLICT (user_id) DO NOTHING
+                `, [user.user_id, user.created_at || new Date()]);
+                syncedCount++;
+            }
+
+            // 4. Sync จาก usage_logs
+            for (const user of missingFromLogs.rows) {
+                await client.query(`
+                    INSERT INTO user_credits (user_id, credits, total_purchased, total_used, last_updated)
+                    VALUES ($1, 0, 0, 0, NOW())
+                    ON CONFLICT (user_id) DO NOTHING
+                `, [user.user_id]);
+                syncedCount++;
+            }
+
+            // 5. Final count
+            const finalCount = await client.query('SELECT COUNT(*) FROM user_credits');
+            
+            res.json({
+                success: true,
+                before: {
+                    users_table: parseInt(usersInUsersTable.rows[0].count),
+                    credits_table: parseInt(usersInCreditsTable.rows[0].count),
+                    usage_logs: parseInt(uniqueInLogs.rows[0].count)
+                },
+                synced: syncedCount,
+                after: {
+                    total_users: parseInt(finalCount.rows[0].count)
+                }
+            });
+
+        } finally {
+            client.release();
+        }
+        
+    } catch (error) {
+        console.error('Sync users error:', error);
+        res.status(500).json({ error: 'Failed to sync users' });
+    }
+});
+
 // Health check endpoint for Railway
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy' });
