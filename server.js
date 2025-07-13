@@ -676,6 +676,27 @@ res.json({
     } catch (error) {
         console.error('❌ Chat error:', error);
         
+        // Handle specific error types
+        if (error.message && error.message.includes('รูปภาพที่อัพโหลดไม่รองรับ')) {
+            return res.status(400).json({
+                success: false,
+                error: 'รูปภาพไม่รองรับ',
+                details: error.message,
+                userMessage: '❌ รูปภาพที่อัพโหลดไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP เท่านั้น'
+            });
+        }
+        
+        // Handle invalid image format error from OpenAI
+        if (error.message && (error.message.includes('invalid_image_format') || 
+            error.message.includes('unsupported image'))) {
+            return res.status(400).json({
+                success: false,
+                error: 'รูปภาพไม่รองรับ',
+                details: 'รูปภาพที่อัพโหลดมีรูปแบบที่ไม่รองรับ',
+                userMessage: '❌ รูปภาพไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP เท่านั้น'
+            });
+        }
+        
         // Handle thread errors
         if (error.message && (error.message.includes('thread') || 
             error.message.includes('Thread') ||
@@ -692,18 +713,22 @@ res.json({
             });
             
             return res.status(500).json({ 
+                success: false,
                 error: 'Session expired. Please try again.',
                 details: 'กรุณาลองส่งข้อความใหม่อีกครั้ง',
+                userMessage: '⚠️ Session หมดอายุ กรุณาลองใหม่อีกครั้ง',
                 shouldRetry: true,
                 clearThread: true
             });
         }
         
+        // Generic error
         res.status(500).json({ 
-    success: false,  // เพิ่ม
-    error: 'Failed to generate response',
-    details: error.message
-});
+            success: false,
+            error: 'Failed to generate response',
+            details: error.message,
+            userMessage: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
+        });
     }
 });
 

@@ -33,9 +33,23 @@ async function addMessage(threadId, content, images = [], openaiClient = null) {
                 }
             ];
             
-            // Add each image URL
+            // Add each image URL with validation
             for (const img of images) {
                 if (img.url) {
+                    // Validate image format
+                    const supportedFormats = ['png', 'jpeg', 'jpg', 'gif', 'webp'];
+                    const urlLower = img.url.toLowerCase();
+                    const hasValidFormat = supportedFormats.some(format => 
+                        urlLower.includes(`.${format}`) || 
+                        urlLower.includes(`/${format}`) ||
+                        urlLower.includes(`format=${format}`)
+                    );
+                    
+                    if (!hasValidFormat) {
+                        console.warn('⚠️ Unsupported image format, skipping:', img.url);
+                        continue;
+                    }
+                    
                     messageContent.push({
                         type: "image_url",
                         image_url: { 
@@ -103,6 +117,13 @@ async function runAssistant(threadId, assistantId, openaiClient = null) {
             }
         } else {
             console.error('Run failed:', run.status, run.last_error);
+            
+            // Handle specific error codes
+            if (run.last_error && run.last_error.code === 'invalid_image_format') {
+                throw new Error('รูปภาพที่อัพโหลดไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP');
+            }
+            
+            // Generic error
             throw new Error(`Run failed with status: ${run.status}`);
         }
     } catch (error) {

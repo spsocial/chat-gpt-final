@@ -3255,8 +3255,9 @@ async function sendChatMessage(message) {
                 addMessage(`❌ ${data.message || 'Daily limit exceeded'}`, 'assistant');
             }
         } else {
-            // Error อื่นๆ
-            addMessage(`❌ เกิดข้อผิดพลาด: ${data.error || 'Failed to send message'}`, 'assistant');
+            // Error อื่นๆ - แสดง userMessage ถ้ามี
+            const errorMsg = data.userMessage || `❌ เกิดข้อผิดพลาด: ${data.error || 'Failed to send message'}`;
+            addMessage(errorMsg, 'assistant');
         }
         
     } catch (error) {
