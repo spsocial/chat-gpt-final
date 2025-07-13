@@ -694,12 +694,18 @@ async function getUserAnalytics(startDate, endDate) {
             dateFilter += ` AND uc.last_updated <= $${params.length}`;
         }
 
-        // Get all users from user_credits table
+        // Get all unique users from all sources
         const allUsers = await pool.query(`
-            SELECT DISTINCT user_id FROM user_credits
+            SELECT COUNT(DISTINCT user_id) as count FROM (
+                SELECT user_id FROM user_credits
+                UNION
+                SELECT user_id FROM users
+                UNION
+                SELECT DISTINCT user_id FROM usage_logs
+            ) all_users
         `);
 
-        const totalUsers = allUsers.rows.length;
+        const totalUsers = parseInt(allUsers.rows[0].count);
 
         // Get active users (have usage logs)
         const activeUsers = await pool.query(`
@@ -796,7 +802,7 @@ async function getTopUsers(startDate, endDate, limit = 20) {
                 ), 0) as total_paid_credits,
                 MAX(ul.created_at) as last_usage
             FROM user_credits uc
-            LEFT JOIN usage_logs ul ON uc.user_id = ul.user_id ${dateFilter.replace('ul.', 'AND ul.')}
+            LEFT JOIN usage_logs ul ON uc.user_id = ul.user_id ${dateFilter}
             WHERE EXISTS (
                 SELECT 1 FROM usage_logs ul2 
                 WHERE ul2.user_id = uc.user_id
