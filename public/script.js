@@ -839,10 +839,18 @@ function showCreditRequiredMessage(data) {
 
 // ========== GOOGLE AUTH FUNCTIONS ==========
 async function handleGoogleSignIn(response) {
-    console.log('Google Sign-In response received');
+    console.log('Google Sign-In response received:', response);
+    
+    // Check if response has credential
+    if (!response || !response.credential) {
+        console.error('No credential in response:', response);
+        showNotification('❌ ไม่ได้รับข้อมูลจาก Google', 'error');
+        return;
+    }
     
     try {
         const currentUserId = ensureUserId();
+        console.log('Current userId before login:', currentUserId);
         
         // Send token to backend
         const res = await fetch('/api/auth/google', {
@@ -856,7 +864,9 @@ async function handleGoogleSignIn(response) {
             })
         });
         
+        console.log('Auth response status:', res.status);
         const data = await res.json();
+        console.log('Auth response data:', data);
         
         if (data.success) {
             // Store user info
@@ -951,15 +961,68 @@ function updateCreditsDisplay() {
     loadTotalPurchasedCredits();
 }
 
-// Make functions global
+// Make functions global (MUST be before DOMContentLoaded)
 window.handleGoogleSignIn = handleGoogleSignIn;
 window.signOut = signOut;
+
+// Debug: Verify function is accessible
+console.log('handleGoogleSignIn function registered:', typeof window.handleGoogleSignIn);
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', async () => {
     // Get or generate user ID using ensureUserId และอัพเดท global
     userId = ensureUserId();
     updateAuthUI();
+    
+    // Initialize Google Sign-In with retry
+    let retryCount = 0;
+    const maxRetries = 10;
+    
+    const initializeGoogleSignIn = () => {
+        if (window.google && window.google.accounts && window.google.accounts.id) {
+            console.log('✅ Google Sign-In library loaded successfully');
+            try {
+                window.google.accounts.id.initialize({
+                    client_id: '1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com',
+                    callback: window.handleGoogleSignIn,
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+                
+                // Render the sign-in button
+                const buttonContainer = document.querySelector('.g_id_signin');
+                if (buttonContainer) {
+                    window.google.accounts.id.renderButton(
+                        buttonContainer,
+                        { 
+                            theme: 'filled_blue',
+                            size: 'medium',
+                            width: '200',
+                            text: 'signin_with',
+                            shape: 'rectangular',
+                            logo_alignment: 'left'
+                        }
+                    );
+                    console.log('✅ Google Sign-In button rendered');
+                } else {
+                    console.error('❌ Button container not found');
+                }
+            } catch (error) {
+                console.error('❌ Error initializing Google Sign-In:', error);
+            }
+        } else {
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log(`⏳ Waiting for Google Sign-In library... (attempt ${retryCount}/${maxRetries})`);
+                setTimeout(initializeGoogleSignIn, 500);
+            } else {
+                console.error('❌ Google Sign-In library failed to load after maximum retries');
+            }
+        }
+    };
+    
+    // Start initialization
+    initializeGoogleSignIn();
     
     document.addEventListener('change', (e) => {
         if (e.target.name === 'imageModel' || e.target.name === 'mobileImageModel') {
