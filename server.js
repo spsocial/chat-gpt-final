@@ -80,8 +80,18 @@ try {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust proxy (for Railway and other cloud platforms)
-app.set('trust proxy', true);
+// Trust proxy configuration
+// For Railway: trust the first proxy
+// For local development: no proxy
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+    // In production (Railway), trust the proxy
+    app.set('trust proxy', 1); // Trust first proxy
+    console.log('🔒 Trust proxy enabled for production');
+} else {
+    // In development, don't trust proxy
+    app.set('trust proxy', false);
+    console.log('🔓 Trust proxy disabled for development');
+}
 
 // Settings
 const DAILY_LIMIT_THB = 5.0;  // 5 บาท/คน/วัน
@@ -115,24 +125,64 @@ app.use(helmet({
     contentSecurityPolicy: false // ปิด CSP ไว้ก่อน เพราะทำให้ inline scripts ไม่ทำงาน
 }));
 
-// Rate limiting
+// Rate limiting with custom key generator
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 500, // เพิ่มจาก 100 เป็น 500 requests
-    message: 'Too many requests from this IP, please try again later.'
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Custom key generator to handle trust proxy properly
+    keyGenerator: (req) => {
+        // Only use forwarded headers if trust proxy is enabled
+        if (app.get('trust proxy')) {
+            return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
+                   req.socket.remoteAddress || 
+                   'unknown';
+        }
+        // In development, use direct IP
+        return req.socket.remoteAddress || 'unknown';
+    },
+    handler: (req, res) => {
+        res.status(429).json({
+            error: 'Too many requests',
+            message: 'Please try again later',
+            retryAfter: Math.round(req.rateLimit.resetTime / 1000) || 60
+        });
+    }
 });
 
 // Stricter rate limit for usage/credits endpoints
 const usageLimiter = rateLimit({
     windowMs: 1 * 60 * 1000, // 1 minute
     max: 200, // 200 requests per minute (รองรับ ~100 users)
-    message: 'Too many usage requests, please try again later.'
+    message: 'Too many usage requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        if (app.get('trust proxy')) {
+            return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
+                   req.socket.remoteAddress || 
+                   'unknown';
+        }
+        return req.socket.remoteAddress || 'unknown';
+    }
 });
 
 const strictLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 10, // limit each IP to 10 requests per windowMs for sensitive endpoints
-    message: 'Too many requests from this IP, please try again later.'
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => {
+        if (app.get('trust proxy')) {
+            return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
+                   req.socket.remoteAddress || 
+                   'unknown';
+        }
+        return req.socket.remoteAddress || 'unknown';
+    }
 });
 
 // Middleware
