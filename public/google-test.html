@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sign-In Test</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <h1>Google Sign-In Test Page</h1>
+    <p>Current Origin: <span id="origin"></span></p>
+    
+    <!-- Google Sign-In Button -->
+    <div id="g_id_onload"
+         data-client_id="1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com"
+         data-callback="handleCredentialResponse"
+         data-auto_prompt="false">
+    </div>
+    <div class="g_id_signin"
+         data-type="standard"
+         data-size="large"
+         data-theme="outline"
+         data-text="sign_in_with"
+         data-shape="rectangular"
+         data-logo_alignment="left">
+    </div>
+    
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none;">
+        <h3>Result:</h3>
+        <pre id="resultContent"></pre>
+    </div>
+    
+    <script>
+        // Show current origin
+        document.getElementById('origin').textContent = window.location.origin;
+        
+        function handleCredentialResponse(response) {
+            console.log("Encoded JWT ID token: " + response.credential);
+            
+            // Show result
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('resultContent').textContent = 'Success! Token received:\n' + response.credential.substring(0, 50) + '...';
+            
+            // Decode JWT to show user info
+            const parts = response.credential.split('.');
+            const payload = JSON.parse(atob(parts[1]));
+            console.log('User info:', payload);
+            
+            document.getElementById('resultContent').textContent += '\n\nUser: ' + payload.email;
+        }
+        
+        window.onload = function () {
+            console.log('Google library loaded, initializing...');
+            google.accounts.id.initialize({
+                client_id: '1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com',
+                callback: handleCredentialResponse
+            });
+            google.accounts.id.renderButton(
+                document.querySelector('.g_id_signin'),
+                { theme: 'outline', size: 'large' }
+            );
+        };
+    </script>
+</body>
+</html>
