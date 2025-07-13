@@ -694,15 +694,9 @@ async function getUserAnalytics(startDate, endDate) {
             dateFilter += ` AND uc.last_updated <= $${params.length}`;
         }
 
-        // Get all unique users from all sources
+        // Get all unique users from all sources - count from user_credits only for now
         const allUsers = await pool.query(`
-            SELECT COUNT(DISTINCT user_id) as count FROM (
-                SELECT user_id FROM user_credits
-                UNION
-                SELECT user_id FROM users
-                UNION
-                SELECT DISTINCT user_id FROM usage_logs
-            ) all_users
+            SELECT COUNT(DISTINCT user_id) as count FROM user_credits
         `);
 
         const totalUsers = parseInt(allUsers.rows[0].count);
