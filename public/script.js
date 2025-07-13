@@ -981,12 +981,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const initializeGoogleSignIn = () => {
         if (window.google && window.google.accounts && window.google.accounts.id) {
             console.log('✅ Google Sign-In library loaded successfully');
+            console.log('Current origin:', window.location.origin);
             try {
                 window.google.accounts.id.initialize({
                     client_id: '1062109975739-avasict57nmucjds54qp4etmv24g49ue.apps.googleusercontent.com',
                     callback: window.handleGoogleSignIn,
                     auto_select: false,
-                    cancel_on_tap_outside: true
+                    cancel_on_tap_outside: true,
+                    ux_mode: 'popup',
+                    context: 'signin',
+                    itp_support: true
                 });
                 
                 // Render the sign-in button
