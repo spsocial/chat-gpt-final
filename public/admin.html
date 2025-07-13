@@ -414,8 +414,11 @@
             <p style="color: #a78bfa;">จัดการเครดิตและดูรายงานรายได้</p>
         </div>
         
-        <!-- Revenue Dashboard Toggle -->
-        <button class="dashboard-toggle" onclick="toggleDashboard()">📊 แสดงแดชบอร์ดรายได้</button>
+        <!-- Dashboard Toggles -->
+        <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+            <button class="dashboard-toggle" onclick="toggleDashboard()">📊 แสดงแดชบอร์ดรายได้</button>
+            <button class="dashboard-toggle" onclick="toggleUserAnalytics()">👥 แสดง User Analytics</button>
+        </div>
         
         <!-- Revenue Dashboard (Initially Hidden) -->
         <div id="revenueDashboard" class="dashboard-container" style="display: none;">
@@ -462,6 +465,71 @@
                 <div class="recent-transactions">
                     <h3 style="margin-bottom: 16px; font-family: 'Kanit', sans-serif; color: #a78bfa;">🕔 รายการเติมเครดิตล่าสุด</h3>
                     <div id="recentTransactionsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- User Analytics Dashboard (Initially Hidden) -->
+        <div id="userAnalyticsDashboard" class="dashboard-container" style="display: none;">
+            <h2 style="margin-bottom: 24px; text-align: center; color: #a78bfa;">👥 User Analytics</h2>
+            
+            <!-- Date Filter -->
+            <div style="display: flex; gap: 12px; margin-bottom: 24px; align-items: center;">
+                <label style="color: #a1a1aa; margin: 0;">จาก:</label>
+                <input type="date" id="startDate" style="width: auto; background: #262626;">
+                <label style="color: #a1a1aa; margin: 0;">ถึง:</label>
+                <input type="date" id="endDate" style="width: auto; background: #262626;">
+                <button class="submit-btn" style="width: auto; padding: 12px 24px;" onclick="loadUserAnalytics()">🔍 ค้นหา</button>
+                <button class="submit-btn" style="width: auto; padding: 12px 24px; background: #666;" onclick="clearDateFilter()">🔄 ล้าง</button>
+            </div>
+            
+            <!-- User Summary Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>👥 ผู้ใช้ทั้งหมด</h3>
+                    <div class="value" id="totalUsers">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>✅ ผู้ใช้ที่ Active</h3>
+                    <div class="value" id="activeUsers">0</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">เคยใช้งาน</div>
+                </div>
+                <div class="stat-card">
+                    <h3>💰 ผู้ใช้ที่เติมเงิน</h3>
+                    <div class="value" id="paidUsers">0</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">เคยเติมเครดิต</div>
+                </div>
+                <div class="stat-card">
+                    <h3>😴 ผู้ใช้ที่ไม่ Active</h3>
+                    <div class="value" id="inactiveUsers">0</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 4px;">ยังไม่เคยใช้งาน</div>
+                </div>
+            </div>
+            
+            <!-- User Categories Tabs -->
+            <div class="chart-tabs" style="margin-bottom: 20px;">
+                <button class="chart-tab active" onclick="filterUserCategory('all')">ทั้งหมด</button>
+                <button class="chart-tab" onclick="filterUserCategory('paid')">เคยเติมเงิน</button>
+                <button class="chart-tab" onclick="filterUserCategory('active')">เคยใช้งาน</button>
+                <button class="chart-tab" onclick="filterUserCategory('inactive')">ยังไม่เคยใช้งาน</button>
+            </div>
+            
+            <!-- Users List -->
+            <div style="background: #262626; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                <h3 style="margin-bottom: 16px; color: #a78bfa;">📋 รายชื่อผู้ใช้</h3>
+                <div id="usersList" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Users will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Top 20 Users -->
+            <div style="background: #262626; border-radius: 12px; padding: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="color: #a78bfa;">🏆 Top 20 ผู้ใช้ที่ใช้เครดิตมากที่สุด</h3>
+                    <button class="submit-btn" style="width: auto; padding: 8px 16px; font-size: 14px;" onclick="loadTopUsers()">โหลด Top Users</button>
+                </div>
+                <div id="topUsersList">
+                    <!-- Top users will be populated here -->
                 </div>
             </div>
         </div>
@@ -981,6 +1049,208 @@
                 loadRevenueData();
             }
         }, 30000);
+        
+        // User Analytics Functions
+        let userAnalyticsData = null;
+        let currentUserFilter = 'all';
+        
+        function toggleUserAnalytics() {
+            const dashboard = document.getElementById('userAnalyticsDashboard');
+            const button = event.target;
+            
+            if (dashboard.style.display === 'none') {
+                dashboard.style.display = 'block';
+                button.textContent = '👥 ซ่อน User Analytics';
+                if (!userAnalyticsData) {
+                    loadUserAnalytics();
+                }
+            } else {
+                dashboard.style.display = 'none';
+                button.textContent = '👥 แสดง User Analytics';
+            }
+        }
+        
+        async function loadUserAnalytics() {
+            if (!isAuthenticated) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                return;
+            }
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            let url = '/api/admin/user-analytics?';
+            if (startDate) url += `startDate=${startDate}&`;
+            if (endDate) url += `endDate=${endDate}`;
+            
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Admin-Key': adminKeyStored || localStorage.getItem('adminKey')
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load user analytics');
+                }
+                
+                userAnalyticsData = await response.json();
+                updateUserStats();
+                displayUsers();
+                
+            } catch (error) {
+                console.error('Error loading user analytics:', error);
+                alert('ไม่สามารถโหลดข้อมูล User Analytics ได้');
+            }
+        }
+        
+        function updateUserStats() {
+            document.getElementById('totalUsers').textContent = userAnalyticsData.summary.totalUsers.toLocaleString();
+            document.getElementById('activeUsers').textContent = userAnalyticsData.summary.activeUsers.toLocaleString();
+            document.getElementById('paidUsers').textContent = userAnalyticsData.summary.paidUsers.toLocaleString();
+            document.getElementById('inactiveUsers').textContent = userAnalyticsData.summary.inactiveUsers.toLocaleString();
+        }
+        
+        function filterUserCategory(category) {
+            currentUserFilter = category;
+            document.querySelectorAll('.chart-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            displayUsers();
+        }
+        
+        function displayUsers() {
+            const container = document.getElementById('usersList');
+            container.innerHTML = '';
+            
+            let filteredUsers = userAnalyticsData.users;
+            if (currentUserFilter !== 'all') {
+                filteredUsers = userAnalyticsData.users.filter(user => user.category === currentUserFilter);
+            }
+            
+            if (filteredUsers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">ไม่พบผู้ใช้ในหมวดหมู่นี้</div>';
+                return;
+            }
+            
+            filteredUsers.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #333;';
+                
+                const categoryColor = {
+                    'paid': '#10b981',
+                    'active': '#3b82f6', 
+                    'inactive': '#6b7280'
+                };
+                
+                const categoryText = {
+                    'paid': '💰 เคยเติมเงิน',
+                    'active': '✅ Active',
+                    'inactive': '😴 Inactive'
+                };
+                
+                userItem.innerHTML = `
+                    <div style="flex: 1;">
+                        <div style="color: #fff; font-weight: 500;">${user.user_id}</div>
+                        <div style="font-size: 12px; color: #666;">
+                            สมัคร: ${new Date(user.created_at).toLocaleDateString('th-TH')} | 
+                            ใช้งาน: ${user.usage_count} ครั้ง
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: ${categoryColor[user.category]}; font-size: 14px;">
+                            ${categoryText[user.category]}
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            เครดิต: ${user.current_credits} | 
+                            ${user.total_paid_credits > 0 ? `เติมแล้ว: ${user.total_paid_credits}` : ''}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(userItem);
+            });
+        }
+        
+        async function loadTopUsers() {
+            if (!isAuthenticated) {
+                alert('กรุณาเข้าสู่ระบบก่อน');
+                return;
+            }
+            
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            let url = '/api/admin/top-users?limit=20';
+            if (startDate) url += `&startDate=${startDate}`;
+            if (endDate) url += `&endDate=${endDate}`;
+            
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Admin-Key': adminKeyStored || localStorage.getItem('adminKey')
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load top users');
+                }
+                
+                const data = await response.json();
+                displayTopUsers(data.topUsers);
+                
+            } catch (error) {
+                console.error('Error loading top users:', error);
+                alert('ไม่สามารถโหลดข้อมูล Top Users ได้');
+            }
+        }
+        
+        function displayTopUsers(topUsers) {
+            const container = document.getElementById('topUsersList');
+            container.innerHTML = '';
+            
+            if (topUsers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">ยังไม่มีข้อมูลผู้ใช้</div>';
+                return;
+            }
+            
+            topUsers.forEach((user, index) => {
+                const userItem = document.createElement('div');
+                userItem.className = 'spender-item';
+                
+                const medalEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                
+                userItem.innerHTML = `
+                    <div class="spender-info">
+                        <div class="spender-rank">${index + 1}${medalEmoji}</div>
+                        <div class="spender-details">
+                            <div class="user-id">${user.user_id}</div>
+                            <div class="payment-count">
+                                ใช้งาน: ${user.total_usage_count} ครั้ง | 
+                                เติมเงิน: ฿${user.total_paid_credits}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="spender-amount" style="color: #ec4899;">
+                            ${user.total_credits_used.toLocaleString()} เครดิต
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                            คงเหลือ: ${user.current_credits}
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(userItem);
+            });
+        }
+        
+        function clearDateFilter() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            loadUserAnalytics();
+        }
         
         // Check API Status
         async function checkAPIStatus() {

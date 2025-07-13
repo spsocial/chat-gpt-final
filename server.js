@@ -1482,6 +1482,69 @@ app.post('/api/generate-qr', async (req, res) => {
     }
 });
 
+// User Analytics endpoints
+app.get('/api/admin/user-analytics', checkAdminAuth, async (req, res) => {
+    try {
+        if (!db || !db.pool) {
+            // Return mock data for local testing
+            return res.json({
+                summary: {
+                    totalUsers: 150,
+                    activeUsers: 85,
+                    paidUsers: 25,
+                    inactiveUsers: 65
+                },
+                users: [
+                    { user_id: 'user_test1', created_at: '2024-01-15', current_credits: 50, category: 'paid', usage_count: 45, total_paid_credits: 150 },
+                    { user_id: 'user_test2', created_at: '2024-01-20', current_credits: 10, category: 'active', usage_count: 12, total_paid_credits: 0 },
+                    { user_id: 'user_test3', created_at: '2024-02-01', current_credits: 5, category: 'inactive', usage_count: 0, total_paid_credits: 0 },
+                    { user_id: 'user_demo1', created_at: '2024-02-10', current_credits: 100, category: 'paid', usage_count: 78, total_paid_credits: 300 },
+                    { user_id: 'user_demo2', created_at: '2024-02-15', current_credits: 0, category: 'active', usage_count: 5, total_paid_credits: 0 }
+                ]
+            });
+        }
+
+        const { startDate, endDate } = req.query;
+        const analytics = await db.getUserAnalytics(startDate, endDate);
+        res.json(analytics);
+        
+    } catch (error) {
+        console.error('User analytics error:', error);
+        res.status(500).json({ error: 'Failed to get user analytics' });
+    }
+});
+
+// Top users endpoint
+app.get('/api/admin/top-users', checkAdminAuth, async (req, res) => {
+    try {
+        if (!db || !db.pool) {
+            // Return mock data for local testing
+            return res.json({
+                topUsers: [
+                    { user_id: 'user_king1', user_created_at: '2024-01-01', current_credits: 500, total_usage_count: 250, total_credits_used: 1500, total_paid_credits: 1000, last_usage: '2024-03-15' },
+                    { user_id: 'user_pro2', user_created_at: '2024-01-05', current_credits: 200, total_usage_count: 180, total_credits_used: 1200, total_paid_credits: 800, last_usage: '2024-03-14' },
+                    { user_id: 'user_vip3', user_created_at: '2024-01-10', current_credits: 150, total_usage_count: 150, total_credits_used: 1000, total_paid_credits: 600, last_usage: '2024-03-13' },
+                    { user_id: 'user_gold4', user_created_at: '2024-01-15', current_credits: 100, total_usage_count: 120, total_credits_used: 800, total_paid_credits: 500, last_usage: '2024-03-12' },
+                    { user_id: 'user_silver5', user_created_at: '2024-01-20', current_credits: 50, total_usage_count: 100, total_credits_used: 600, total_paid_credits: 400, last_usage: '2024-03-11' }
+                ],
+                limit: 20
+            });
+        }
+
+        const { startDate, endDate, limit = 20 } = req.query;
+        const topUsers = await db.getTopUsers(startDate, endDate, parseInt(limit));
+        
+        res.json({
+            topUsers: topUsers,
+            limit: parseInt(limit)
+        });
+        
+    } catch (error) {
+        console.error('Top users error:', error);
+        res.status(500).json({ error: 'Failed to get top users' });
+    }
+});
+
 // Health check endpoint for Railway
 app.get('/health', (req, res) => {
     res.json({ status: 'healthy' });

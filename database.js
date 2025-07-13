@@ -679,6 +679,140 @@ async function getPaymentByRef(transactionRef) {
     }
 }
 
+// Get user analytics for admin
+async function getUserAnalytics(startDate, endDate) {
+    try {
+        let dateFilter = '';
+        const params = [];
+        
+        if (startDate) {
+            params.push(startDate);
+            dateFilter += ` AND uc.last_updated >= $${params.length}`;
+        }
+        if (endDate) {
+            params.push(endDate);
+            dateFilter += ` AND uc.last_updated <= $${params.length}`;
+        }
+
+        // Get all users from user_credits table
+        const allUsers = await pool.query(`
+            SELECT DISTINCT user_id FROM user_credits
+        `);
+
+        const totalUsers = allUsers.rows.length;
+
+        // Get active users (have usage logs)
+        const activeUsers = await pool.query(`
+            SELECT COUNT(DISTINCT user_id) as count
+            FROM usage_logs
+        `);
+
+        // Get paid users
+        const paidUsers = await pool.query(`
+            SELECT COUNT(DISTINCT user_id) as count
+            FROM credit_transactions
+            WHERE type = 'ADD'
+            AND (description LIKE '%ชำระ%' OR description LIKE '%Payment%')
+        `);
+
+        // Get detailed user list
+        const userList = await pool.query(`
+            SELECT 
+                uc.user_id,
+                uc.last_updated as created_at,
+                uc.credits as current_credits,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM credit_transactions ct
+                        WHERE ct.user_id = uc.user_id 
+                        AND ct.type = 'ADD'
+                        AND (ct.description LIKE '%ชำระ%' OR ct.description LIKE '%Payment%')
+                    ) THEN 'paid'
+                    WHEN EXISTS (
+                        SELECT 1 FROM usage_logs ul
+                        WHERE ul.user_id = uc.user_id
+                    ) THEN 'active'
+                    ELSE 'inactive'
+                END as category,
+                (
+                    SELECT COUNT(*) FROM usage_logs ul
+                    WHERE ul.user_id = uc.user_id
+                ) as usage_count,
+                (
+                    SELECT COALESCE(SUM(amount), 0) 
+                    FROM credit_transactions ct
+                    WHERE ct.user_id = uc.user_id 
+                    AND ct.type = 'ADD'
+                    AND (ct.description LIKE '%ชำระ%' OR ct.description LIKE '%Payment%')
+                ) as total_paid_credits
+            FROM user_credits uc
+            WHERE 1=1 ${dateFilter}
+            ORDER BY uc.last_updated DESC
+        `, params);
+
+        return {
+            summary: {
+                totalUsers: totalUsers,
+                activeUsers: parseInt(activeUsers.rows[0].count),
+                paidUsers: parseInt(paidUsers.rows[0].count),
+                inactiveUsers: totalUsers - parseInt(activeUsers.rows[0].count)
+            },
+            users: userList.rows
+        };
+    } catch (error) {
+        console.error('Error in getUserAnalytics:', error);
+        throw error;
+    }
+}
+
+// Get top users by credit usage
+async function getTopUsers(startDate, endDate, limit = 20) {
+    try {
+        let dateFilter = '';
+        const params = [limit];
+        
+        if (startDate) {
+            params.push(startDate);
+            dateFilter += ` AND ul.created_at >= $${params.length}`;
+        }
+        if (endDate) {
+            params.push(endDate);
+            dateFilter += ` AND ul.created_at <= $${params.length}`;
+        }
+
+        const result = await pool.query(`
+            SELECT 
+                uc.user_id,
+                uc.last_updated as user_created_at,
+                uc.credits as current_credits,
+                COUNT(ul.id) as total_usage_count,
+                COALESCE(SUM(ul.cost), 0) as total_credits_used,
+                COALESCE((
+                    SELECT SUM(amount) 
+                    FROM credit_transactions ct
+                    WHERE ct.user_id = uc.user_id 
+                    AND ct.type = 'ADD'
+                    AND (ct.description LIKE '%ชำระ%' OR ct.description LIKE '%Payment%')
+                ), 0) as total_paid_credits,
+                MAX(ul.created_at) as last_usage
+            FROM user_credits uc
+            LEFT JOIN usage_logs ul ON uc.user_id = ul.user_id ${dateFilter.replace('ul.', 'AND ul.')}
+            WHERE EXISTS (
+                SELECT 1 FROM usage_logs ul2 
+                WHERE ul2.user_id = uc.user_id
+            )
+            GROUP BY uc.user_id, uc.last_updated, uc.credits
+            ORDER BY total_credits_used DESC
+            LIMIT $1
+        `, params);
+
+        return result.rows;
+    } catch (error) {
+        console.error('Error in getTopUsers:', error);
+        throw error;
+    }
+}
+
 // อย่าลืม export!
 module.exports = {
     pool,
@@ -706,6 +840,9 @@ module.exports = {
     // เพิ่ม payment verification functions
     savePaymentVerification,
     checkDuplicatePayment,
-    getPaymentByRef
+    getPaymentByRef,
+    // เพิ่ม user analytics functions
+    getUserAnalytics,
+    getTopUsers
 };
 
