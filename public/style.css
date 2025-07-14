@@ -2111,6 +2111,378 @@
         display: none !important;
     }
 }
+
+/* Tutorial Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background-color: var(--surface);
+    margin: 5% auto;
+    padding: 0;
+    border: 1px solid var(--border);
+    width: 90%;
+    max-width: 900px;
+    border-radius: 20px;
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal .close {
+    color: var(--text-secondary);
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    z-index: 10;
+}
+
+.modal .close:hover,
+.modal .close:focus {
+    color: var(--text);
+}
+
+.tutorial-modal {
+    max-width: 900px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 32px;
+}
+
+.tutorial-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    color: var(--text);
+}
+
+.tutorial-tabs {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+}
+
+.tab-button {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 12px 24px;
+    font-size: 16px;
+    font-family: 'Kanit', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-button:hover {
+    color: var(--text);
+}
+
+.tab-button.active {
+    color: var(--primary);
+}
+
+.tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary);
+}
+
+.tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+.technique-section {
+    margin-bottom: 32px;
+}
+
+.technique-section h3 {
+    color: var(--primary);
+    margin-bottom: 16px;
+    font-size: 20px;
+}
+
+.technique-card {
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.technique-card h4 {
+    color: var(--text);
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+.technique-card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.example-box {
+    background: rgba(147, 51, 234, 0.1);
+    border: 1px solid rgba(147, 51, 234, 0.3);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+    font-family: monospace;
+}
+
+.tip {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.technique-list {
+    list-style: none;
+    padding-left: 20px;
+}
+
+.technique-list li {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.technique-list li::before {
+    content: '•';
+    color: var(--primary);
+    position: absolute;
+    left: -20px;
+    font-weight: bold;
+}
+
+.warning-card {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+}
+
+.warning-card h4 {
+    color: #ef4444;
+    margin-bottom: 16px;
+}
+
+.problem-list {
+    padding-left: 20px;
+    color: var(--text-secondary);
+}
+
+.problem-list li {
+    margin-bottom: 16px;
+}
+
+.problem-list li strong {
+    color: var(--text);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.solution-card {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.solution-card h4 {
+    color: #10b981;
+    margin-bottom: 12px;
+}
+
+.solution-list {
+    list-style: none;
+    padding-left: 20px;
+}
+
+.solution-list li {
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.solution-list li::before {
+    content: '✓';
+    color: #10b981;
+    position: absolute;
+    left: -20px;
+    font-weight: bold;
+}
+
+/* Video Tab Styles */
+.video-list {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.video-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.video-item:hover {
+    background: rgba(147, 51, 234, 0.1);
+    border-color: var(--primary);
+    transform: translateX(4px);
+}
+
+.video-thumbnail {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+.video-info h4 {
+    color: var(--text);
+    margin-bottom: 4px;
+    font-size: 16px;
+}
+
+.video-info p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.video-player-wrapper {
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 24px;
+}
+
+/* Tutorial Button Animation */
+.tutorial-button {
+    animation: pulse 2s infinite;
+}
+
+.tutorial-button .fab-icon svg {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Desktop Tutorial Button */
+.desktop-tutorial-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border: none;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-family: 'Kanit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(147, 51, 234, 0.25);
+}
+
+.desktop-tutorial-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.35);
+}
+
+.desktop-tutorial-btn svg {
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.3));
+}
+
+/* Hide desktop button on mobile */
+@media (max-width: 768px) {
+    .desktop-tutorial-btn {
+        display: none;
+    }
+}
+
+/* Hide FAB tutorial button on desktop */
+@media (min-width: 769px) {
+    .fab-item.tutorial-button {
+        display: none;
+    }
+}
+
+/* Desktop FAB Buttons Container */
+.desktop-fab-buttons {
+    display: none;
+}
+
+/* Show desktop FAB buttons only on desktop */
+@media (min-width: 769px) {
+    .desktop-fab-buttons {
+        display: block;
+    }
+}
+
+/* Hide desktop FAB buttons on mobile */
+@media (max-width: 768px) {
+    .desktop-fab-buttons {
+        display: none;
+    }
+}
 /* Quick Actions Bar */
 .quick-actions-bar {
     display: flex;
@@ -6374,7 +6746,7 @@ body.mode-character #characterTemplateButtonSection {
     bottom: 20px;
     right: 20px;
     z-index: 9999;
-    display: none;
+    display: none; /* ซ่อนเป็นค่าเริ่มต้น */
 }
 
 /* แสดงเฉพาะบนมือถือ */
