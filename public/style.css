@@ -500,6 +500,12 @@
             font-size: 12px;
             color: var(--text-secondary);
         }
+        
+        .character-actions {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
 
         .empty-library {
             text-align: center;

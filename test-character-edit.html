@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Character Edit</title>
+    <script>
+        // Test character edit functionality
+        const testCharacter = {
+            id: 'test_123',
+            name: 'Test Character',
+            profile: `📋 CHARACTER IDENTITY TEMPLATE
+
+👩‍🏫 **1. ชื่อเรียก / บทบาท (Nickname / Role)**
+- ชื่อเรียก: คุณครู
+- บทบาท: ครูสอนภาษาไทย
+
+🧑‍🎨 **2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**
+- เพศ: หญิง
+- อายุ: 30-35 ปี
+- เชื้อชาติ: ไทย`
+        };
+
+        function testParseCharacterProfile() {
+            console.log('Testing parseCharacterProfile...');
+            const parsed = parseCharacterProfile(testCharacter.profile);
+            console.log('Parsed result:', parsed);
+            
+            // Check if parsing worked
+            const expected = {
+                nickname: 'คุณครู',
+                role: 'ครูสอนภาษาไทย',
+                gender: 'หญิง',
+                age: '30-35 ปี',
+                ethnicity: 'ไทย'
+            };
+            
+            let passed = true;
+            for (const key in expected) {
+                if (parsed[key] !== expected[key]) {
+                    console.error(`❌ Failed: ${key} - expected "${expected[key]}", got "${parsed[key]}"`);
+                    passed = false;
+                } else {
+                    console.log(`✅ Passed: ${key} = "${parsed[key]}"`);
+                }
+            }
+            
+            return passed;
+        }
+
+        // Wait for script to load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (typeof parseCharacterProfile === 'function') {
+                    testParseCharacterProfile();
+                } else {
+                    console.error('parseCharacterProfile function not found!');
+                }
+            }, 1000);
+        });
+    </script>
+</head>
+<body>
+    <h1>Character Edit Test</h1>
+    <p>Check the console for test results.</p>
+    <script src="script.js"></script>
+</body>
+</html>

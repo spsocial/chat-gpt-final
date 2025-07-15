@@ -1550,9 +1550,14 @@ function displayCharacterLibrary() {
                 <div class="character-preview">${displayText}</div>
                 <div class="character-meta">
                     <span>Created: ${new Date(char.created_at).toLocaleDateString('en-US')}</span>
-                    <button onclick="deleteCharacter('${char.id}', event)" style="background: none; border: none; color: var(--error); cursor: pointer;">
-                        🗑️ Delete
-                    </button>
+                    <div class="character-actions">
+                        <button onclick="editCharacter(${index}, event)" style="background: none; border: none; color: var(--primary); cursor: pointer; margin-right: 10px;">
+                            ✏️ Edit
+                        </button>
+                        <button onclick="deleteCharacter('${char.id}', event)" style="background: none; border: none; color: var(--error); cursor: pointer;">
+                            🗑️ Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1718,6 +1723,445 @@ async function deleteCharacter(characterId, event) {
     } catch (error) {
         console.error('Error deleting character:', error);
     }
+}
+
+// Function to edit character
+function editCharacter(index, event) {
+    event.stopPropagation();
+    
+    const character = characterLibrary[index];
+    if (!character) return;
+    
+    // Debug: แสดงข้อมูล character
+    console.log('Editing character:', character);
+    
+    // Store character data for editing
+    window.editingCharacter = {
+        id: character.id,
+        name: character.name,
+        profile: character.profile || character.preview,
+        index: index
+    };
+    
+    // Parse profile to extract 8 sections
+    const profileData = parseCharacterProfile(character.profile || character.preview);
+    
+    // Open character template modal with existing data
+    showEditCharacterModal(profileData);
+}
+
+// Parse character profile to extract 8 sections
+function parseCharacterProfile(profile) {
+    if (!profile) return {};
+    
+    const sections = {
+        nickname: '',
+        gender: '',
+        body: '',
+        hair: '',
+        glasses: '',
+        clothing: '',
+        voice: '',
+        personality: ''
+    };
+    
+    // Split into lines and process
+    const lines = profile.split('\n');
+    let currentSection = '';
+    let sectionContent = [];
+    
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const nextLine = i + 1 < lines.length ? lines[i + 1].trim() : '';
+        
+        // Check for section headers
+        if (line.includes('👩‍🏫') || line.includes('1.') || 
+            line.toLowerCase().includes('nickname') || line.toLowerCase().includes('ชื่อเรียก')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'nickname';
+            sectionContent = [];
+            // ถ้าข้อมูลอยู่ในบรรทัดเดียวกัน
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('🧑‍🎨') || line.includes('2.') || 
+                 line.toLowerCase().includes('gender') || line.toLowerCase().includes('เพศ')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'gender';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('💃') || line.includes('3.') || 
+                 line.toLowerCase().includes('body') || line.toLowerCase().includes('รูปร่าง')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'body';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('💇') || line.includes('4.') || 
+                 line.toLowerCase().includes('hair') || line.toLowerCase().includes('ผม')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'hair';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('👓') || line.includes('5.') || 
+                 line.toLowerCase().includes('glasses') || line.toLowerCase().includes('แว่น')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'glasses';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('👗') || line.includes('6.') || 
+                 line.toLowerCase().includes('clothing') || line.toLowerCase().includes('เครื่องแต่งกาย')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'clothing';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('🎙️') || line.includes('7.') || 
+                 line.toLowerCase().includes('voice') || line.toLowerCase().includes('เสียง')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'voice';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (line.includes('💼') || line.includes('8.') || 
+                 line.toLowerCase().includes('personality') || line.toLowerCase().includes('บุคลิก')) {
+            if (currentSection && sectionContent.length > 0) {
+                sections[currentSection] = sectionContent.join(' ').trim();
+            }
+            currentSection = 'personality';
+            sectionContent = [];
+            if (line.includes(':')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts.slice(1).join(':').trim());
+                }
+            }
+        }
+        else if (currentSection && line && !line.includes('**') && !line.includes('==')) {
+            // Collect content for current section
+            if (line.startsWith('-') || line.startsWith('•')) {
+                sectionContent.push(line.substring(1).trim());
+            } else if (line.includes(':') && !line.includes('http')) {
+                const parts = line.split(':');
+                if (parts.length > 1) {
+                    sectionContent.push(parts[1].trim());
+                }
+            } else {
+                sectionContent.push(line);
+            }
+        }
+    }
+    
+    // Save last section
+    if (currentSection && sectionContent.length > 0) {
+        sections[currentSection] = sectionContent.join(' ').trim();
+    }
+    
+    // Debug: แสดงข้อมูลที่ parse ได้
+    console.log('Original profile:', profile);
+    console.log('Parsed sections:', sections);
+    
+    return sections;
+}
+
+// Show edit character modal
+function showEditCharacterModal(profileData) {
+    // ปิด library ก่อน
+    const library = document.getElementById('characterLibrary');
+    library.classList.remove('active');
+    
+    // เปิด character template modal
+    const modal = document.getElementById('characterTemplateModal');
+    modal.style.display = 'flex';
+    
+    // Update modal title
+    const modalTitle = modal.querySelector('h2');
+    modalTitle.textContent = '✏️ แก้ไขข้อมูลตัวละคร';
+    
+    // Clear all fields first
+    const fields = [
+        'charNickname', 'charRole', 'charGender', 'charAge', 'charEthnicity',
+        'charBody', 'charSkin', 'charPosture', 'charHair', 'charFace',
+        'charGlasses', 'charAccessories', 'charShirt', 'charJacket', 
+        'charPants', 'charShoes', 'charVoiceTone', 'charSpeechStyle',
+        'charConfidence', 'charCameraPresence', 'charStoryRole'
+    ];
+    
+    fields.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) elem.value = '';
+    });
+    
+    // Fill form with existing data (simple 8 fields version)
+    document.getElementById('charNickname').value = profileData.nickname || '';
+    document.getElementById('charGender').value = profileData.gender || '';
+    document.getElementById('charBody').value = profileData.body || '';
+    document.getElementById('charHair').value = profileData.hair || '';
+    document.getElementById('charGlasses').value = profileData.glasses || '';
+    document.getElementById('charClothing').value = profileData.clothing || '';
+    document.getElementById('charVoice').value = profileData.voice || '';
+    document.getElementById('charPersonality').value = profileData.personality || '';
+    
+    // หา action buttons div
+    const actionsDiv = modal.querySelector('.template-actions');
+    if (actionsDiv) {
+        // เปลี่ยนปุ่มเป็นปุ่มบันทึก
+        actionsDiv.innerHTML = `
+            <button class="generate-from-template-btn" onclick="saveEditedCharacter()">
+                💾 บันทึกการแก้ไข
+            </button>
+            <button class="cancel-btn" onclick="cancelEditCharacter()">
+                ยกเลิก
+            </button>
+        `;
+    }
+}
+
+// Save edited character
+function saveEditedCharacter() {
+    if (!window.editingCharacter) return;
+    
+    // Get form data - support both simple 8 fields and detailed fields
+    const nickname = document.getElementById('charNickname')?.value.trim() || '';
+    const role = document.getElementById('charRole')?.value.trim() || '';
+    
+    const gender = document.getElementById('charGender')?.value.trim() || '';
+    const age = document.getElementById('charAge')?.value.trim() || '';
+    const ethnicity = document.getElementById('charEthnicity')?.value.trim() || '';
+    
+    const body = document.getElementById('charBody')?.value.trim() || '';
+    const skin = document.getElementById('charSkin')?.value.trim() || '';
+    const posture = document.getElementById('charPosture')?.value.trim() || '';
+    
+    const hair = document.getElementById('charHair')?.value.trim() || '';
+    const face = document.getElementById('charFace')?.value.trim() || '';
+    
+    const glasses = document.getElementById('charGlasses')?.value.trim() || '';
+    const accessories = document.getElementById('charAccessories')?.value.trim() || '';
+    
+    const clothing = document.getElementById('charClothing')?.value.trim() || '';
+    const shirt = document.getElementById('charShirt')?.value.trim() || '';
+    const jacket = document.getElementById('charJacket')?.value.trim() || '';
+    const pants = document.getElementById('charPants')?.value.trim() || '';
+    const shoes = document.getElementById('charShoes')?.value.trim() || '';
+    
+    const voice = document.getElementById('charVoice')?.value.trim() || '';
+    const voiceTone = document.getElementById('charVoiceTone')?.value.trim() || '';
+    const speechStyle = document.getElementById('charSpeechStyle')?.value.trim() || '';
+    
+    const personality = document.getElementById('charPersonality')?.value.trim() || '';
+    const confidence = document.getElementById('charConfidence')?.value.trim() || '';
+    const cameraPresence = document.getElementById('charCameraPresence')?.value.trim() || '';
+    const storyRole = document.getElementById('charStoryRole')?.value.trim() || '';
+    
+    // Create updated profile - use detailed format if available, otherwise simple format
+    let updatedProfile = `📋 Character Identity Template\n\n`;
+    
+    // 1. Nickname/Role
+    updatedProfile += `1. 👩‍🏫 Nickname / Role: ${nickname}${role ? ' / ' + role : ''}\n`;
+    
+    // 2. Gender/Age/Ethnicity
+    updatedProfile += `2. 🧑‍🎨 Gender / Age / Ethnicity: ${gender}`;
+    if (age) updatedProfile += ` / ${age}`;
+    if (ethnicity) updatedProfile += ` / ${ethnicity}`;
+    updatedProfile += '\n';
+    
+    // 3. Body/Skin/Posture
+    updatedProfile += `3. 💃 Body / Skin / Posture: ${body}`;
+    if (skin) updatedProfile += ` / ${skin}`;
+    if (posture) updatedProfile += ` / ${posture}`;
+    updatedProfile += '\n';
+    
+    // 4. Hair/Face
+    updatedProfile += `4. 💇‍♀️ Hair / Face: ${hair}`;
+    if (face) updatedProfile += ` / ${face}`;
+    updatedProfile += '\n';
+    
+    // 5. Glasses/Accessories
+    updatedProfile += `5. 👓 Glasses / Accessories: ${glasses}`;
+    if (accessories) updatedProfile += ` / ${accessories}`;
+    updatedProfile += '\n';
+    
+    // 6. Clothing
+    updatedProfile += `6. 👗 Clothing: `;
+    if (clothing) {
+        updatedProfile += clothing;
+    } else if (shirt || jacket || pants || shoes) {
+        const clothingParts = [];
+        if (shirt) clothingParts.push(shirt);
+        if (jacket) clothingParts.push(jacket);
+        if (pants) clothingParts.push(pants);
+        if (shoes) clothingParts.push(shoes);
+        updatedProfile += clothingParts.join(' / ');
+    }
+    updatedProfile += '\n';
+    
+    // 7. Voice/Speech
+    updatedProfile += `7. 🎙️ Voice / Speech: ${voice}`;
+    if (voiceTone) updatedProfile += ` / ${voiceTone}`;
+    if (speechStyle) updatedProfile += ` / ${speechStyle}`;
+    updatedProfile += '\n';
+    
+    // 8. Personality
+    updatedProfile += `8. 💼 Personality: ${personality}`;
+    if (confidence) updatedProfile += ` / ${confidence}`;
+    if (cameraPresence) updatedProfile += ` / ${cameraPresence}`;
+    if (storyRole) updatedProfile += ` / ${storyRole}`;
+    
+    // Call updateCharacter with the formatted profile
+    window.tempUpdatedProfile = updatedProfile;
+    updateCharacter();
+}
+
+// Cancel edit character
+function cancelEditCharacter() {
+    // Close modal
+    closeCharacterTemplate();
+    
+    // Clear editing data
+    window.editingCharacter = null;
+    
+    // Restore original button
+    const modal = document.getElementById('characterTemplateModal');
+    const actionsDiv = modal.querySelector('.template-actions');
+    if (actionsDiv) {
+        actionsDiv.innerHTML = `
+            <button class="generate-from-template-btn" onclick="generateFromCharacterTemplate()">
+                ✨ สร้าง Character Profile
+            </button>
+        `;
+    }
+}
+
+// Update character
+async function updateCharacter() {
+    if (!window.editingCharacter) return;
+    
+    // Use the profile from saveEditedCharacter if available
+    const updatedProfile = window.tempUpdatedProfile || '';
+    
+    if (!updatedProfile) {
+        alert('กรุณากรอกข้อมูลตัวละคร');
+        return;
+    }
+    
+    // Show edit name dialog
+    const editNameModal = document.createElement('div');
+    editNameModal.className = 'modal';
+    editNameModal.style.display = 'block';
+    editNameModal.style.zIndex = '10001';
+    editNameModal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <h3>แก้ไขชื่อตัวละคร</h3>
+            <input type="text" id="editCharacterName" value="${window.editingCharacter.name}" 
+                   style="width: 100%; padding: 10px; margin: 10px 0; background: var(--surface-light); 
+                          border: 1px solid var(--border); color: var(--text); border-radius: 8px;">
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button onclick="this.closest('.modal').remove(); window.tempUpdatedProfile = null;" 
+                        style="padding: 10px 20px; background: var(--surface-light); 
+                               border: 1px solid var(--border); color: var(--text); 
+                               border-radius: 8px; cursor: pointer;">ยกเลิก</button>
+                <button onclick="confirmUpdateCharacter('${updatedProfile.replace(/'/g, "\\'").replace(/\n/g, "\\n")}')" 
+                        style="padding: 10px 20px; background: var(--primary); 
+                               border: none; color: white; border-radius: 8px; cursor: pointer;">บันทึก</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(editNameModal);
+}
+
+// Confirm update character
+async function confirmUpdateCharacter(updatedProfile) {
+    const newName = document.getElementById('editCharacterName').value.trim();
+    if (!newName) {
+        alert('กรุณาใส่ชื่อตัวละคร');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/characters/${window.editingCharacter.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: newName,
+                profile: updatedProfile,
+                preview: updatedProfile.substring(0, 500)
+            })
+        });
+        
+        if (response.ok) {
+            // Close modals
+            document.querySelector('.modal').remove();
+            closeCharacterTemplate();
+            
+            // Reload library
+            loadCharacterLibrary();
+            
+            // Show success message
+            showNotification('✅ แก้ไขตัวละครเรียบร้อยแล้ว');
+        } else {
+            throw new Error('Failed to update character');
+        }
+    } catch (error) {
+        console.error('Error updating character:', error);
+        alert('เกิดข้อผิดพลาดในการแก้ไขตัวละคร');
+    }
+    
+    // Clear editing data
+    window.editingCharacter = null;
 }
 
 // ========== API STATUS CHECK ==========
@@ -6463,6 +6907,10 @@ window.showCharacterTemplate = showCharacterTemplate;
 window.closeCharacterTemplate = closeCharacterTemplate;
 window.generateFromCharacterTemplate = generateFromCharacterTemplate;
 window.updateCharacterTemplateButton = updateCharacterTemplateButton;
+window.saveEditedCharacter = saveEditedCharacter;
+window.cancelEditCharacter = cancelEditCharacter;
+window.confirmUpdateCharacter = confirmUpdateCharacter;
+window.editCharacter = editCharacter;
 
 // Override switchMode เพื่อเรียก updateCharacterTemplateButton
 const originalSwitchModeForCharTemplate = window.switchMode;

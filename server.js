@@ -813,6 +813,24 @@ app.delete('/api/characters/:characterId', async (req, res) => {
     }
 });
 
+// Update character endpoint
+app.put('/api/characters/:characterId', async (req, res) => {
+    const { characterId } = req.params;
+    const { name, profile, preview } = req.body;
+    
+    try {
+        if (!db) {
+            return res.status(500).json({ error: 'Database not available' });
+        }
+        
+        await db.updateCharacter(characterId, name, profile, preview);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error updating character:', error);
+        res.status(500).json({ error: 'Failed to update character' });
+    }
+});
+
 // Save rating endpoint
 // ========== RATING ENDPOINTS ==========
 app.post('/api/ratings', async (req, res) => {

@@ -226,6 +226,22 @@ async function deleteCharacter(characterId) {
     }
 }
 
+async function updateCharacter(characterId, name, profile, preview) {
+    try {
+        await pool.query(
+            `UPDATE characters 
+             SET name = $2, profile = $3, preview = $4, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [characterId, name, profile, preview]
+        );
+        
+        return true;
+    } catch (error) {
+        console.error('Error updating character:', error);
+        throw error;
+    }
+}
+
 // ======== CREDIT SYSTEM FUNCTIONS ========
 
 // ฟังก์ชันจัดการเครดิต
@@ -969,6 +985,7 @@ module.exports = {
     saveCharacter,
     getCharacter,
     deleteCharacter,
+    updateCharacter,
     saveRating,
     getUserRatings,
     getUserAverageRating,
