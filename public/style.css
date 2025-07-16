@@ -5601,9 +5601,9 @@ line-clamp: 3;
     height: 100%;
     background: rgba(0, 0, 0, 0.9);
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Changed from center to flex-start for mobile */
     justify-content: center;
-    z-index: 4000;
+    z-index: 10000;
     padding: 20px;
     overflow-y: auto;
 }
@@ -5680,6 +5680,9 @@ line-clamp: 3;
     font-weight: 600;
     cursor: pointer;
     font-family: 'Kanit', sans-serif;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10002;
 }
 
 .save-template-btn,
@@ -7313,3 +7316,39 @@ body.mode-character #characterTemplateButtonSection {
     display: none;
 }
 /* ========== END GOOGLE SIGN-IN STYLES ========== */
+
+/* Character Template Modal Mobile Fixes */
+@media (max-width: 768px) {
+    .character-template-modal {
+        padding: 0;
+        align-items: flex-start;
+    }
+    
+    .character-template-content {
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        padding: 20px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .template-actions {
+        position: sticky;
+        bottom: 0;
+        background: #1a1a1a;
+        padding: 20px;
+        margin: -20px -20px 0 -20px;
+        border-top: 1px solid var(--border);
+        z-index: 10003;
+    }
+    
+    .generate-from-template-btn,
+    .cancel-btn {
+        width: 100%;
+        margin: 10px 0;
+        min-width: auto;
+    }
+}
