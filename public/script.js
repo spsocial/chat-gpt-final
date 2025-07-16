@@ -1600,7 +1600,14 @@ ${visualProfile}
 
 CRITICAL: The prompt MUST describe this EXACT character (not generic "person" or "man/woman"). Include their name, age, clothing colors, and appearance in EVERY shot.
 
-Now create a prompt where this character: [your scene here]`;
+Now create a prompt where this character: 
+
+[กรอกรายละเอียดฉาก เช่น: สถานที่ เหตุการณ์ ท่าทาง บทพูด อารมณ์ การกระทำ]
+
+ตัวอย่าง: 
+- เธอนั่งทำงานในออฟฟิศสมัยใหม่ กำลังนำเสนองานผ่านจอคอมพิวเตอร์
+- เธอยืนอยู่หน้าห้องประชุม พูดว่า "วันนี้เรามาคุยกันเรื่องแผนการตลาดปีหน้า"
+- เธอเดินในสวนสาธารณะตอนเย็น ใส่ชุดลำลอง กำลังคุยโทรศัพท์`;
     }
     
     // Focus ที่ input

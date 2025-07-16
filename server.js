@@ -676,15 +676,83 @@ res.json({
     } catch (error) {
         console.error('❌ Chat error:', error);
         
+        // Prepare user-friendly error messages
+        let userMessage = '';
+        let errorType = 'unknown_error';
+        let suggestions = [];
+        
         // Handle specific error types
         if (error.message && error.message.includes('รูปภาพที่อัพโหลดไม่รองรับ')) {
-            return res.status(400).json({
-                success: false,
-                error: 'รูปภาพไม่รองรับ',
-                details: error.message,
-                userMessage: '❌ รูปภาพที่อัพโหลดไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP เท่านั้น'
-            });
+            errorType = 'invalid_image';
+            userMessage = '❌ รูปภาพที่อัพโหลดไม่รองรับ';
+            suggestions = [
+                '✅ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP เท่านั้น',
+                '💡 ลองเปลี่ยนรูปใหม่แล้วส่งอีกครั้ง'
+            ];
+        } else if (error.message && error.message.includes('server_error')) {
+            errorType = 'server_error';
+            userMessage = '⚠️ เซิร์ฟเวอร์ AI มีปัญหาชั่วคราว';
+            suggestions = [
+                '🔄 กรุณารอสักครู่แล้วลองใหม่อีกครั้ง',
+                '💡 หรือกด Refresh หน้าเว็บ 1 ครั้ง',
+                '⏰ ปกติจะกลับมาใช้งานได้ภายใน 1-2 นาที'
+            ];
+        } else if (error.message && error.message.includes('rate_limit')) {
+            errorType = 'rate_limit';
+            userMessage = '⏱️ ระบบได้รับคำขอมากเกินไป';
+            suggestions = [
+                '⏰ กรุณารอ 1 นาทีแล้วลองใหม่',
+                '💡 หลีกเลี่ยงการส่งข้อความติดต่อกันเร็วเกินไป'
+            ];
+        } else if (error.message && error.message.includes('context_length')) {
+            errorType = 'context_length';
+            userMessage = '📝 ข้อความยาวเกินไป';
+            suggestions = [
+                '✂️ ลองลดความยาวข้อความลง',
+                '💡 หรือแบ่งส่งเป็นหลายครั้ง'
+            ];
+        } else if (error.message && error.message.includes('network') || error.code === 'ECONNRESET') {
+            errorType = 'network_error';
+            userMessage = '🌐 การเชื่อมต่ออินเทอร์เน็ตมีปัญหา';
+            suggestions = [
+                '📶 ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต',
+                '🔄 ลองรีเฟรชหน้าเว็บแล้วส่งใหม่'
+            ];
+        } else if (error.message && error.message.includes('Insufficient credits')) {
+            errorType = 'no_credits';
+            userMessage = '💰 เครดิตไม่เพียงพอ';
+            suggestions = [
+                '💳 กรุณาเติมเครดิตเพิ่ม',
+                '💡 หรือรอให้ครบวันเพื่อรับเครดิตฟรีใหม่'
+            ];
+        } else {
+            // Generic error
+            errorType = 'general_error';
+            userMessage = '❌ เกิดข้อผิดพลาดในการประมวลผล';
+            suggestions = [
+                '🔄 ลองส่งข้อความใหม่อีกครั้ง',
+                '💡 หากยังมีปัญหา ให้รีเฟรชหน้าเว็บ',
+                '📧 ติดต่อแอดมินหากปัญหายังคงอยู่'
+            ];
         }
+        
+        // Log detailed error for debugging
+        console.error('Error details:', {
+            type: errorType,
+            message: error.message,
+            code: error.code,
+            status: error.status
+        });
+        
+        // Return user-friendly response
+        return res.status(error.status || 500).json({
+            success: false,
+            error: errorType,
+            userMessage: userMessage,
+            suggestions: suggestions,
+            technical: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
         
         // Handle invalid image format error from OpenAI
         if (error.message && (error.message.includes('invalid_image_format') || 
