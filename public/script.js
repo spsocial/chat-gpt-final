@@ -1600,12 +1600,9 @@ ${visualProfile}
 
 CRITICAL: The prompt MUST describe this EXACT character (not generic "person" or "man/woman"). Include their name, age, clothing colors, and appearance in EVERY shot.
 
-Now create a prompt where this character: `;
-    
-    // Set placeholder แทนการใส่ข้อความใน input
-    const messageInput = document.getElementById('messageInput');
-    const originalPlaceholder = messageInput.placeholder;
-    messageInput.placeholder = "พิมพ์ฉากที่ต้องการ เช่น: นั่งทำงานในออฟฟิศ, ยืนนำเสนองาน, เดินในสวนสาธารณะ...";
+Now create a prompt where this character: 
+
+[⚠️ กรุณาลบข้อความนี้ออก แล้วพิมพ์ฉากที่คุณต้องการแทนที่]`;
     }
     
     // Focus ที่ input
@@ -3085,9 +3082,6 @@ async function sendMessage() {
     addMessage(displayMessage, 'user');
     
     input.value = '';
-    
-    // Reset placeholder to default
-    input.placeholder = "ส่งข้อความ...";
     
     const loadingId = addLoadingMessage();
 
