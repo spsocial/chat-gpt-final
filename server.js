@@ -753,51 +753,6 @@ res.json({
             technical: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
-        
-        // Handle invalid image format error from OpenAI
-        if (error.message && (error.message.includes('invalid_image_format') || 
-            error.message.includes('unsupported image'))) {
-            return res.status(400).json({
-                success: false,
-                error: 'รูปภาพไม่รองรับ',
-                details: 'รูปภาพที่อัพโหลดมีรูปแบบที่ไม่รองรับ',
-                userMessage: '❌ รูปภาพไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP เท่านั้น'
-            });
-        }
-        
-        // Handle thread errors
-        if (error.message && (error.message.includes('thread') || 
-            error.message.includes('Thread') ||
-            error.message.includes('assistant') ||
-            error.status === 404)) {
-            
-            // Clear all threads for this user to ensure clean state
-            const threadKeys = Array.from(userThreads.keys());
-            threadKeys.forEach(key => {
-                if (key.startsWith(userId)) {
-                    const threadId = userThreads.get(key);
-                    userThreads.delete(key);
-                }
-            });
-            
-            return res.status(500).json({ 
-                success: false,
-                error: 'Session expired. Please try again.',
-                details: 'กรุณาลองส่งข้อความใหม่อีกครั้ง',
-                userMessage: '⚠️ Session หมดอายุ กรุณาลองใหม่อีกครั้ง',
-                shouldRetry: true,
-                clearThread: true
-            });
-        }
-        
-        // Generic error
-        res.status(500).json({ 
-            success: false,
-            error: 'Failed to generate response',
-            details: error.message,
-            userMessage: '❌ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง'
-        });
-    }
 });
 
 // ========== AI CHAT ALIAS ENDPOINT ==========
