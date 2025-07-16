@@ -1298,6 +1298,10 @@
             .info-panel, .character-library {
                 display: none !important;
             }
+            
+            .chat-panel {
+                width: 100% !important;
+            }
 
             .header {
                 padding: 16px;
@@ -5779,7 +5783,7 @@ body.mode-library #templateButtonSection {
     display: none !important;
 }
 
-body.mode-general #characterTemplateButtonSection,
+body.mode-promptmaster #characterTemplateButtonSection,
 body.mode-multichar #characterTemplateButtonSection,
 body.mode-chat #characterTemplateButtonSection,
 body.mode-image #characterTemplateButtonSection,
@@ -5788,7 +5792,7 @@ body.mode-library #characterTemplateButtonSection {
 }
 
 /* Show only in correct modes */
-body.mode-general #templateButtonSection,
+body.mode-promptmaster #templateButtonSection,
 body.mode-multichar #templateButtonSection {
     display: inline-block !important;
 }
@@ -5796,6 +5800,68 @@ body.mode-multichar #templateButtonSection {
 body.mode-character #characterTemplateButtonSection {
     display: inline-block !important;
 }
+
+/* Ensure info panels are visible on desktop */
+@media (min-width: 969px) {
+    body.mode-promptmaster .main-content,
+    body.mode-image .main-content,
+    body.mode-character .main-content,
+    body.mode-chat .main-content,
+    body.mode-imagegen .main-content,
+    body.mode-library .main-content {
+        grid-template-columns: 380px 1fr !important;
+    }
+    
+    body.mode-promptmaster #multicharInfo,
+    body.mode-image #imageInfo,
+    body.mode-character #characterInfo,
+    body.mode-chat #chatInfo,
+    body.mode-imagegen #imageGenInfo {
+        display: block !important;
+    }
+    
+    /* Show character library for library mode */
+    body.mode-library #characterLibrary {
+        display: block !important;
+    }
+    
+    /* Desktop styling for image generation buttons */
+    .image-gen-internal-btn,
+    .image-gen-external-btn {
+        padding: 10px 20px !important;
+        font-size: 14px !important;
+        font-weight: 500 !important;
+        border-radius: 8px !important;
+        border: none !important;
+        cursor: pointer !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        font-family: 'Kanit', sans-serif !important;
+    }
+    
+    .image-gen-internal-btn {
+        background: linear-gradient(135deg, #9333ea, #7c3aed) !important;
+        color: white !important;
+    }
+    
+    .image-gen-internal-btn:hover {
+        background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3) !important;
+    }
+    
+    .image-gen-external-btn {
+        background: linear-gradient(135deg, #06b6d4, #0891b2) !important;
+        color: white !important;
+    }
+    
+    .image-gen-external-btn:hover {
+        background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3) !important;
+    }
+}
+
 /* ปุ่ม My Character */
 .my-char-btn {
     background: linear-gradient(135deg, #9333ea, #7c3aed);
@@ -6101,6 +6167,17 @@ body.mode-character #characterTemplateButtonSection {
         padding: 8px 12px !important;
         font-size: 12px !important;
         border-radius: 6px !important;
+    }
+    
+    /* Image generation buttons */
+    .image-gen-internal-btn {
+        background: linear-gradient(135deg, #ec4899, #8b5cf6) !important;
+        color: white !important;
+    }
+    
+    .image-gen-external-btn {
+        background: linear-gradient(135deg, #3b82f6, #10b981) !important;
+        color: white !important;
     }
     
     /* VEO3 Prompt Box */

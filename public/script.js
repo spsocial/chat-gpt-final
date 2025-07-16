@@ -1,4 +1,4 @@
-console.log("Script Version: 5.0.1 - Fixed mode issue");
+console.log("Script Version: 5.1.0 - Added Image Prompt feature");
 // Suppress WM Failed warning
 if (typeof window !== 'undefined') {
     window.WM = window.WM || {};
@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 }
 
 // PROFESSIONAL VERSION - NO ERRORS
-console.log("Script loaded - Professional Version 5.0");
+console.log("Script loaded - Professional Version 5.1");
 
 // ========== GLOBAL CONFIGURATION ==========
 const API_URL = window.location.origin + '/api';
@@ -20,7 +20,7 @@ const FEATURES = {
 };
 
 // ========== GLOBAL VARIABLES ==========
-let currentMode = 'general';
+let currentMode = 'promptmaster';
 let messageId = 0;
 let characterLibrary = [];
 let currentCharacterProfile = null;
@@ -373,7 +373,7 @@ const THREE_HOURS = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Current announcement version (change this when you have new announcements)
-const CURRENT_ANNOUNCEMENT_VERSION = '2.0.0';
+const CURRENT_ANNOUNCEMENT_VERSION = '5.1.0';
 
 function shouldShowAnnouncement() {
     const now = new Date().getTime();
@@ -1181,16 +1181,30 @@ setInterval(loadUserCredits, 30000);
     // Send button
     document.getElementById('sendButton').addEventListener('click', sendMessage);
     
+    // Show/hide quick edit bar based on input content
+    const quickEditBar = document.getElementById('quickEditBar');
+    messageInput.addEventListener('input', () => {
+        if (messageInput.value.length > 50) {
+            quickEditBar.style.display = 'flex';
+        } else {
+            quickEditBar.style.display = 'none';
+        }
+    });
+    
     // Initialize mode แต่ยังไม่โหลดประวัติ
-    currentMode = 'general';
-    switchMode('general');
+    currentMode = 'promptmaster';
+    switchMode('promptmaster');
     
     // รอให้ userId พร้อมจริงๆ แล้วค่อยโหลดประวัติ
     setTimeout(() => {
         console.log('🔵 Force reload history after init');
         console.log('🔵 Current userId:', userId);
-        if (userId && (currentMode === 'general' || currentMode === 'multichar')) {
-            loadChatHistory(currentMode);
+        if (userId && (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'image')) {
+            if (currentMode === 'promptmaster') {
+                loadChatHistory('multichar');
+            } else {
+                loadChatHistory(currentMode);
+            }
         }
     }, 1000); // เพิ่มเป็น 1 วินาที
     
@@ -1221,13 +1235,7 @@ function getSelectedRatio() {
 
 // ========== MODE MANAGEMENT ==========
 function switchMode(mode) {
-
-    // ลบ class เก่าออก
-    document.body.className = document.body.className.replace(/mode-\w+/g, '');
-    // เพิ่ม class ใหม่
-    document.body.classList.add(`mode-${mode}`);
-
-      // ถ้ากำลังประมวลผลอยู่ ไม่ให้เปลี่ยน mode
+    // ถ้ากำลังประมวลผลอยู่ ไม่ให้เปลี่ยน mode
     if (isProcessing) {
         showNotification('⏳ กรุณารอให้ AI ตอบก่อนค่อยเปลี่ยนโหมด', 'warning');
         
@@ -1243,6 +1251,11 @@ function switchMode(mode) {
         
         return; // หยุดการเปลี่ยน mode
     }
+
+    // ลบ class เก่าออก
+    document.body.className = document.body.className.replace(/mode-\w+/g, '');
+    // เพิ่ม class ใหม่
+    document.body.classList.add(`mode-${mode}`);
     
     // Save current chat history before switching
     if (currentMode === 'general' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image') {
@@ -1262,6 +1275,8 @@ function switchMode(mode) {
     document.getElementById('characterInfo').style.display = 'none';
     document.getElementById('multicharInfo').style.display = 'none';
     document.getElementById('imageInfo').style.display = 'none';
+    document.getElementById('imageGenInfo').style.display = 'none';
+    document.getElementById('chatInfo').style.display = 'none';
     document.getElementById('characterLibrary').classList.remove('active');
     
     // Update UI based on mode
@@ -1273,8 +1288,8 @@ function switchMode(mode) {
     switch(mode) {
         // ในแต่ละ case ให้แก้ไขดังนี้:
 
-case 'general':
-    document.getElementById('generalInfo').style.display = 'block';
+case 'promptmaster':
+    document.getElementById('multicharInfo').style.display = 'block';
     messageInput.placeholder = "อธิบายวิดีโอที่ต้องการ...";
     sendButton.innerHTML = 'สร้าง Prompt ✨';
     modeNotice.classList.remove('active');
@@ -1289,7 +1304,7 @@ case 'general':
     document.getElementById('clearHistoryBtn').style.display = 'block';
     document.getElementById('chatInfo').style.display = 'none';
     
-    loadChatHistory('general');
+    loadChatHistory('multichar');
     break;
     
 case 'character':
@@ -1368,6 +1383,29 @@ if (enhanceSectionHide) enhanceSectionHide.style.display = 'none';
 
 case 'image':
     document.getElementById('imageInfo').style.display = 'block';
+    messageInput.placeholder = "บอกไอเดียภาพที่ต้องการ...";
+    sendButton.innerHTML = 'สร้าง Prompt 🖼️';
+    modeNotice.classList.remove('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnImage = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnImage) uploadBtnImage.style.display = '';
+    
+    // ซ่อน enhance section  
+    const enhanceSection = document.getElementById('enhanceSection');
+    if (enhanceSection) enhanceSection.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'block';
+    document.getElementById('chatInfo').style.display = 'none';
+
+    // ซ่อนปุ่ม Template Form
+    const templateBtnImage = document.getElementById('templateButtonSection');
+    if (templateBtnImage) templateBtnImage.style.display = 'none';
+    
+    loadChatHistory('image');
+    break;
+
+case 'imagegen':
+    document.getElementById('imageGenInfo').style.display = 'block';
     messageInput.placeholder = "พิมพ์ Prompt ภาษา English...";
     sendButton.innerHTML = 'สร้างภาพ 🎨';
     modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> พิมพ์/พูดไทยได้ แต่ต้องกดปรับปรุง Prompt';
@@ -1377,17 +1415,17 @@ case 'image':
     uploadSection.style.display = 'none';
     
     // แสดง enhance section  
-    const enhanceSection = document.getElementById('enhanceSection');
-    if (enhanceSection) enhanceSection.style.display = 'flex';
+    const enhanceSectionImageGen = document.getElementById('enhanceSection');
+    if (enhanceSectionImageGen) enhanceSectionImageGen.style.display = 'flex';
     document.getElementById('clearChatBtn').style.display = 'none';
     document.getElementById('clearHistoryBtn').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
 
     // ซ่อนปุ่ม Template Form
-    const templateBtnImage = document.getElementById('templateButtonSection');
-    if (templateBtnImage) templateBtnImage.style.display = 'none';
+    const templateBtnImage2 = document.getElementById('templateButtonSection');
+    if (templateBtnImage2) templateBtnImage2.style.display = 'none';
     
-    loadChatHistory('image');
+    loadChatHistory('imagegen');
     break;
 
     case 'chat':
@@ -1415,6 +1453,16 @@ case 'image':
     
     loadChatHistory('chat');
     break;
+    }
+    
+    // Hide all info panels first
+    document.querySelectorAll('.info-panel').forEach(panel => {
+        panel.style.display = 'none';
+    });
+    
+    // Show correct info panel
+    if (mode === 'imagegen') {
+        document.getElementById('imageGenInfo').style.display = 'block';
     }
     
 }
@@ -1497,6 +1545,12 @@ function addWelcomeMessage(mode) {
             break;
 
         case 'image':
+            message = `สวัสดีครับ! ผมคือ Image Prompt Creator 🖼️<br><br>
+                      ผมช่วยสร้าง Prompt สำหรับสร้างรูปภาพโดยเฉพาะ<br><br>
+                      💡 <strong>Tip:</strong> บอกแค่ไอเดีย ผมจะสร้าง prompt ที่ละเอียดสำหรับ AI สร้างภาพ`;
+            break;
+            
+        case 'imagegen':
             message = `สวัสดีครับ! ผมคือ AI Image Generator 🎨<br><br>
                       เลือก Model และพิมพ์คำอธิบายภาพที่ต้องการเป็นภาษาอังกฤษ<br><br>
                       💡 <strong>ตัวอย่าง:</strong> "A cute cat wearing sunglasses, digital art style"`;
@@ -1578,8 +1632,8 @@ function useCharacter(index) {
         chatPanel.style.display = '';
     }
     
-    // เปลี่ยนไป general mode
-    switchMode('general');
+    // เปลี่ยนไป promptmaster mode
+    switchMode('promptmaster');
     
     // ใส่ข้อมูลตัวละคร
     const messageInput = document.getElementById('messageInput');
@@ -1616,46 +1670,79 @@ Now create a prompt where this character:
     }
 }
 
-// เพิ่มฟังก์ชันใหม่สำหรับดึงข้อมูลให้ครบทั้ง 8 หัวข้อ
+// เพิ่มฟังก์ชันใหม่สำหรับดึงข้อมูลให้ครบทั้ง 14 หัวข้อ
 function extractCompleteCharacterProfile(profile) {
     if (!profile) return '';
     
-    // คำค้นหาสำหรับแต่ละหัวข้อ
+    // ค้นหาส่วนที่เป็น Character Identity Template
+    const templateStart = profile.indexOf('📋 **Character Identity Template');
+    const templateEnd = profile.indexOf('===================', templateStart + 1);
+    
+    if (templateStart !== -1 && templateEnd !== -1) {
+        // ดึงเฉพาะส่วน template ทั้งหมด
+        return profile.substring(templateStart, templateEnd).trim();
+    }
+    
+    // ถ้าไม่เจอ format ใหม่ ใช้วิธีเดิม
     const sections = [
         {
             headers: ['character identity template', '📋'],
             include: true
         },
         {
-            headers: ['👩‍🏫', 'nickname / role', '1.'],
+            headers: ['👤', 'ชื่อ / บทบาท', 'name / role', '1.'],
             include: true
         },
         {
-            headers: ['🧑‍🎨', 'gender / age / ethnicity', '2.'],
+            headers: ['🧑‍🎨', 'เพศ / อายุ', 'gender / age', '2.'],
             include: true
         },
         {
-            headers: ['💃', 'body / skin / posture', '3.'],
+            headers: ['💃', 'รูปร่าง / ผิว', 'body / skin', '3.'],
             include: true
         },
         {
-            headers: ['💇‍♀️', 'hair / face', '4.'],
+            headers: ['👤', 'ใบหน้า', 'face', '4.'],
             include: true
         },
         {
-            headers: ['👓', 'glasses / accessories', '5.'],
+            headers: ['👁️', 'ดวงตา / คิ้ว', 'eyes / eyebrows', '5.'],
             include: true
         },
         {
-            headers: ['👗', 'clothing', '6.'],
+            headers: ['👄', 'ริมฝีปาก', 'lips', '6.'],
             include: true
         },
         {
-            headers: ['🎙️', 'voice / speech', '7.'],
+            headers: ['💇', 'ผม', 'hair', '7.'],
             include: true
         },
         {
-            headers: ['💼', 'personality', '8.'],
+            headers: ['👗', 'เครื่องแต่งกาย', 'outfit', '8.'],
+            include: true
+        },
+        {
+            headers: ['💎', 'เครื่องประดับ', 'accessories', '9.'],
+            include: true
+        },
+        {
+            headers: ['🎭', 'บุคลิกภาพ', 'personality', '10.'],
+            include: true
+        },
+        {
+            headers: ['🕴️', 'ท่าทางเริ่มต้น', 'starting pose', '11.'],
+            include: true
+        },
+        {
+            headers: ['🎙️', 'โทนเสียง', 'voice tone', '12.'],
+            include: true
+        },
+        {
+            headers: ['✨', 'ลักษณะพิเศษ', 'special features', '13.'],
+            include: true
+        },
+        {
+            headers: ['🖼️', 'ภาพความสมจริง', 'visual style', '14.'],
             include: true
         }
     ];
@@ -2983,7 +3070,7 @@ function removeImage(index) {
 }
 
 // ========== SEND MESSAGE ==========
-async function sendMessage() {
+window.sendMessage = async function() {
     if (isProcessing) return;
     
     const input = document.getElementById('messageInput');
@@ -3087,6 +3174,9 @@ async function sendMessage() {
 
     
     try {
+        // Map promptmaster to multichar for backend
+        const apiMode = currentMode === 'promptmaster' ? 'multichar' : currentMode;
+        
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3094,7 +3184,7 @@ async function sendMessage() {
                 message,
                 userId,
                 images: window.imageUrls,
-                mode: currentMode
+                mode: apiMode
             })
         });
         
@@ -3103,16 +3193,24 @@ async function sendMessage() {
         removeMessage(loadingId);
         
         if (response.ok) {
-            if (currentMode === 'image') {
+            if (currentMode === 'imagegen') {
         // ส่งไปสร้างภาพแทน
         removeMessage(loadingId);
         generateImage(message);
+        // Reset processing state for imagegen
+        isProcessing = false;
+        input.disabled = false;
+        document.getElementById('sendButton').disabled = false;
         return;
     }
     if (currentMode === 'chat') {
         // AI Chat mode
         removeMessage(loadingId);
         sendChatMessage(message);
+        // Reset processing state for chat
+        isProcessing = false;
+        input.disabled = false;
+        document.getElementById('sendButton').disabled = false;
         return;
     }
             if (currentMode === 'character') {
@@ -3135,22 +3233,19 @@ loadUserCredits();
             window.imageUrls = [];
             displayImagePreview();
             
-        if (response.status === 429) {
-    // ถ้าเกิน limit และไม่มีเครดิต
-    if (data.error === 'Insufficient credits') {
-        showCreditRequiredMessage(data);
-    } else {
-        // Daily limit แบบปกติ
-        addMessage(`
-            <div style="color: #ef4444;">
-                <strong>❌ ${data.message}</strong><br>
-                <span style="color: #a1a1aa;">ใช้งานได้อีกครั้งในวันพรุ่งนี้</span>
-            </div>
-        `, 'assistant');
-    }
-    return;
-}
-            
+        } else if (response.status === 429) {
+            // ถ้าเกิน limit และไม่มีเครดิต
+            if (data.error === 'Insufficient credits') {
+                showCreditRequiredMessage(data);
+            } else {
+                // Daily limit แบบปกติ
+                addMessage(`
+                    <div style="color: #ef4444;">
+                        <strong>❌ ${data.message}</strong><br>
+                        <span style="color: #a1a1aa;">ใช้งานได้อีกครั้งในวันพรุ่งนี้</span>
+                    </div>
+                `, 'assistant');
+            }
         } else {
     // Check if it's a thread error that needs retry
     if (data.shouldRetry || data.clearThread || 
@@ -3188,7 +3283,7 @@ loadUserCredits();
         input.disabled = false;
         document.getElementById('sendButton').disabled = false;
     }
-}
+        }
     } catch (error) {
         removeMessage(loadingId);
         console.error('Error:', error);
@@ -3240,9 +3335,9 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
     // Auto-save after adding any message (both user and assistant)
-    if (currentMode === 'general' || currentMode === 'multichar') {
+    if (currentMode === 'promptmaster' || currentMode === 'multichar') {
         setTimeout(() => {
-            PromptStorage.save(currentMode);
+            PromptStorage.save('multichar');
         }, 100);
     }
     
@@ -3287,6 +3382,33 @@ function formatVeoPrompt(response) {
     
     const isFav = isFavorited(response);
     
+    // Check if this is image mode
+    if (currentMode === 'image') {
+        return `
+        <div>✨ Image Prompt สำเร็จแล้ว!</div>
+        <div class="veo3-prompt">
+            <div class="prompt-header">🖼️ Image Prompt:</div>
+            <div class="prompt-content" id="promptContent-${promptId}">${formattedResponse}</div>
+            <div class="prompt-actions">
+                <button class="copy-btn" onclick="copyPrompt(this)">📋 Copy Prompt</button>
+                <button class="favorite-btn ${isFav ? 'favorited' : ''}" id="favBtn-${promptId}" onclick="toggleFavorite('${promptId}')">
+                    ${isFav ? '⭐ Favorited' : '⭐ Add to Favorites'}
+                </button>
+                <button class="share-btn" onclick="sharePromptById('${promptId}')">
+                    📤 Share
+                </button>
+                <button class="image-gen-internal-btn" onclick="switchToImageGen()">
+                    🎨 สร้างภาพในเว็บ
+                </button>
+                <button class="image-gen-external-btn" onclick="openExternalImageGen()">
+                    🌐 สร้างภาพภายนอก
+                </button>
+            </div>
+        </div>
+        `;
+    }
+    
+    // Default format for other modes
     return `
     <div>✨ Veo Prompt สำเร็จแล้ว!</div>
     <div class="veo3-prompt">
@@ -3405,24 +3527,63 @@ function copyPrompt(button) {
     // Clone element เพื่อไม่กระทบ DOM จริง
     const clonedElement = promptElement.cloneNode(true);
     
-    // แปลง br tags เป็น newlines
-    const brElements = clonedElement.getElementsByTagName('br');
-    for (let i = brElements.length - 1; i >= 0; i--) {
-        const br = brElements[i];
-        const textNode = document.createTextNode('\n');
-        br.parentNode.replaceChild(textNode, br);
+    // Check if this is image mode prompt
+    if (currentMode === 'image' && promptElement.innerHTML.includes('🇺🇸 **English Prompt')) {
+        // Extract only English prompt for image mode
+        const html = promptElement.innerHTML;
+        const text = promptElement.textContent;
+        
+        // Try to find the English section using different patterns
+        const englishStart = text.indexOf('🇺🇸 **English Prompt');
+        const thaiStart = text.indexOf('🇹🇭 **พ้อม');
+        
+        if (englishStart !== -1 && thaiStart !== -1) {
+            // Get text between English and Thai sections
+            let englishSection = text.substring(englishStart, thaiStart).trim();
+            
+            // Remove the header and bullet
+            englishSection = englishSection
+                .replace(/🇺🇸\s*\*\*English Prompt\*[\*•]?\s*/g, '')
+                .replace(/^1\.\s*/, '') // Remove numbering if present
+                .trim();
+            
+            // Remove the divider line and any trailing numbers
+            englishSection = englishSection
+                .replace(/---\s*$/m, '')
+                .replace(/---\s*\d+\.?\s*$/m, '')
+                .trim();
+            
+            fullText = englishSection;
+        } else {
+            // Fallback to original method
+            fullText = text;
+        }
+    } else {
+        // Original method for other modes
+        // แปลง br tags เป็น newlines
+        const brElements = clonedElement.getElementsByTagName('br');
+        for (let i = brElements.length - 1; i >= 0; i--) {
+            const br = brElements[i];
+            const textNode = document.createTextNode('\n');
+            br.parentNode.replaceChild(textNode, br);
+        }
+        
+        // ดึง text content
+        fullText = clonedElement.textContent || clonedElement.innerText || '';
+        
+        // ทำความสะอาด text
+        fullText = fullText
+            .replace(/•\s/g, '* ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
     }
     
-    // ดึง text content
-    fullText = clonedElement.textContent || clonedElement.innerText || '';
-    
-    // ทำความสะอาด text
-    fullText = fullText
-        .replace(/•\s/g, '* ')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-    
     let finalPrompt = '';
+    
+    // If we already have the full text for image mode, use it
+    if (currentMode === 'image' && fullText && !fullText.includes('VEO3 MULTI-CHARACTER SCENE')) {
+        finalPrompt = fullText;
+    } else {
     
     // ตรวจสอบว่าเป็น Prompt Master format ใหม่
     if (fullText.includes('VEO3 MULTI-CHARACTER SCENE') || 
@@ -3512,6 +3673,7 @@ function copyPrompt(button) {
             finalPrompt = fullText.substring(0, cutoffIndex).trim();
         }
     }
+    }
     
     // ลบบรรทัดว่างท้าย
     finalPrompt = finalPrompt.replace(/\n\s*\n\s*$/g, '\n');
@@ -3580,6 +3742,9 @@ function addLoadingMessage() {
             loadingText = 'กำลังสร้าง Character Profile แบบละเอียด...';
             break;
         case 'image':
+            loadingText = 'กำลังสร้าง Image Prompt ที่ละเอียด...';
+            break;
+        case 'imagegen':
             loadingText = 'กำลังสร้างภาพตาม prompt ของคุณ...';
             break;
         default:
@@ -4061,6 +4226,16 @@ function processVoiceCommands(text) {
     return false;
 }
 
+// Function to switch to Image Gen mode
+function switchToImageGen() {
+    switchMode('imagegen');
+}
+
+// Function to open external image generation
+function openExternalImageGen() {
+    window.open('https://aistudio.google.com/app/prompts/new_image', '_blank');
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     // Slip upload handler
@@ -4195,6 +4370,13 @@ async function generateImage(prompt) {
         if (loadingDiv) loadingDiv.remove();
         console.error('Image generation error:', error);
         addMessage('❌ ไม่สามารถเชื่อมต่อกับ server ได้', 'assistant');
+    } finally {
+        // Reset processing state
+        isProcessing = false;
+        const input = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        if (input) input.disabled = false;
+        if (sendButton) sendButton.disabled = false;
     }
 }
 
@@ -4430,6 +4612,13 @@ async function sendChatMessage(message) {
         removeMessage(loadingId);
         console.error('Chat error:', error);
         addMessage('❌ ไม่สามารถเชื่อมต่อกับ server ได้', 'assistant');
+    } finally {
+        // Reset processing state
+        isProcessing = false;
+        const input = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        if (input) input.disabled = false;
+        if (sendButton) sendButton.disabled = false;
     }
 }
 
@@ -5723,6 +5912,7 @@ function loadMobileInfo(mode) {
             `;
             break;
             
+        case 'promptmaster':
         case 'multichar':
             infoHTML = quickActionsHTML + `
                 <h4>🎭 Prompt Master</h4>
@@ -5750,6 +5940,15 @@ function loadMobileInfo(mode) {
             break;
             
         case 'image':
+    infoHTML = quickActionsHTML + `
+        <h4>🖼️ Image Prompt</h4>
+        <p>• สร้าง prompt สำหรับรูปภาพโดยเฉพาะ</p>
+        <p>• บอกแค่ไอเดีย AI จะสร้าง prompt ที่ละเอียด</p>
+        <p>• สามารถสร้างภาพได้ทันที</p>
+    `;
+    break;
+    
+        case 'imagegen':
     infoHTML = quickActionsHTML + `
         <h4>🎨 Image Generator</h4>
         
@@ -6657,31 +6856,18 @@ window.clearModeChat = function(mode) {
     }
 };
 
-// แก้ไข sendMessage เพื่อบันทึกหลังส่งข้อความ
-const originalSendMessage = window.sendMessage;
-window.sendMessage = async function() {
-    // เรียก function เดิม
-    await originalSendMessage();
-    
-    // บันทึกหลังส่งข้อความ (รอให้ response มาครบก่อน)
-    if (currentMode === 'general' || currentMode === 'multichar') {
-        setTimeout(() => {
-            PromptStorage.save(currentMode);
-        }, 2000); // เพิ่มเป็น 2 วินาที
-    }
-};
 
 // Auto save ทุก 30 วินาที
 setInterval(() => {
-    if (currentMode === 'general' || currentMode === 'multichar') {
-        PromptStorage.save(currentMode);
+    if (currentMode === 'promptmaster' || currentMode === 'multichar') {
+        PromptStorage.save('multichar');
     }
 }, 30000);
 
 // บันทึกก่อนปิดหน้า
 window.addEventListener('beforeunload', () => {
-    if (currentMode === 'general' || currentMode === 'multichar') {
-        PromptStorage.save(currentMode);
+    if (currentMode === 'promptmaster' || currentMode === 'multichar') {
+        PromptStorage.save('multichar');
     }
 });
 
@@ -7800,7 +7986,7 @@ function verifyButtonVisibility() {
     const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
     
     switch(currentMode) {
-        case 'general':
+        case 'promptmaster':
         case 'multichar':
             // แสดงปุ่ม Template Form สีส้ม
             if (templateBtn) templateBtn.style.display = 'inline-block';
@@ -7854,7 +8040,7 @@ const buttonObserver = new MutationObserver(function(mutations) {
     
     // ตรวจสอบโหมดปัจจุบันและซ่อน/แสดงปุ่มให้ถูกต้อง
     switch(currentMode) {
-        case 'general':
+        case 'promptmaster':
         case 'multichar':
             templateBtn.style.display = 'inline-block';
             templateBtn.style.visibility = 'visible';
@@ -7871,6 +8057,7 @@ const buttonObserver = new MutationObserver(function(mutations) {
             
         case 'chat':
         case 'image':
+        case 'imagegen':
         case 'library':
             templateBtn.style.display = 'none';
             templateBtn.style.visibility = 'hidden';
@@ -7897,7 +8084,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const templateBtn = document.getElementById('templateButtonSection');
         const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
         
-        if (currentMode === 'chat' || currentMode === 'image') {
+        if (currentMode === 'chat' || currentMode === 'image' || currentMode === 'imagegen') {
             if (templateBtn) {
                 templateBtn.style.display = 'none';
                 templateBtn.style.visibility = 'hidden';

@@ -16,7 +16,8 @@ const { OAuth2Client } = require('google-auth-library');
 // Assistant IDs mapping
 const ASSISTANT_CONFIGS = {
     standard: {
-        general: process.env.ASSISTANT_ID,
+        promptmaster: process.env.MULTI_CHARACTER_ASSISTANT_ID,
+        image: process.env.IMAGE_PROMPT_ASSISTANT_ID || 'asst_fTpI5G9WTb9hUS165JsyDP94',
         character: process.env.CHARACTER_ASSISTANT_ID,
         multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID,
         chat: process.env.CHAT_ASSISTANT_ID
@@ -488,12 +489,12 @@ app.get('/api/admin/revenue-stats', checkAdminAuth, async (req, res) => {
 });
 
 // Calculate cost (with premium for multichar mode)
-function calculateCost(usage, mode = 'general') {
+function calculateCost(usage, mode = 'promptmaster') {
     const totalTokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
     let costPerThousand = COST_PER_1K_TOKENS;
     
     // Prompt Master mode ใช้ GPT-4o ราคาแพงกว่า
-    if (mode === 'multichar') {
+    if (mode === 'multichar' || mode === 'promptmaster') {
         // GPT-4o cost ~$5/1M input, $15/1M output
         // เฉลี่ยประมาณ 0.50 บาท/1K tokens + กำไร 10%
         costPerThousand = 0.02;
@@ -516,7 +517,7 @@ app.get('/test', (req, res) => {
 // ========== AI CHAT ENDPOINT ==========
 // Chat endpoint using Assistants API
 app.post('/api/chat', async (req, res) => {
-    const { message, userId = 'guest', images = [], mode = 'general' } = req.body;
+    const { message, userId = 'guest', images = [], mode = 'promptmaster' } = req.body;
     let shouldUseCredits = false;
     
 
@@ -531,7 +532,7 @@ app.post('/api/chat', async (req, res) => {
     try {
         // ========== SELECT ASSISTANT ==========
         // Get assistant ID from config
-        let assistantId = ASSISTANT_CONFIGS.standard[mode] || ASSISTANT_CONFIGS.standard.general;
+        let assistantId = ASSISTANT_CONFIGS.standard[mode] || ASSISTANT_CONFIGS.standard.promptmaster;
         
         // Validate Assistant ID
         if (!assistantId || assistantId.length < 10) {
@@ -903,7 +904,7 @@ app.get('/api/ratings/:userId', async (req, res) => {
 // Reset thread endpoint (optional)
 app.post('/api/reset/:userId', (req, res) => {
     const { userId } = req.params;
-    const { mode = 'general' } = req.body;
+    const { mode = 'promptmaster' } = req.body;
     
     const threadKey = `${userId}_${mode}`;
     if (userThreads.has(threadKey)) {

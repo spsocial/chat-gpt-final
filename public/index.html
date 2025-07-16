@@ -32,7 +32,7 @@
                 <div class="logo">
                     <div class="logo-icon">🎬</div>
                     <div class="logo-text">
-                        <h1>Prompt D - Generator</h1>
+                        <h1>Prompt D - Generator <span style="font-size: 14px; color: var(--text-secondary); font-weight: normal;">v5.1</span></h1>
 <p>AI-Powered Prompt Generator</p>
                     </div>
                 </div>
@@ -97,16 +97,16 @@
             
             <!-- Mode Selector -->
 <div class="mode-selector">
-    <button class="mode-btn active" data-mode="general" onclick="switchMode('general')">
-        <span class="mode-icon">🎬</span>
-        <span class="mode-text">General Prompt</span>
-    </button>
-    <button class="mode-btn" data-mode="multichar" onclick="switchMode('multichar')">
-        <span class="mode-icon">🎭</span>
+    <button class="mode-btn active" data-mode="promptmaster" onclick="switchMode('promptmaster')">
+        <span class="mode-icon">🎥</span>
         <span class="mode-text">Prompt Master</span>
     </button>
+    <button class="mode-btn" data-mode="image" onclick="switchMode('image')">
+        <span class="mode-icon">🖼️</span>
+        <span class="mode-text">Image Prompt</span>
+    </button>
     <!-- ย้าย Image Gen มาตรงนี้ พร้อมเพิ่ม class พิเศษ -->
-    <button class="mode-btn new-feature" data-mode="image" onclick="switchMode('image')">
+    <button class="mode-btn new-feature" data-mode="imagegen" onclick="switchMode('imagegen')">
         <span class="mode-icon">🎨</span>
         <span class="mode-text">Image Gen</span>
         <span class="new-badge">NEW!</span>
@@ -125,18 +125,14 @@
         <span class="mode-icon">🗂️</span>
         <span class="mode-text">My Characters</span>
     </button>
-<button class="mode-btn" onclick="showMusicVideoForm()">
-        <span class="mode-icon">🎵</span>
-        <span class="mode-text">Music Video</span>
-    </button>
 </div>
         </div>
 
         <!-- Mobile Dropdown Mode Selector -->
             <select class="mobile-mode-dropdown" id="mobileModeDrop" onchange="switchMode(this.value)">
-    <option value="general">🎬 General Prompt</option>
-    <option value="multichar">🎭 Prompt Master</option>
-    <option value="image">🎨 Image Gen ✨NEW!</option>
+    <option value="promptmaster">🎥 Prompt Master</option>
+    <option value="image">🖼️ Image Prompt</option>
+    <option value="imagegen">🎨 Image Gen ✨NEW!</option>
     <option value="chat">💬 AI Chat ✨NEW!</option>
     <option value="character">🧙 Character Creator</option>
     <option value="library">🗂️ My Characters</option>
@@ -248,6 +244,29 @@
 
 <!-- Info Panel - Image Mode -->
 <div class="info-panel" id="imageInfo" style="display: none;">
+    <div class="info-section">
+        <h3>🖼️ Image Prompt Creator</h3>
+        <div class="tip-card">
+            <h4>✨ สร้าง Prompt สำหรับรูปภาพ</h4>
+            <p>AI จะช่วยสร้าง prompt ที่ละเอียดสำหรับการสร้างภาพ</p>
+        </div>
+        <div class="tip-card">
+            <h4>🎨 วิธีใช้งาน</h4>
+            <p>1. บอกไอเดียภาพที่ต้องการ</p>
+            <p>2. AI จะสร้าง prompt แบบละเอียด</p>
+            <p>3. คัดลอก prompt ไปใช้ได้เลย</p>
+        </div>
+        <div class="tip-card">
+            <h4>💡 ตัวอย่างคำสั่ง</h4>
+            <p>• "ภาพแมวน่ารักสวมแว่น"</p>
+            <p>• "ภาพภูเขาตอนพระอาทิตย์ขึ้น"</p>
+            <p>• "ผู้หญิงในชุดสไตล์ cyberpunk"</p>
+        </div>
+    </div>
+</div>
+
+<!-- Info Panel - Image Gen Mode -->
+<div class="info-panel" id="imageGenInfo" style="display: none;">
     <div class="info-section">
         <h3>🎨 Image Generator</h3>
         <div class="tip-card">
@@ -615,9 +634,28 @@
         </div>
         
 <div class="announcement-body">
-    <!-- ข่าวที่ 1: อัพเกรดระบบ Character เป็น 14 หัวข้อ -->
+    <!-- ข่าวที่ 1: Image Prompt ฟีเจอร์ใหม่ -->
+    <div class="announcement-item" style="border: 2px solid #0891b2; background: linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(8, 145, 178, 0.05) 100%);">
+        <span class="announcement-badge new" style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);">ใหม่ล่าสุด! 🖼️</span>
+        <h3>🖼️ Image Prompt - ตัวช่วยอัจฉริยะสายทำภาพ!</h3>
+        <p style="margin-bottom: 12px;">AI ช่วยสร้าง Prompt ภาพระดับมืออาชีพ พร้อมใช้ได้ทันที ทั้งไทยและอังกฤษ</p>
+        <ul style="line-height: 1.8;">
+            <li>🎨 <strong>บอกแค่ไอเดีย</strong> - AI สร้าง Prompt ภาพแบบละเอียดให้อัตโนมัติ</li>
+            <li>🌐 <strong>ได้ทั้งไทยและอังกฤษ</strong> - สร้าง Prompt 2 ภาษาในคลิกเดียว</li>
+            <li>✨ <strong>มี Negative Prompt</strong> - ป้องกันสิ่งที่ไม่ต้องการในภาพ</li>
+            <li>🚀 <strong>พร้อมใช้ทันที</strong> - Copy ไปใช้กับ AI สร้างภาพได้เลย</li>
+            <li>🔗 <strong>ต่อยอดได้ 2 ทาง</strong> - สร้างในเว็บหรือไปใช้ที่อื่นก็ได้</li>
+        </ul>
+        <div style="background: rgba(6, 182, 212, 0.1); padding: 12px; border-radius: 8px; margin-top: 12px;">
+            <p style="margin: 0; font-size: 14px; text-align: center;">
+                🎯 <strong>ลองเลย!</strong> คลิกแท็บ <strong style="color: #0891b2;">"Image Prompt"</strong> สายทำภาพต้องไม่พลาด!
+            </p>
+        </div>
+    </div>
+
+    <!-- ข่าวที่ 2: อัพเกรดระบบ Character เป็น 14 หัวข้อ -->
     <div class="announcement-item" style="border: 2px solid #ec4899; background: linear-gradient(135deg, rgba(236, 72, 153, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%);">
-        <span class="announcement-badge new" style="background: linear-gradient(135deg, #ec4899 0%, #9333ea 100%);">อัพเกรดใหม่! 🎭</span>
+        <span class="announcement-badge" style="background: linear-gradient(135deg, #ec4899 0%, #9333ea 100%);">อัพเกรดใหม่! 🎭</span>
         <h3>🎭 ระบบ Character Creator อัพเกรดใหม่ จาก 8 เป็น 14 หัวข้อ!</h3>
         <p style="margin-bottom: 12px;">สร้างตัวละครได้ละเอียดขึ้น พร้อมฟีเจอร์แก้ไขคาแร็กเตอร์ที่บันทึกไว้</p>
         <ul style="line-height: 1.8;">
@@ -633,7 +671,7 @@
         </div>
     </div>
 
-    <!-- ข่าวที่ 2: ระบบคู่มือการใช้งาน (เดิม) -->
+    <!-- ข่าวที่ 3: ระบบคู่มือการใช้งาน (เดิม) -->
     <div class="announcement-item" style="border: 2px solid #FFD700; background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(255, 193, 7, 0.05) 100%);">
         <span class="announcement-badge" style="background: linear-gradient(135deg, #FFD700 0%, #FFC107 100%);">อัพเดต! 📚</span>
         <h3>📚 เพิ่มระบบ "คู่มือการใช้งาน" แบบครบวงจร!</h3>
@@ -650,42 +688,6 @@
             </p>
         </div>
     </div>
-
-    <!-- ข่าวที่ 3: Prompt Master บันทึกประวัติได้แล้ว -->
-    <div class="announcement-item" style="border: 2px solid #9333ea; background: linear-gradient(135deg, rgba(147, 51, 234, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);">
-        <span class="announcement-badge" style="background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);">อัพเดต! 🎉</span>
-        <h3>🎭 Prompt Master บันทึกประวัติได้แล้ว!</h3>
-        <p style="margin-bottom: 12px;">เราปรับปรุงระบบให้ดีขึ้นเพื่อคุณ</p>
-        <ul style="line-height: 1.8;">
-            <li>💾 <strong>บันทึกประวัติอัตโนมัติ</strong> - ทุก prompt ที่สร้างจะถูกเก็บไว้</li>
-            <li>🔍 <strong>กลับมาดูย้อนหลังได้</strong> - เปิดเว็บใหม่ก็ยังเจอ prompt เดิม</li>
-            <li>📋 <strong>Copy ง่าย</strong> - คลิกเดียวคัดลอกไปใช้ต่อได้เลย</li>
-            <li>🚀 <strong>ไม่ต้องกลัวหาย</strong> - ปิดเบราว์เซอร์ไปก็ไม่หาย</li>
-        </ul>
-        <div style="background: rgba(147, 51, 234, 0.1); padding: 12px; border-radius: 8px; margin-top: 12px;">
-            <p style="margin: 0; font-size: 14px; text-align: center;">
-                ✨ <strong>สะดวกมาก!</strong> ใช้ได้ทันทีที่แท็บ <strong style="color: #9333ea;">"Prompt Master"</strong>
-            </p>
-        </div>
-    </div>
-
-    <!-- ข่าวที่ 4: ปุ่มติดต่อ Support -->
-    <div class="announcement-item" style="border: 2px solid #10b981; background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);">
-        <span class="announcement-badge" style="background: #10b981;">เพิ่มใหม่! ✨</span>
-        <h3>💬 ติดต่อทีม Support ได้แล้ว!</h3>
-        <p style="margin-bottom: 12px;">เพื่อการบริการที่ดีขึ้น เราเพิ่มช่องทางติดต่อให้คุณ</p>
-        <ul style="line-height: 1.8;">
-            <li>🆘 <strong>มีปัญหาการใช้งาน?</strong> - แจ้งเราได้ทันที</li>
-            <li>💡 <strong>มีคำแนะนำ?</strong> - เราพร้อมรับฟังทุกความเห็น</li>
-            <li>❓ <strong>สงสัยวิธีใช้?</strong> - ทีมงานพร้อมช่วยเหลือ</li>
-            <li>⚡ <strong>ตอบเร็ว</strong> - ภายใน 24 ชั่วโมง</li>
-        </ul>
-        <div style="background: rgba(16, 185, 129, 0.1); padding: 12px; border-radius: 8px; margin-top: 12px;">
-            <p style="margin: 0; font-size: 14px; text-align: center;">
-                📱 <strong>ติดต่อง่าย!</strong> มองหาปุ่ม <strong style="color: #10b981;">"💬 Support"</strong> ที่มุมล่างขวา
-            </p>
-        </div>
-    </div>
 </div>
         
         <div class="announcement-footer">
@@ -699,6 +701,46 @@
         </div>
     </div>
 </div>
+</div>
+
+<!-- Credit Packages Modal -->
+<div id="creditPackagesModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>💝 สนับสนุนเว็บไซต์</h2>
+            <button class="close-btn" onclick="closeCreditModal()">×</button>
+        </div>
+        
+        <div class="support-message">
+            <p>🙏 ขอบคุณที่ใช้บริการ! การสนับสนุนของคุณช่วยให้เราพัฒนาต่อไปได้</p>
+        </div>
+
+        <div class="credit-packages" id="creditPackages">
+            <!-- Packages จะถูกโหลดจาก API -->
+        </div>
+
+        <div class="payment-method">
+            <h3>📱 ช่องทางการชำระเงิน</h3>
+            <div class="promptpay-section">
+                <div id="qrCodeContainer"></div>
+                <p class="promptpay-number">PromptPay: <span id="promptpayNumber">0902462826</span></p>
+            </div>
+        </div>
+
+        <div class="upload-section">
+            <h3>📤 อัพโหลดสลิป</h3>
+            <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
+                <p>คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง</p>
+                <input type="file" id="slipFileInput" accept="image/*" style="display: none;" onchange="handleSlipSelect(event)">
+            </div>
+            <div id="slipPreview" style="display: none;">
+                <img id="slipImage" alt="Slip preview">
+                <button onclick="removeSlip()">ลบรูป</button>
+            </div>
+            <button class="upload-btn" onclick="uploadSlip()">ตรวจสอบสลิป</button>
+            <div id="uploadStatus" class="upload-status" style="display: none;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Floating Announcement Button -->
@@ -1143,7 +1185,6 @@ window.addEventListener('click', function(event) {
                             <option value="cinematic">Cinematic (ภาพยนตร์)</option>
                             <option value="documentary">Documentary (สารคดี)</option>
                             <option value="commercial">Commercial (โฆษณา)</option>
-                            <option value="musicvideo">Music Video</option>
                             <option value="action">Action (แอ็คชั่น)</option>
                             <option value="drama">Drama (ดราม่า)</option>
                             <option value="horror">Horror (สยองขวัญ)</option>
