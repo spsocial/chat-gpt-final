@@ -81,9 +81,10 @@ async function addMessage(threadId, content, images = [], openaiClient = null) {
 }
 
 // Run assistant and get response
-async function runAssistant(threadId, assistantId, openaiClient = null) {
+async function runAssistant(threadId, assistantId, openaiClient = null, retryCount = 0) {
     // Use provided client or default
     const client = openaiClient || openai;
+    const maxRetries = 2;
     
     try {
         // Check assistant info first
@@ -123,11 +124,29 @@ async function runAssistant(threadId, assistantId, openaiClient = null) {
                 throw new Error('รูปภาพที่อัพโหลดไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP');
             }
             
+            // Retry for server_error
+            if (run.last_error && run.last_error.code === 'server_error' && retryCount < maxRetries) {
+                console.log(`Retrying due to server_error... (attempt ${retryCount + 1}/${maxRetries})`);
+                // Wait a bit before retry
+                await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                return runAssistant(threadId, assistantId, openaiClient, retryCount + 1);
+            }
+            
             // Generic error
             throw new Error(`Run failed with status: ${run.status}`);
         }
     } catch (error) {
         console.error('Error running assistant:', error);
+        
+        // Retry on network errors
+        if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+            if (retryCount < maxRetries) {
+                console.log(`Retrying due to network error... (attempt ${retryCount + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                return runAssistant(threadId, assistantId, openaiClient, retryCount + 1);
+            }
+        }
+        
         throw error;
     }
 }

@@ -1939,20 +1939,24 @@ window.generateFromTemplate = function() {
 };
 </script>
 
-<!-- Character Template Modal -->
+<!-- Character Template Modal with 14 Fields -->
 <div id="characterTemplateModal" class="character-template-modal" style="display: none;">
     <div class="character-template-content">
         <button class="close-btn" onclick="closeCharacterTemplate()">✕</button>
         
         <h2>📋 Character Identity Template (Prompt D)</h2>
-        <p class="template-subtitle">กรอกข้อมูลตัวละครแบบละเอียด เพื่อใช้สร้าง prompt ที่แม่นยำ</p>
+        <p class="template-subtitle">กรอกข้อมูลตัวละครแบบละเอียด 14 หัวข้อ เพื่อใช้สร้าง prompt ที่แม่นยำ</p>
         
         <div class="character-template-form">
-            <!-- 1. ชื่อเรียก / บทบาท -->
+            <!-- 1. ชื่อ / บทบาท -->
             <div class="template-section">
-                <h3>👩‍🏫 1. ชื่อเรียก / บทบาท</h3>
+                <h3>👤 1. ชื่อ / บทบาท (Name / Role)</h3>
                 <div class="form-group">
-                    <label>ชื่อเรียกภายใน Prompt:</label>
+                    <label>ชื่อ:</label>
+                    <input type="text" id="charName" placeholder="ชื่อจริง (ถ้ามี)">
+                </div>
+                <div class="form-group">
+                    <label>ชื่อเรียก:</label>
                     <input type="text" id="charNickname" placeholder='เช่น "CEO สาว", "นักสืบหนุ่ม"'>
                 </div>
                 <div class="form-group">
@@ -1963,131 +1967,228 @@ window.generateFromTemplate = function() {
 
             <!-- 2. เพศ / อายุ / เชื้อชาติ -->
             <div class="template-section">
-                <h3>🧑‍🎨 2. เพศ / อายุ / เชื้อชาติ</h3>
+                <h3>🧑‍🎨 2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)</h3>
                 <div class="form-row">
                     <div class="form-group">
                         <label>เพศ:</label>
                         <select id="charGender">
                             <option value="">-- เลือกเพศ --</option>
-                            <option value="ชาย">ชาย</option>
-                            <option value="หญิง">หญิง</option>
-                            <option value="ไม่ระบุ">ไม่ระบุ</option>
+                            <option value="Male">ชาย</option>
+                            <option value="Female">หญิง</option>
+                            <option value="Non-binary">ไม่ระบุ</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>อายุโดยประมาณ:</label>
-                        <input type="text" id="charAge" placeholder='เช่น "30 ปี", "วัยกลางคน"'>
+                        <label>อายุ:</label>
+                        <input type="text" id="charAge" placeholder='เช่น "30 years old", "middle-aged"'>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>เชื้อชาติ / ภูมิหลัง:</label>
-                    <input type="text" id="charEthnicity" placeholder="เช่น ไทย / ลูกครึ่ง / อเมริกันเอเชีย">
+                    <label>เชื้อชาติ:</label>
+                    <input type="text" id="charEthnicity" placeholder="เช่น Thai / Asian / Mixed-race">
                 </div>
             </div>
 
-            <!-- 3. รูปร่าง / ผิว / ท่าทาง -->
+            <!-- 3. รูปร่าง / ผิว -->
             <div class="template-section">
-                <h3>💃 3. รูปร่าง / ผิว / ท่าทาง</h3>
+                <h3>💃 3. รูปร่าง / ผิว (Body / Skin)</h3>
                 <div class="form-group">
                     <label>รูปร่าง:</label>
-                    <input type="text" id="charBody" placeholder="เช่น หุ่นดี / ผอม / อ้วนเล็กน้อย / สูงเพรียว">
+                    <input type="text" id="charBody" placeholder="เช่น Slim / Athletic / Curvy">
                 </div>
                 <div class="form-group">
-                    <label>ผิว:</label>
-                    <input type="text" id="charSkin" placeholder="เช่น ขาวอมชมพู / น้ำผึ้ง / แทนเข้ม">
+                    <label>ส่วนสูง & น้ำหนัก:</label>
+                    <input type="text" id="charHeightWeight" placeholder="เช่น 170cm / 60kg">
                 </div>
                 <div class="form-group">
-                    <label>ท่าทาง / บุคลิกภายนอก:</label>
-                    <input type="text" id="charPosture" placeholder="เช่น ยืนตรง / ดูมั่นใจ / รอยยิ้มเล็กน้อย">
+                    <label>สีผิว:</label>
+                    <input type="text" id="charSkin" placeholder="เช่น Fair / Tan / Dark">
                 </div>
             </div>
 
-            <!-- 4. ลักษณะผม / ใบหน้า -->
+            <!-- 4. ใบหน้า -->
             <div class="template-section">
-                <h3>💇‍♀️ 4. ลักษณะผม / ใบหน้า</h3>
+                <h3>👤 4. ใบหน้า (Face)</h3>
+                <div class="form-group">
+                    <label>รูปหน้า:</label>
+                    <input type="text" id="charFaceShape" placeholder="เช่น Oval / Round / Square">
+                </div>
+                <div class="form-group">
+                    <label>ลักษณะหน้า:</label>
+                    <input type="text" id="charFaceFeatures" placeholder="เช่น High cheekbones / Sharp jawline">
+                </div>
+            </div>
+
+            <!-- 5. ดวงตา / คิ้ว -->
+            <div class="template-section">
+                <h3>👁️ 5. ดวงตา / คิ้ว (Eyes / Eyebrows)</h3>
+                <div class="form-group">
+                    <label>ดวงตา:</label>
+                    <input type="text" id="charEyes" placeholder="เช่น Almond-shaped brown eyes / Big round eyes">
+                </div>
+                <div class="form-group">
+                    <label>คิ้ว:</label>
+                    <input type="text" id="charEyebrows" placeholder="เช่น Thick arched eyebrows / Thin straight eyebrows">
+                </div>
+            </div>
+
+            <!-- 6. ริมฝีปาก -->
+            <div class="template-section">
+                <h3>👄 6. ริมฝีปาก (Lips)</h3>
+                <div class="form-group">
+                    <label>ริมฝีปาก:</label>
+                    <input type="text" id="charLips" placeholder="เช่น Full pink lips / Thin natural lips">
+                </div>
+            </div>
+
+            <!-- 7. ผม -->
+            <div class="template-section">
+                <h3>💇‍♀️ 7. ผม (Hair)</h3>
                 <div class="form-group">
                     <label>ทรงผม:</label>
-                    <input type="text" id="charHair" placeholder="เช่น ผมดำยาว รวบหางม้าต่ำ / แสกกลาง / หน้าม้า">
+                    <input type="text" id="charHairStyle" placeholder="เช่น Long straight hair / Short bob cut">
                 </div>
                 <div class="form-group">
-                    <label>คิ้ว / ดวงตา / ริมฝีปาก:</label>
-                    <input type="text" id="charFace" placeholder="เช่น คิ้วได้รูป / ตาคม / ปากอมชมพู">
+                    <label>สีผม:</label>
+                    <input type="text" id="charHairColor" placeholder="เช่น Black / Brown / Blonde">
+                </div>
+                <div class="form-group">
+                    <label>รายละเอียดผม:</label>
+                    <input type="text" id="charHairDetails" placeholder="เช่น Silky smooth / Wavy with bangs">
                 </div>
             </div>
 
-            <!-- 5. แว่น / เครื่องประดับ -->
+            <!-- 8. เครื่องแต่งกาย -->
             <div class="template-section">
-                <h3>👓 5. แว่น / เครื่องประดับ</h3>
-                <div class="form-group">
-                    <label>แว่น:</label>
-                    <input type="text" id="charGlasses" placeholder="เช่น ทรงกลมขอบบางสีทอง (หรือไม่ใส่)">
-                </div>
-                <div class="form-group">
-                    <label>นาฬิกา / ต่างหู / สร้อย:</label>
-                    <input type="text" id="charAccessories" placeholder="ระบุรายละเอียด หรือพิมพ์ 'ไม่ใส่'">
-                </div>
-            </div>
-
-            <!-- 6. เครื่องแต่งกาย -->
-            <div class="template-section">
-                <h3>👗 6. เครื่องแต่งกาย</h3>
+                <h3>👗 8. เครื่องแต่งกาย (Outfit)</h3>
                 <div class="form-group">
                     <label>เสื้อ:</label>
-                    <input type="text" id="charShirt" placeholder="เช่น เสื้อเชิ้ตสีขาว / คอปก / แขนยาว">
+                    <input type="text" id="charShirt" placeholder="เช่น White button-up shirt">
                 </div>
                 <div class="form-group">
-                    <label>เสื้อคลุม / สูท:</label>
-                    <input type="text" id="charJacket" placeholder="เช่น สูทสีชมพูอ่อน / ผ้าเรียบหรู / ทรงโมเดิร์น">
+                    <label>กางเกง/กระโปรง:</label>
+                    <input type="text" id="charBottoms" placeholder="เช่น Black pencil skirt / Navy blue pants">
                 </div>
                 <div class="form-group">
-                    <label>กางเกง / กระโปรง:</label>
-                    <input type="text" id="charPants" placeholder="เช่น กางเกงขายาวสีขาวล้วน / ทรงตรง">
+                    <label>เสื้อคลุม:</label>
+                    <input type="text" id="charOuterwear" placeholder="เช่น Beige blazer / Leather jacket">
                 </div>
                 <div class="form-group">
                     <label>รองเท้า:</label>
-                    <input type="text" id="charShoes" placeholder="เช่น รองเท้าส้นสูงหัวแหลมสีครีม">
+                    <input type="text" id="charShoes" placeholder="เช่น Black high heels / White sneakers">
+                </div>
+                <div class="form-group">
+                    <label>วัสดุ/ผ้า:</label>
+                    <input type="text" id="charFabric" placeholder="เช่น Silk / Cotton / Denim">
                 </div>
             </div>
 
-            <!-- 7. น้ำเสียง / วิธีพูด -->
+            <!-- 9. เครื่องประดับ -->
             <div class="template-section">
-                <h3>🎙️ 7. น้ำเสียง / วิธีพูด</h3>
+                <h3>💎 9. เครื่องประดับ (Accessories)</h3>
                 <div class="form-group">
-                    <label>โทนเสียง:</label>
-                    <input type="text" id="charVoiceTone" placeholder="เช่น สุภาพ / ชัดเจน / มั่นใจ / จริงใจ">
+                    <label>ที่ศีรษะ:</label>
+                    <input type="text" id="charHeadAccessories" placeholder="เช่น Hair clip / Headband / Hat">
                 </div>
                 <div class="form-group">
-                    <label>ลักษณะการพูด:</label>
-                    <input type="text" id="charSpeechStyle" placeholder="เช่น เริ่มต้นด้วยรอยยิ้ม / จบคำพูดด้วยสายตาแน่วแน่">
+                    <label>เครื่องประดับ:</label>
+                    <input type="text" id="charJewelry" placeholder="เช่น Pearl earrings / Gold necklace">
+                </div>
+                <div class="form-group">
+                    <label>อื่นๆ:</label>
+                    <input type="text" id="charOtherAccessories" placeholder="เช่น Watch / Belt / Glasses">
                 </div>
             </div>
 
-            <!-- 8. บุคลิกภายใน -->
+            <!-- 10. บุคลิกภาพ -->
             <div class="template-section">
-                <h3>💼 8. บุคลิกภายใน</h3>
+                <h3>🎭 10. บุคลิกภาพ (Personality)</h3>
                 <div class="form-group">
-                    <label>ความมั่นใจ:</label>
-                    <input type="text" id="charConfidence" placeholder="เช่น มั่นใจในสิ่งที่พูด / ไม่ลังเล">
+                    <label>ลักษณะนิสัย:</label>
+                    <input type="text" id="charPersonalityTraits" placeholder="เช่น Friendly / Professional / Energetic">
+                </div>
+                <div class="form-group">
+                    <label>ระดับความมั่นใจ:</label>
+                    <input type="text" id="charConfidence" placeholder="เช่น Very confident / Modest / Shy">
                 </div>
                 <div class="form-group">
                     <label>ท่าทีต่อกล้อง:</label>
-                    <input type="text" id="charCameraPresence" placeholder="เช่น สบตา / ยิ้ม / ส่งพลังบวก">
+                    <input type="text" id="charCameraPresence" placeholder="เช่น Natural / Charismatic / Reserved">
+                </div>
+            </div>
+
+            <!-- 11. ท่าทางเริ่มต้น -->
+            <div class="template-section">
+                <h3>🕴️ 11. ท่าทางเริ่มต้น (Starting Pose)</h3>
+                <div class="form-group">
+                    <label>ท่าทางเริ่มต้น:</label>
+                    <input type="text" id="charInitialPose" placeholder="เช่น Standing straight / Sitting crossed legs">
                 </div>
                 <div class="form-group">
-                    <label>บทบาทในเรื่อง:</label>
-                    <input type="text" id="charStoryRole" placeholder="เช่น ดำเนินเรื่อง / พูดอธิบาย / เปรียบเทียบ / สื่อสารความรู้">
+                    <label>ภาษากาย:</label>
+                    <input type="text" id="charBodyLanguage" placeholder="เช่น Open arms / Hands clasped / Relaxed posture">
+                </div>
+            </div>
+
+            <!-- 12. โทนเสียง -->
+            <div class="template-section">
+                <h3>🎙️ 12. โทนเสียง (Voice Tone)</h3>
+                <div class="form-group">
+                    <label>ระดับเสียง:</label>
+                    <input type="text" id="charVoicePitch" placeholder="เช่น High pitched / Deep voice / Mid-range">
+                </div>
+                <div class="form-group">
+                    <label>ลักษณะการพูด:</label>
+                    <input type="text" id="charSpeakingStyle" placeholder="เช่น Clear articulation / Fast-paced / Soft-spoken">
+                </div>
+                <div class="form-group">
+                    <label>สำเนียง:</label>
+                    <input type="text" id="charAccent" placeholder="เช่น Thai accent / British accent / Neutral">
+                </div>
+                <div class="form-group">
+                    <label>ลักษณะเสียง:</label>
+                    <input type="text" id="charVoiceCharacteristics" placeholder="เช่น Warm and friendly / Authoritative / Gentle">
+                </div>
+            </div>
+
+            <!-- 13. ลักษณะพิเศษ -->
+            <div class="template-section">
+                <h3>✨ 13. ลักษณะพิเศษ (Special Features)</h3>
+                <div class="form-group">
+                    <label>ลักษณะเฉพาะ:</label>
+                    <input type="text" id="charUniqueTraits" placeholder="เช่น Dimples / Beauty mark / Tattoo">
+                </div>
+                <div class="form-group">
+                    <label>เอฟเฟกต์พิเศษ:</label>
+                    <input type="text" id="charSpecialEffects" placeholder="เช่น Glowing aura / Sparkles / Wind effect">
+                </div>
+            </div>
+
+            <!-- 14. ภาพความสมจริง -->
+            <div class="template-section">
+                <h3>🖼️ 14. ภาพความสมจริง (Visual Style)</h3>
+                <div class="form-group">
+                    <label>ประเภทความสมจริง:</label>
+                    <select id="charRealismType">
+                        <option value="">-- เลือกประเภท --</option>
+                        <option value="Photorealistic Human">Photorealistic Human</option>
+                        <option value="3D Anime Style">3D Anime Style</option>
+                        <option value="2D Anime Style">2D Anime Style</option>
+                        <option value="Semi-Real">Semi-Real</option>
+                        <option value="Stylized Illustration">Stylized Illustration</option>
+                    </select>
                 </div>
             </div>
 
             <!-- Actions -->
-<div class="template-actions">
-    <button class="generate-from-template-btn" onclick="generateFromCharacterTemplate()">
-        ✨ สร้าง Character Profile
-    </button>
-    <button class="cancel-btn" onclick="closeCharacterTemplate()">
-        ยกเลิก
-    </button>
-</div>
+            <div class="template-actions">
+                <button class="generate-from-template-btn" onclick="generateFromCharacterTemplate()">
+                    ✨ สร้าง Character Profile
+                </button>
+                <button class="cancel-btn" onclick="closeCharacterTemplate()">
+                    ยกเลิก
+                </button>
+            </div>
         </div>
     </div>
 </div>

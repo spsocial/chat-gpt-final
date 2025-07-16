@@ -1771,42 +1771,61 @@ function editCharacter(index, event) {
     showEditCharacterModal(profileData);
 }
 
-// Parse character profile to extract 8 sections
+// Parse character profile to extract sections (supports both 8 and 14 section formats)
 function parseCharacterProfile(profile) {
     if (!profile) return {};
     
     console.log('Parsing profile:', profile);
     
     const parsed = {
-        // Section 1
+        // Original 8 fields for backward compatibility
         nickname: '',
         role: '',
-        // Section 2
         gender: '',
         age: '',
         ethnicity: '',
-        // Section 3
         body: '',
         skin: '',
         posture: '',
-        // Section 4
         hair: '',
         face: '',
-        // Section 5
         glasses: '',
         accessories: '',
-        // Section 6
         shirt: '',
         jacket: '',
         pants: '',
         shoes: '',
-        // Section 7
         voiceTone: '',
         speechStyle: '',
-        // Section 8
         confidence: '',
         cameraPresence: '',
-        storyRole: ''
+        storyRole: '',
+        // New 14 fields
+        name: '',
+        heightWeight: '',
+        faceShape: '',
+        faceFeatures: '',
+        eyes: '',
+        eyebrows: '',
+        lips: '',
+        hairStyle: '',
+        hairColor: '',
+        hairDetails: '',
+        bottoms: '',
+        outerwear: '',
+        fabric: '',
+        headAccessories: '',
+        jewelry: '',
+        otherAccessories: '',
+        personalityTraits: '',
+        initialPose: '',
+        bodyLanguage: '',
+        voicePitch: '',
+        speakingStyle: '',
+        accent: '',
+        voiceCharacteristics: '',
+        speech: '',
+        theme: ''
     };
     
     // Extract data from each section
@@ -1814,51 +1833,138 @@ function parseCharacterProfile(profile) {
     let currentSection = null;
     let collectedData = {};
     
+    // Count sections to determine format
+    let sectionCount = 0;
+    for (const line of lines) {
+        if (line.includes('**') && /\*\*\d+\./.test(line)) {
+            sectionCount++;
+        }
+    }
+    
+    const is14FieldFormat = sectionCount > 10;
+    console.log(`Detected ${sectionCount} sections, using ${is14FieldFormat ? '14' : '8'}-field format`);
+    
     for (const line of lines) {
         const trimmedLine = line.trim();
         
-        // Section 1: ชื่อเรียก / บทบาท
-        if (trimmedLine.includes('**1.') || trimmedLine.includes('👩‍🏫')) {
-            currentSection = 1;
-            collectedData[currentSection] = [];
+        if (is14FieldFormat) {
+            // 14-field format detection
+            // Section 1: ชื่อ / บทบาท
+            if (trimmedLine.includes('**1.') || trimmedLine.includes('👤')) {
+                currentSection = 1;
+                collectedData[currentSection] = [];
+            }
+            // Section 2: เพศ / อายุ / เชื้อชาติ
+            else if (trimmedLine.includes('**2.') || trimmedLine.includes('🧑‍🎨')) {
+                currentSection = 2;
+                collectedData[currentSection] = [];
+            }
+            // Section 3: รูปร่าง / ผิว
+            else if (trimmedLine.includes('**3.') || trimmedLine.includes('💃')) {
+                currentSection = 3;
+                collectedData[currentSection] = [];
+            }
+            // Section 4: ใบหน้า
+            else if (trimmedLine.includes('**4.') && trimmedLine.includes('ใบหน้า')) {
+                currentSection = 4;
+                collectedData[currentSection] = [];
+            }
+            // Section 5: ดวงตา / คิ้ว
+            else if (trimmedLine.includes('**5.') || trimmedLine.includes('👁️')) {
+                currentSection = 5;
+                collectedData[currentSection] = [];
+            }
+            // Section 6: ริมฝีปาก
+            else if (trimmedLine.includes('**6.') || trimmedLine.includes('👄')) {
+                currentSection = 6;
+                collectedData[currentSection] = [];
+            }
+            // Section 7: ผม
+            else if (trimmedLine.includes('**7.') || trimmedLine.includes('💇‍♀️')) {
+                currentSection = 7;
+                collectedData[currentSection] = [];
+            }
+            // Section 8: เครื่องแต่งกาย
+            else if (trimmedLine.includes('**8.') || trimmedLine.includes('👗')) {
+                currentSection = 8;
+                collectedData[currentSection] = [];
+            }
+            // Section 9: เครื่องประดับ
+            else if (trimmedLine.includes('**9.') || trimmedLine.includes('💎')) {
+                currentSection = 9;
+                collectedData[currentSection] = [];
+            }
+            // Section 10: บุคลิกภาพ
+            else if (trimmedLine.includes('**10.') || trimmedLine.includes('🎭')) {
+                currentSection = 10;
+                collectedData[currentSection] = [];
+            }
+            // Section 11: ท่าทางเริ่มต้น
+            else if (trimmedLine.includes('**11.') || trimmedLine.includes('🕴️')) {
+                currentSection = 11;
+                collectedData[currentSection] = [];
+            }
+            // Section 12: โทนเสียง
+            else if (trimmedLine.includes('**12.') || trimmedLine.includes('🎙️')) {
+                currentSection = 12;
+                collectedData[currentSection] = [];
+            }
+            // Section 13: คำพูด
+            else if (trimmedLine.includes('**13.') || trimmedLine.includes('💬')) {
+                currentSection = 13;
+                collectedData[currentSection] = [];
+            }
+            // Section 14: ธีม
+            else if (trimmedLine.includes('**14.') || trimmedLine.includes('🎨')) {
+                currentSection = 14;
+                collectedData[currentSection] = [];
+            }
+        } else {
+            // 8-field format detection (original)
+            // Section 1: ชื่อเรียก / บทบาท
+            if (trimmedLine.includes('**1.') || trimmedLine.includes('👩‍🏫')) {
+                currentSection = 1;
+                collectedData[currentSection] = [];
+            }
+            // Section 2: เพศ / อายุ / เชื้อชาติ
+            else if (trimmedLine.includes('**2.') || trimmedLine.includes('🧑‍🎨')) {
+                currentSection = 2;
+                collectedData[currentSection] = [];
+            }
+            // Section 3: รูปร่าง / ผิว / ท่าทาง
+            else if (trimmedLine.includes('**3.') || trimmedLine.includes('💃')) {
+                currentSection = 3;
+                collectedData[currentSection] = [];
+            }
+            // Section 4: ลักษณะผม / ใบหน้า
+            else if (trimmedLine.includes('**4.') || trimmedLine.includes('💇')) {
+                currentSection = 4;
+                collectedData[currentSection] = [];
+            }
+            // Section 5: แว่น / เครื่องประดับ
+            else if (trimmedLine.includes('**5.') || trimmedLine.includes('👓')) {
+                currentSection = 5;
+                collectedData[currentSection] = [];
+            }
+            // Section 6: เครื่องแต่งกาย
+            else if (trimmedLine.includes('**6.') || trimmedLine.includes('👗')) {
+                currentSection = 6;
+                collectedData[currentSection] = [];
+            }
+            // Section 7: น้ำเสียง / วิธีพูด
+            else if (trimmedLine.includes('**7.') || trimmedLine.includes('🎙️')) {
+                currentSection = 7;
+                collectedData[currentSection] = [];
+            }
+            // Section 8: บุคลิกภายใน
+            else if (trimmedLine.includes('**8.') || trimmedLine.includes('💼')) {
+                currentSection = 8;
+                collectedData[currentSection] = [];
+            }
         }
-        // Section 2: เพศ / อายุ / เชื้อชาติ
-        else if (trimmedLine.includes('**2.') || trimmedLine.includes('🧑‍🎨')) {
-            currentSection = 2;
-            collectedData[currentSection] = [];
-        }
-        // Section 3: รูปร่าง / ผิว / ท่าทาง
-        else if (trimmedLine.includes('**3.') || trimmedLine.includes('💃')) {
-            currentSection = 3;
-            collectedData[currentSection] = [];
-        }
-        // Section 4: ลักษณะผม / ใบหน้า
-        else if (trimmedLine.includes('**4.') || trimmedLine.includes('💇')) {
-            currentSection = 4;
-            collectedData[currentSection] = [];
-        }
-        // Section 5: แว่น / เครื่องประดับ
-        else if (trimmedLine.includes('**5.') || trimmedLine.includes('👓')) {
-            currentSection = 5;
-            collectedData[currentSection] = [];
-        }
-        // Section 6: เครื่องแต่งกาย
-        else if (trimmedLine.includes('**6.') || trimmedLine.includes('👗')) {
-            currentSection = 6;
-            collectedData[currentSection] = [];
-        }
-        // Section 7: น้ำเสียง / วิธีพูด
-        else if (trimmedLine.includes('**7.') || trimmedLine.includes('🎙️')) {
-            currentSection = 7;
-            collectedData[currentSection] = [];
-        }
-        // Section 8: บุคลิกภายใน
-        else if (trimmedLine.includes('**8.') || trimmedLine.includes('💼')) {
-            currentSection = 8;
-            collectedData[currentSection] = [];
-        }
+        
         // Collect data lines (support both - and * bullet points)
-        else if (currentSection && (trimmedLine.startsWith('-') || trimmedLine.startsWith('*'))) {
+        if (currentSection && (trimmedLine.startsWith('-') || trimmedLine.startsWith('*'))) {
             const dataLine = trimmedLine.substring(1).trim();
             if (dataLine.includes(':')) {
                 const [key, ...valueParts] = dataLine.split(':');
@@ -1872,123 +1978,332 @@ function parseCharacterProfile(profile) {
     
     // Process collected data
     console.log('Collected data:', collectedData);
-    // Section 1: ชื่อเรียก / บทบาท / Nickname / Role
-    if (collectedData[1]) {
-        const nicknameData = collectedData[1].find(d => 
-            d.key.toLowerCase().includes('nickname') || d.key.includes('ชื่อเรียก')
-        );
-        const roleData = collectedData[1].find(d => 
-            d.key.toLowerCase().includes('role') || d.key.includes('บทบาท')
-        );
-        parsed.nickname = nicknameData ? nicknameData.value : '';
-        parsed.role = roleData ? roleData.value : '';
-    }
     
-    // Section 2: เพศ / อายุ / เชื้อชาติ / Gender / Age / Ethnicity
-    if (collectedData[2]) {
-        const genderData = collectedData[2].find(d => 
-            d.key.toLowerCase().includes('gender') || d.key.includes('เพศ')
-        );
-        const ageData = collectedData[2].find(d => 
-            d.key.toLowerCase().includes('age') || d.key.includes('อายุ')
-        );
-        const ethnicityData = collectedData[2].find(d => 
-            d.key.toLowerCase().includes('ethnicity') || d.key.includes('เชื้อชาติ')
-        );
-        parsed.gender = genderData ? genderData.value : '';
-        parsed.age = ageData ? ageData.value : '';
-        parsed.ethnicity = ethnicityData ? ethnicityData.value : '';
-    }
-    
-    // Section 3: รูปร่าง / ผิว / ท่าทาง / Body / Skin / Posture
-    if (collectedData[3]) {
-        const bodyData = collectedData[3].find(d => 
-            d.key.toLowerCase().includes('body') || d.key.includes('รูปร่าง')
-        );
-        const skinData = collectedData[3].find(d => 
-            d.key.toLowerCase().includes('skin') || d.key.includes('ผิว')
-        );
-        const postureData = collectedData[3].find(d => 
-            d.key.toLowerCase().includes('posture') || d.key.includes('ท่าทาง')
-        );
-        parsed.body = bodyData ? bodyData.value : '';
-        parsed.skin = skinData ? skinData.value : '';
-        parsed.posture = postureData ? postureData.value : '';
-    }
-    
-    // Section 4: ลักษณะผม / ใบหน้า / Hair / Face
-    if (collectedData[4]) {
-        const hairData = collectedData[4].find(d => 
-            d.key.toLowerCase().includes('hair') || d.key.includes('ผม')
-        );
-        const faceData = collectedData[4].find(d => 
-            d.key.toLowerCase().includes('face') || d.key.includes('ใบหน้า')
-        );
-        parsed.hair = hairData ? hairData.value : '';
-        parsed.face = faceData ? faceData.value : '';
-    }
-    
-    // Section 5: แว่น / เครื่องประดับ / Glasses / Accessories
-    if (collectedData[5]) {
-        const glassesData = collectedData[5].find(d => 
-            d.key.toLowerCase().includes('glasses') || d.key.includes('แว่น')
-        );
-        const accessoriesData = collectedData[5].find(d => 
-            d.key.toLowerCase().includes('accessories') || d.key.includes('เครื่องประดับ')
-        );
-        parsed.glasses = glassesData ? glassesData.value : '';
-        parsed.accessories = accessoriesData ? accessoriesData.value : '';
-    }
-    
-    // Section 6: เครื่องแต่งกาย / Clothing
-    if (collectedData[6]) {
-        collectedData[6].forEach(d => {
-            const keyLower = d.key.toLowerCase();
-            if ((keyLower.includes('shirt') && !keyLower.includes('jacket')) || 
-                (d.key.includes('เสื้อ') && !d.key.includes('เสื้อคลุม'))) {
-                parsed.shirt = d.value;
-            } else if (keyLower.includes('jacket') || keyLower.includes('suit') || 
-                       d.key.includes('เสื้อคลุม') || d.key.includes('สูท')) {
-                parsed.jacket = d.value;
-            } else if (keyLower.includes('pants') || keyLower.includes('skirt') || 
-                       d.key.includes('กางเกง') || d.key.includes('กระโปรง')) {
-                parsed.pants = d.value;
-            } else if (keyLower.includes('shoes') || d.key.includes('รองเท้า')) {
-                parsed.shoes = d.value;
-            }
-        });
-    }
-    
-    // Section 7: น้ำเสียง / วิธีพูด / Voice / Speech
-    if (collectedData[7]) {
-        const voiceData = collectedData[7].find(d => 
-            d.key.toLowerCase().includes('voice') || d.key.includes('โทนเสียง')
-        );
-        const speechData = collectedData[7].find(d => 
-            d.key.toLowerCase().includes('speech') || d.key.includes('ลักษณะการพูด')
-        );
-        parsed.voiceTone = voiceData ? voiceData.value : '';
-        parsed.speechStyle = speechData ? speechData.value : '';
-    }
-    
-    // Section 8: บุคลิกภายใน / Personality
-    if (collectedData[8]) {
-        collectedData[8].forEach(d => {
-            const keyLower = d.key.toLowerCase();
-            if (keyLower.includes('confidence') || d.key.includes('ความมั่นใจ')) {
-                parsed.confidence = d.value;
-            } else if (keyLower.includes('camera') || d.key.includes('ท่าทีต่อกล้อง')) {
-                parsed.cameraPresence = d.value;
-            } else if (keyLower.includes('story') || d.key.includes('บทบาทในเรื่อง')) {
-                parsed.storyRole = d.value;
-            }
-        });
+    if (is14FieldFormat) {
+        // Parse 14-field format
+        // Section 1: ชื่อ / บทบาท
+        if (collectedData[1]) {
+            const nameData = collectedData[1].find(d => 
+                d.key.toLowerCase().includes('name') || d.key.includes('ชื่อ')
+            );
+            const nicknameData = collectedData[1].find(d => 
+                d.key.toLowerCase().includes('nickname') || d.key.includes('ชื่อเรียก')
+            );
+            const roleData = collectedData[1].find(d => 
+                d.key.toLowerCase().includes('role') || d.key.includes('บทบาท')
+            );
+            parsed.name = nameData ? nameData.value : '';
+            parsed.nickname = nicknameData ? nicknameData.value : '';
+            parsed.role = roleData ? roleData.value : '';
+        }
+        
+        // Section 2: เพศ / อายุ / เชื้อชาติ
+        if (collectedData[2]) {
+            const genderData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('gender') || d.key.includes('เพศ')
+            );
+            const ageData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('age') || d.key.includes('อายุ')
+            );
+            const ethnicityData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('ethnicity') || d.key.includes('เชื้อชาติ')
+            );
+            parsed.gender = genderData ? genderData.value : '';
+            parsed.age = ageData ? ageData.value : '';
+            parsed.ethnicity = ethnicityData ? ethnicityData.value : '';
+        }
+        
+        // Section 3: รูปร่าง / ผิว
+        if (collectedData[3]) {
+            const bodyData = collectedData[3].find(d => 
+                d.key.toLowerCase().includes('body') || d.key.includes('รูปร่าง')
+            );
+            const heightWeightData = collectedData[3].find(d => 
+                d.key.toLowerCase().includes('height') || d.key.includes('ส่วนสูง')
+            );
+            const skinData = collectedData[3].find(d => 
+                d.key.toLowerCase().includes('skin') || d.key.includes('สีผิว') || d.key.includes('ผิว')
+            );
+            parsed.body = bodyData ? bodyData.value : '';
+            parsed.heightWeight = heightWeightData ? heightWeightData.value : '';
+            parsed.skin = skinData ? skinData.value : '';
+        }
+        
+        // Section 4: ใบหน้า
+        if (collectedData[4]) {
+            const faceShapeData = collectedData[4].find(d => 
+                d.key.toLowerCase().includes('shape') || d.key.includes('รูปหน้า')
+            );
+            const faceFeaturesData = collectedData[4].find(d => 
+                d.key.toLowerCase().includes('features') || d.key.includes('ลักษณะหน้า')
+            );
+            parsed.faceShape = faceShapeData ? faceShapeData.value : '';
+            parsed.faceFeatures = faceFeaturesData ? faceFeaturesData.value : '';
+            parsed.face = `${parsed.faceShape} ${parsed.faceFeatures}`.trim();
+        }
+        
+        // Section 5: ดวงตา / คิ้ว
+        if (collectedData[5]) {
+            const eyesData = collectedData[5].find(d => 
+                d.key.toLowerCase().includes('eyes') || d.key.includes('ดวงตา')
+            );
+            const eyebrowsData = collectedData[5].find(d => 
+                d.key.toLowerCase().includes('eyebrows') || d.key.includes('คิ้ว')
+            );
+            parsed.eyes = eyesData ? eyesData.value : '';
+            parsed.eyebrows = eyebrowsData ? eyebrowsData.value : '';
+        }
+        
+        // Section 6: ริมฝีปาก
+        if (collectedData[6]) {
+            const lipsData = collectedData[6].find(d => 
+                d.key.toLowerCase().includes('lips') || d.key.includes('ริมฝีปาก')
+            );
+            parsed.lips = lipsData ? lipsData.value : '';
+        }
+        
+        // Section 7: ผม
+        if (collectedData[7]) {
+            const hairStyleData = collectedData[7].find(d => 
+                d.key.toLowerCase().includes('style') || d.key.includes('ทรงผม')
+            );
+            const hairColorData = collectedData[7].find(d => 
+                d.key.toLowerCase().includes('color') || d.key.includes('สีผม')
+            );
+            const hairDetailsData = collectedData[7].find(d => 
+                d.key.toLowerCase().includes('details') || d.key.includes('รายละเอียดผม')
+            );
+            parsed.hairStyle = hairStyleData ? hairStyleData.value : '';
+            parsed.hairColor = hairColorData ? hairColorData.value : '';
+            parsed.hairDetails = hairDetailsData ? hairDetailsData.value : '';
+            parsed.hair = `${parsed.hairStyle} ${parsed.hairColor} ${parsed.hairDetails}`.trim();
+        }
+        
+        // Section 8: เครื่องแต่งกาย
+        if (collectedData[8]) {
+            collectedData[8].forEach(d => {
+                const keyLower = d.key.toLowerCase();
+                if ((keyLower.includes('shirt') && !keyLower.includes('outerwear')) || 
+                    (d.key.includes('เสื้อ') && !d.key.includes('เสื้อคลุม'))) {
+                    parsed.shirt = d.value;
+                } else if (keyLower.includes('bottoms') || keyLower.includes('pants') || 
+                           d.key.includes('กางเกง') || d.key.includes('กระโปรง')) {
+                    parsed.bottoms = d.value;
+                    parsed.pants = d.value; // For backward compatibility
+                } else if (keyLower.includes('outerwear') || keyLower.includes('jacket') || 
+                           d.key.includes('เสื้อคลุม')) {
+                    parsed.outerwear = d.value;
+                    parsed.jacket = d.value; // For backward compatibility
+                } else if (keyLower.includes('shoes') || d.key.includes('รองเท้า')) {
+                    parsed.shoes = d.value;
+                } else if (keyLower.includes('fabric') || d.key.includes('วัสดุ') || d.key.includes('ผ้า')) {
+                    parsed.fabric = d.value;
+                }
+            });
+        }
+        
+        // Section 9: เครื่องประดับ
+        if (collectedData[9]) {
+            const headAccessoriesData = collectedData[9].find(d => 
+                d.key.toLowerCase().includes('head') || d.key.includes('ที่ศีรษะ')
+            );
+            const jewelryData = collectedData[9].find(d => 
+                d.key.toLowerCase().includes('jewelry') || d.key.includes('เครื่องประดับ')
+            );
+            const otherAccessoriesData = collectedData[9].find(d => 
+                d.key.toLowerCase().includes('other') || d.key.includes('อื่นๆ')
+            );
+            parsed.headAccessories = headAccessoriesData ? headAccessoriesData.value : '';
+            parsed.jewelry = jewelryData ? jewelryData.value : '';
+            parsed.otherAccessories = otherAccessoriesData ? otherAccessoriesData.value : '';
+            parsed.accessories = `${parsed.headAccessories} ${parsed.jewelry} ${parsed.otherAccessories}`.trim();
+        }
+        
+        // Section 10: บุคลิกภาพ
+        if (collectedData[10]) {
+            const personalityTraitsData = collectedData[10].find(d => 
+                d.key.toLowerCase().includes('traits') || d.key.includes('ลักษณะนิสัย')
+            );
+            const confidenceData = collectedData[10].find(d => 
+                d.key.toLowerCase().includes('confidence') || d.key.includes('ความมั่นใจ')
+            );
+            const cameraPresenceData = collectedData[10].find(d => 
+                d.key.toLowerCase().includes('camera') || d.key.includes('ท่าทีต่อกล้อง')
+            );
+            parsed.personalityTraits = personalityTraitsData ? personalityTraitsData.value : '';
+            parsed.confidence = confidenceData ? confidenceData.value : '';
+            parsed.cameraPresence = cameraPresenceData ? cameraPresenceData.value : '';
+        }
+        
+        // Section 11: ท่าทางเริ่มต้น
+        if (collectedData[11]) {
+            const initialPoseData = collectedData[11].find(d => 
+                d.key.toLowerCase().includes('pose') || d.key.includes('ท่าทางเริ่มต้น')
+            );
+            const bodyLanguageData = collectedData[11].find(d => 
+                d.key.toLowerCase().includes('language') || d.key.includes('ภาษากาย')
+            );
+            parsed.initialPose = initialPoseData ? initialPoseData.value : '';
+            parsed.bodyLanguage = bodyLanguageData ? bodyLanguageData.value : '';
+            parsed.posture = parsed.initialPose; // For backward compatibility
+        }
+        
+        // Section 12: โทนเสียง
+        if (collectedData[12]) {
+            const voicePitchData = collectedData[12].find(d => 
+                d.key.toLowerCase().includes('pitch') || d.key.includes('ระดับเสียง')
+            );
+            const speakingStyleData = collectedData[12].find(d => 
+                d.key.toLowerCase().includes('speaking') || d.key.includes('ลักษณะการพูด')
+            );
+            const accentData = collectedData[12].find(d => 
+                d.key.toLowerCase().includes('accent') || d.key.includes('สำเนียง')
+            );
+            const voiceCharData = collectedData[12].find(d => 
+                d.key.toLowerCase().includes('characteristics') || d.key.includes('ลักษณะเสียง')
+            );
+            parsed.voicePitch = voicePitchData ? voicePitchData.value : '';
+            parsed.speakingStyle = speakingStyleData ? speakingStyleData.value : '';
+            parsed.accent = accentData ? accentData.value : '';
+            parsed.voiceCharacteristics = voiceCharData ? voiceCharData.value : '';
+            parsed.voiceTone = parsed.voicePitch; // For backward compatibility
+            parsed.speechStyle = parsed.speakingStyle; // For backward compatibility
+        }
+        
+        // Section 13: คำพูด
+        if (collectedData[13]) {
+            const speechData = collectedData[13].find(d => 
+                d.key.toLowerCase().includes('speech') || d.key.includes('คำพูด')
+            );
+            parsed.speech = speechData ? speechData.value : '';
+        }
+        
+        // Section 14: ธีม
+        if (collectedData[14]) {
+            const themeData = collectedData[14].find(d => 
+                d.key.toLowerCase().includes('theme') || d.key.includes('ธีม')
+            );
+            parsed.theme = themeData ? themeData.value : '';
+            parsed.storyRole = parsed.theme; // For backward compatibility
+        }
+    } else {
+        // Parse 8-field format (original logic)
+        // Section 1: ชื่อเรียก / บทบาท / Nickname / Role
+        if (collectedData[1]) {
+            const nicknameData = collectedData[1].find(d => 
+                d.key.toLowerCase().includes('nickname') || d.key.includes('ชื่อเรียก')
+            );
+            const roleData = collectedData[1].find(d => 
+                d.key.toLowerCase().includes('role') || d.key.includes('บทบาท')
+            );
+            parsed.nickname = nicknameData ? nicknameData.value : '';
+            parsed.role = roleData ? roleData.value : '';
+        }
+        
+        // Section 2: เพศ / อายุ / เชื้อชาติ / Gender / Age / Ethnicity
+        if (collectedData[2]) {
+            const genderData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('gender') || d.key.includes('เพศ')
+            );
+            const ageData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('age') || d.key.includes('อายุ')
+            );
+            const ethnicityData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('ethnicity') || d.key.includes('เชื้อชาติ')
+            );
+            parsed.gender = genderData ? genderData.value : '';
+            parsed.age = ageData ? ageData.value : '';
+            parsed.ethnicity = ethnicityData ? ethnicityData.value : '';
+        }
+        
+        // Section 3: รูปร่าง / ผิว / ท่าทาง / Body / Skin / Posture
+        if (collectedData[3]) {
+            const bodyData = collectedData[3].find(d => 
+                d.key.toLowerCase().includes('body') || d.key.includes('รูปร่าง')
+            );
+            const skinData = collectedData[3].find(d => 
+                d.key.toLowerCase().includes('skin') || d.key.includes('ผิว')
+            );
+            const postureData = collectedData[3].find(d => 
+                d.key.toLowerCase().includes('posture') || d.key.includes('ท่าทาง')
+            );
+            parsed.body = bodyData ? bodyData.value : '';
+            parsed.skin = skinData ? skinData.value : '';
+            parsed.posture = postureData ? postureData.value : '';
+        }
+        
+        // Section 4: ลักษณะผม / ใบหน้า / Hair / Face
+        if (collectedData[4]) {
+            const hairData = collectedData[4].find(d => 
+                d.key.toLowerCase().includes('hair') || d.key.includes('ผม')
+            );
+            const faceData = collectedData[4].find(d => 
+                d.key.toLowerCase().includes('face') || d.key.includes('ใบหน้า')
+            );
+            parsed.hair = hairData ? hairData.value : '';
+            parsed.face = faceData ? faceData.value : '';
+        }
+        
+        // Section 5: แว่น / เครื่องประดับ / Glasses / Accessories
+        if (collectedData[5]) {
+            const glassesData = collectedData[5].find(d => 
+                d.key.toLowerCase().includes('glasses') || d.key.includes('แว่น')
+            );
+            const accessoriesData = collectedData[5].find(d => 
+                d.key.toLowerCase().includes('accessories') || d.key.includes('เครื่องประดับ')
+            );
+            parsed.glasses = glassesData ? glassesData.value : '';
+            parsed.accessories = accessoriesData ? accessoriesData.value : '';
+        }
+        
+        // Section 6: เครื่องแต่งกาย / Clothing
+        if (collectedData[6]) {
+            collectedData[6].forEach(d => {
+                const keyLower = d.key.toLowerCase();
+                if ((keyLower.includes('shirt') && !keyLower.includes('jacket')) || 
+                    (d.key.includes('เสื้อ') && !d.key.includes('เสื้อคลุม'))) {
+                    parsed.shirt = d.value;
+                } else if (keyLower.includes('jacket') || keyLower.includes('suit') || 
+                           d.key.includes('เสื้อคลุม') || d.key.includes('สูท')) {
+                    parsed.jacket = d.value;
+                } else if (keyLower.includes('pants') || keyLower.includes('skirt') || 
+                           d.key.includes('กางเกง') || d.key.includes('กระโปรง')) {
+                    parsed.pants = d.value;
+                } else if (keyLower.includes('shoes') || d.key.includes('รองเท้า')) {
+                    parsed.shoes = d.value;
+                }
+            });
+        }
+        
+        // Section 7: น้ำเสียง / วิธีพูด / Voice / Speech
+        if (collectedData[7]) {
+            const voiceData = collectedData[7].find(d => 
+                d.key.toLowerCase().includes('voice') || d.key.includes('โทนเสียง')
+            );
+            const speechData = collectedData[7].find(d => 
+                d.key.toLowerCase().includes('speech') || d.key.includes('ลักษณะการพูด')
+            );
+            parsed.voiceTone = voiceData ? voiceData.value : '';
+            parsed.speechStyle = speechData ? speechData.value : '';
+        }
+        
+        // Section 8: บุคลิกภายใน / Personality
+        if (collectedData[8]) {
+            collectedData[8].forEach(d => {
+                const keyLower = d.key.toLowerCase();
+                if (keyLower.includes('confidence') || d.key.includes('ความมั่นใจ')) {
+                    parsed.confidence = d.value;
+                } else if (keyLower.includes('camera') || d.key.includes('ท่าทีต่อกล้อง')) {
+                    parsed.cameraPresence = d.value;
+                } else if (keyLower.includes('story') || d.key.includes('บทบาทในเรื่อง')) {
+                    parsed.storyRole = d.value;
+                }
+            });
+        }
     }
     
     console.log('Parsed result:', parsed);
-    console.log('Parsed nickname:', parsed.nickname);
-    console.log('Parsed role:', parsed.role);
-    console.log('Parsed gender:', parsed.gender);
+    console.log('Is 14-field format:', is14FieldFormat);
     return parsed;
 }
 
@@ -2043,51 +2358,99 @@ function showEditCharacterModal(profileData) {
     // Fill form with existing data
     // The parsed data already contains clean values without labels
     
-    // Section 1: ชื่อเรียก / บทบาท
-    const nicknameField = document.getElementById('charNickname');
-    const roleField = document.getElementById('charRole');
-    
-    if (nicknameField && profileData.nickname) {
-        nicknameField.value = profileData.nickname;
-        console.log('Set nickname to:', profileData.nickname);
-    }
-    if (roleField && profileData.role) {
-        roleField.value = profileData.role;
-        console.log('Set role to:', profileData.role);
-    }
+    // Section 1: ชื่อ / บทบาท
+    if (profileData.name) document.getElementById('charName').value = profileData.name;
+    if (profileData.nickname) document.getElementById('charNickname').value = profileData.nickname;
+    if (profileData.role) document.getElementById('charRole').value = profileData.role;
     
     // Section 2: เพศ / อายุ / เชื้อชาติ
     if (profileData.gender) document.getElementById('charGender').value = profileData.gender;
     if (profileData.age) document.getElementById('charAge').value = profileData.age;
     if (profileData.ethnicity) document.getElementById('charEthnicity').value = profileData.ethnicity;
     
-    // Section 3: รูปร่าง / ผิว / ท่าทาง
+    // Section 3: รูปร่าง / ผิว
     if (profileData.body) document.getElementById('charBody').value = profileData.body;
+    if (profileData.heightWeight) document.getElementById('charHeightWeight').value = profileData.heightWeight;
     if (profileData.skin) document.getElementById('charSkin').value = profileData.skin;
-    if (profileData.posture) document.getElementById('charPosture').value = profileData.posture;
     
-    // Section 4: ลักษณะผม / ใบหน้า
-    if (profileData.hair) document.getElementById('charHair').value = profileData.hair;
-    if (profileData.face) document.getElementById('charFace').value = profileData.face;
+    // Section 4: ใบหน้า
+    if (profileData.faceShape) document.getElementById('charFaceShape').value = profileData.faceShape;
+    if (profileData.faceFeatures) document.getElementById('charFaceFeatures').value = profileData.faceFeatures;
+    // For backward compatibility, if old face field exists
+    if (!profileData.faceShape && !profileData.faceFeatures && profileData.face) {
+        document.getElementById('charFaceShape').value = profileData.face;
+    }
     
-    // Section 5: แว่น / เครื่องประดับ
-    if (profileData.glasses) document.getElementById('charGlasses').value = profileData.glasses;
-    if (profileData.accessories) document.getElementById('charAccessories').value = profileData.accessories;
+    // Section 5: ดวงตา / คิ้ว
+    if (profileData.eyes) document.getElementById('charEyes').value = profileData.eyes;
+    if (profileData.eyebrows) document.getElementById('charEyebrows').value = profileData.eyebrows;
     
-    // Section 6: เครื่องแต่งกาย
+    // Section 6: ริมฝีปาก
+    if (profileData.lips) document.getElementById('charLips').value = profileData.lips;
+    
+    // Section 7: ผม
+    if (profileData.hairStyle) document.getElementById('charHairStyle').value = profileData.hairStyle;
+    if (profileData.hairColor) document.getElementById('charHairColor').value = profileData.hairColor;
+    if (profileData.hairDetails) document.getElementById('charHairDetails').value = profileData.hairDetails;
+    // For backward compatibility, if old hair field exists
+    if (!profileData.hairStyle && !profileData.hairColor && !profileData.hairDetails && profileData.hair) {
+        document.getElementById('charHairStyle').value = profileData.hair;
+    }
+    
+    // Section 8: เครื่องแต่งกาย
     if (profileData.shirt) document.getElementById('charShirt').value = profileData.shirt;
-    if (profileData.jacket) document.getElementById('charJacket').value = profileData.jacket;
-    if (profileData.pants) document.getElementById('charPants').value = profileData.pants;
+    if (profileData.bottoms) document.getElementById('charBottoms').value = profileData.bottoms;
+    if (profileData.pants && !profileData.bottoms) document.getElementById('charBottoms').value = profileData.pants; // Backward compatibility
+    if (profileData.outerwear) document.getElementById('charOuterwear').value = profileData.outerwear;
+    if (profileData.jacket && !profileData.outerwear) document.getElementById('charOuterwear').value = profileData.jacket; // Backward compatibility
     if (profileData.shoes) document.getElementById('charShoes').value = profileData.shoes;
+    if (profileData.fabric) document.getElementById('charFabric').value = profileData.fabric;
     
-    // Section 7: น้ำเสียง / วิธีพูด
-    if (profileData.voiceTone) document.getElementById('charVoiceTone').value = profileData.voiceTone;
-    if (profileData.speechStyle) document.getElementById('charSpeechStyle').value = profileData.speechStyle;
+    // Section 9: เครื่องประดับ
+    if (profileData.headAccessories) document.getElementById('charHeadAccessories').value = profileData.headAccessories;
+    if (profileData.jewelry) document.getElementById('charJewelry').value = profileData.jewelry;
+    if (profileData.otherAccessories) document.getElementById('charOtherAccessories').value = profileData.otherAccessories;
+    // For backward compatibility with old accessories field
+    if (!profileData.headAccessories && !profileData.jewelry && !profileData.otherAccessories && profileData.accessories) {
+        document.getElementById('charJewelry').value = profileData.accessories;
+    }
+    // Handle glasses from old format
+    if (profileData.glasses) document.getElementById('charOtherAccessories').value = profileData.glasses;
     
-    // Section 8: บุคลิกภายใน
+    // Section 10: บุคลิกภาพ
+    if (profileData.personalityTraits) document.getElementById('charPersonalityTraits').value = profileData.personalityTraits;
     if (profileData.confidence) document.getElementById('charConfidence').value = profileData.confidence;
     if (profileData.cameraPresence) document.getElementById('charCameraPresence').value = profileData.cameraPresence;
-    if (profileData.storyRole) document.getElementById('charStoryRole').value = profileData.storyRole;
+    
+    // Section 11: ท่าทางเริ่มต้น
+    if (profileData.initialPose) document.getElementById('charInitialPose').value = profileData.initialPose;
+    if (profileData.bodyLanguage) document.getElementById('charBodyLanguage').value = profileData.bodyLanguage;
+    // For backward compatibility with posture
+    if (!profileData.initialPose && profileData.posture) document.getElementById('charInitialPose').value = profileData.posture;
+    
+    // Section 12: โทนเสียง
+    if (profileData.voicePitch) document.getElementById('charVoicePitch').value = profileData.voicePitch;
+    if (profileData.speakingStyle) document.getElementById('charSpeakingStyle').value = profileData.speakingStyle;
+    if (profileData.accent) document.getElementById('charAccent').value = profileData.accent;
+    if (profileData.voiceCharacteristics) document.getElementById('charVoiceCharacteristics').value = profileData.voiceCharacteristics;
+    // For backward compatibility with old voice fields
+    if (!profileData.voicePitch && profileData.voiceTone) document.getElementById('charVoicePitch').value = profileData.voiceTone;
+    if (!profileData.speakingStyle && profileData.speechStyle) document.getElementById('charSpeakingStyle').value = profileData.speechStyle;
+    
+    // Section 13: ลักษณะพิเศษ
+    if (profileData.uniqueTraits) document.getElementById('charUniqueTraits').value = profileData.uniqueTraits;
+    if (profileData.specialEffects) document.getElementById('charSpecialEffects').value = profileData.specialEffects;
+    
+    // Section 14: ภาพความสมจริง
+    if (profileData.realismType) document.getElementById('charRealismType').value = profileData.realismType;
+    // For backward compatibility with storyRole/theme
+    if (!profileData.realismType && (profileData.storyRole || profileData.theme)) {
+        // Try to map old values to new realism types
+        const oldValue = profileData.storyRole || profileData.theme;
+        if (oldValue.toLowerCase().includes('realistic') || oldValue.toLowerCase().includes('photo')) {
+            document.getElementById('charRealismType').value = 'Photorealistic Human';
+        }
+    }
     
     // หา action buttons div
     const actionsDiv = modal.querySelector('.template-actions');
@@ -2115,45 +2478,79 @@ function saveEditedCharacter() {
         return;
     }
     
-    // Get form data - support both simple 8 fields and detailed fields
+    // Get form data - support 14 fields format
+    // Section 1: ชื่อ / บทบาท
+    const name = document.getElementById('charName')?.value.trim() || '';
     const nickname = document.getElementById('charNickname')?.value.trim() || '';
     const role = document.getElementById('charRole')?.value.trim() || '';
     
+    // Section 2: เพศ / อายุ / เชื้อชาติ
     const gender = document.getElementById('charGender')?.value.trim() || '';
     const age = document.getElementById('charAge')?.value.trim() || '';
     const ethnicity = document.getElementById('charEthnicity')?.value.trim() || '';
     
+    // Section 3: รูปร่าง / ผิว
     const body = document.getElementById('charBody')?.value.trim() || '';
+    const heightWeight = document.getElementById('charHeightWeight')?.value.trim() || '';
     const skin = document.getElementById('charSkin')?.value.trim() || '';
-    const posture = document.getElementById('charPosture')?.value.trim() || '';
     
-    const hair = document.getElementById('charHair')?.value.trim() || '';
-    const face = document.getElementById('charFace')?.value.trim() || '';
+    // Section 4: ใบหน้า
+    const faceShape = document.getElementById('charFaceShape')?.value.trim() || '';
+    const faceFeatures = document.getElementById('charFaceFeatures')?.value.trim() || '';
     
-    const glasses = document.getElementById('charGlasses')?.value.trim() || '';
-    const accessories = document.getElementById('charAccessories')?.value.trim() || '';
+    // Section 5: ดวงตา / คิ้ว
+    const eyes = document.getElementById('charEyes')?.value.trim() || '';
+    const eyebrows = document.getElementById('charEyebrows')?.value.trim() || '';
     
-    const clothing = document.getElementById('charClothing')?.value.trim() || '';
+    // Section 6: ริมฝีปาก
+    const lips = document.getElementById('charLips')?.value.trim() || '';
+    
+    // Section 7: ผม
+    const hairStyle = document.getElementById('charHairStyle')?.value.trim() || '';
+    const hairColor = document.getElementById('charHairColor')?.value.trim() || '';
+    const hairDetails = document.getElementById('charHairDetails')?.value.trim() || '';
+    
+    // Section 8: เครื่องแต่งกาย
     const shirt = document.getElementById('charShirt')?.value.trim() || '';
-    const jacket = document.getElementById('charJacket')?.value.trim() || '';
-    const pants = document.getElementById('charPants')?.value.trim() || '';
+    const bottoms = document.getElementById('charBottoms')?.value.trim() || '';
+    const outerwear = document.getElementById('charOuterwear')?.value.trim() || '';
     const shoes = document.getElementById('charShoes')?.value.trim() || '';
+    const fabric = document.getElementById('charFabric')?.value.trim() || '';
     
-    const voice = document.getElementById('charVoice')?.value.trim() || '';
-    const voiceTone = document.getElementById('charVoiceTone')?.value.trim() || '';
-    const speechStyle = document.getElementById('charSpeechStyle')?.value.trim() || '';
+    // Section 9: เครื่องประดับ
+    const headAccessories = document.getElementById('charHeadAccessories')?.value.trim() || '';
+    const jewelry = document.getElementById('charJewelry')?.value.trim() || '';
+    const otherAccessories = document.getElementById('charOtherAccessories')?.value.trim() || '';
     
-    const personality = document.getElementById('charPersonality')?.value.trim() || '';
+    // Section 10: บุคลิกภาพ
+    const personalityTraits = document.getElementById('charPersonalityTraits')?.value.trim() || '';
     const confidence = document.getElementById('charConfidence')?.value.trim() || '';
     const cameraPresence = document.getElementById('charCameraPresence')?.value.trim() || '';
-    const storyRole = document.getElementById('charStoryRole')?.value.trim() || '';
     
-    // Create updated profile using the standard format
-    let updatedProfile = '📋 CHARACTER IDENTITY TEMPLATE\n\n';
+    // Section 11: ท่าทางเริ่มต้น
+    const initialPose = document.getElementById('charInitialPose')?.value.trim() || '';
+    const bodyLanguage = document.getElementById('charBodyLanguage')?.value.trim() || '';
     
-    // 1. ชื่อเรียก / บทบาท
-    if (nickname || role) {
-        updatedProfile += '👩‍🏫 **1. ชื่อเรียก / บทบาท (Nickname / Role)**\n';
+    // Section 12: โทนเสียง
+    const voicePitch = document.getElementById('charVoicePitch')?.value.trim() || '';
+    const speakingStyle = document.getElementById('charSpeakingStyle')?.value.trim() || '';
+    const accent = document.getElementById('charAccent')?.value.trim() || '';
+    const voiceCharacteristics = document.getElementById('charVoiceCharacteristics')?.value.trim() || '';
+    
+    // Section 13: ลักษณะพิเศษ
+    const uniqueTraits = document.getElementById('charUniqueTraits')?.value.trim() || '';
+    const specialEffects = document.getElementById('charSpecialEffects')?.value.trim() || '';
+    
+    // Section 14: ภาพความสมจริง
+    const realismType = document.getElementById('charRealismType')?.value.trim() || '';
+    
+    // Create updated profile using the 14-field format
+    let updatedProfile = '📋 CHARACTER IDENTITY TEMPLATE (Prompt D)\n\n';
+    
+    // 1. ชื่อ / บทบาท
+    if (name || nickname || role) {
+        updatedProfile += '👤 **1. ชื่อ / บทบาท (Name / Role)**\n';
+        if (name) updatedProfile += `- ชื่อ: ${name}\n`;
         if (nickname) updatedProfile += `- ชื่อเรียก: ${nickname}\n`;
         if (role) updatedProfile += `- บทบาท: ${role}\n`;
         updatedProfile += '\n';
@@ -2168,67 +2565,106 @@ function saveEditedCharacter() {
         updatedProfile += '\n';
     }
     
-    // 3. รูปร่าง / ผิว / ท่าทาง
-    if (body || skin || posture) {
-        updatedProfile += '💃 **3. รูปร่าง / ผิว / ท่าทาง (Body / Skin / Posture)**\n';
+    // 3. รูปร่าง / ผิว
+    if (body || heightWeight || skin) {
+        updatedProfile += '💃 **3. รูปร่าง / ผิว (Body / Skin)**\n';
         if (body) updatedProfile += `- รูปร่าง: ${body}\n`;
-        if (skin) updatedProfile += `- ผิว: ${skin}\n`;
-        if (posture) updatedProfile += `- ท่าทาง: ${posture}\n`;
+        if (heightWeight) updatedProfile += `- ส่วนสูง & น้ำหนัก: ${heightWeight}\n`;
+        if (skin) updatedProfile += `- สีผิว: ${skin}\n`;
         updatedProfile += '\n';
     }
     
-    // 4. ลักษณะผม / ใบหน้า
-    if (hair || face) {
-        updatedProfile += '💇‍♀️ **4. ลักษณะผม / ใบหน้า (Hair / Face)**\n';
-        if (hair) updatedProfile += `- ผม: ${hair}\n`;
-        if (face) updatedProfile += `- ใบหน้า: ${face}\n`;
+    // 4. ใบหน้า
+    if (faceShape || faceFeatures) {
+        updatedProfile += '👤 **4. ใบหน้า (Face)**\n';
+        if (faceShape) updatedProfile += `- รูปหน้า: ${faceShape}\n`;
+        if (faceFeatures) updatedProfile += `- ลักษณะหน้า: ${faceFeatures}\n`;
         updatedProfile += '\n';
     }
     
-    // 5. แว่น / เครื่องประดับ
-    if (glasses || accessories) {
-        updatedProfile += '👓 **5. แว่น / เครื่องประดับ (Glasses / Accessories)**\n';
-        if (glasses) updatedProfile += `- แว่น: ${glasses}\n`;
-        if (accessories) updatedProfile += `- เครื่องประดับ: ${accessories}\n`;
+    // 5. ดวงตา / คิ้ว
+    if (eyes || eyebrows) {
+        updatedProfile += '👁️ **5. ดวงตา / คิ้ว (Eyes / Eyebrows)**\n';
+        if (eyes) updatedProfile += `- ดวงตา: ${eyes}\n`;
+        if (eyebrows) updatedProfile += `- คิ้ว: ${eyebrows}\n`;
         updatedProfile += '\n';
     }
     
-    // 6. เครื่องแต่งกาย
-    if (clothing || shirt || jacket || pants || shoes) {
-        updatedProfile += '👗 **6. เครื่องแต่งกาย (Clothing)**\n';
-        if (clothing) {
-            updatedProfile += `- ${clothing}\n`;
-        } else {
-            if (shirt) updatedProfile += `- เสื้อ: ${shirt}\n`;
-            if (jacket) updatedProfile += `- เสื้อคลุม/สูท: ${jacket}\n`;
-            if (pants) updatedProfile += `- กางเกง/กระโปรง: ${pants}\n`;
-            if (shoes) updatedProfile += `- รองเท้า: ${shoes}\n`;
-        }
+    // 6. ริมฝีปาก
+    if (lips) {
+        updatedProfile += '👄 **6. ริมฝีปาก (Lips)**\n';
+        updatedProfile += `- ริมฝีปาก: ${lips}\n`;
         updatedProfile += '\n';
     }
     
-    // 7. น้ำเสียง / วิธีพูด
-    if (voice || voiceTone || speechStyle) {
-        updatedProfile += '🎙️ **7. น้ำเสียง / วิธีพูด (Voice / Speech)**\n';
-        if (voice) {
-            updatedProfile += `- ${voice}\n`;
-        } else {
-            if (voiceTone) updatedProfile += `- โทนเสียง: ${voiceTone}\n`;
-            if (speechStyle) updatedProfile += `- ลักษณะการพูด: ${speechStyle}\n`;
-        }
+    // 7. ผม
+    if (hairStyle || hairColor || hairDetails) {
+        updatedProfile += '💇‍♀️ **7. ผม (Hair)**\n';
+        if (hairStyle) updatedProfile += `- ทรงผม: ${hairStyle}\n`;
+        if (hairColor) updatedProfile += `- สีผม: ${hairColor}\n`;
+        if (hairDetails) updatedProfile += `- รายละเอียดผม: ${hairDetails}\n`;
         updatedProfile += '\n';
     }
     
-    // 8. บุคลิกภายใน
-    if (personality || confidence || cameraPresence || storyRole) {
-        updatedProfile += '💼 **8. บุคลิกภายใน (Personality)**\n';
-        if (personality) {
-            updatedProfile += `- ${personality}\n`;
-        } else {
-            if (confidence) updatedProfile += `- ความมั่นใจ: ${confidence}\n`;
-            if (cameraPresence) updatedProfile += `- ท่าทีต่อกล้อง: ${cameraPresence}\n`;
-            if (storyRole) updatedProfile += `- บทบาทในเรื่อง: ${storyRole}\n`;
-        }
+    // 8. เครื่องแต่งกาย
+    if (shirt || bottoms || outerwear || shoes || fabric) {
+        updatedProfile += '👗 **8. เครื่องแต่งกาย (Outfit)**\n';
+        if (shirt) updatedProfile += `- เสื้อ: ${shirt}\n`;
+        if (bottoms) updatedProfile += `- กางเกง/กระโปรง: ${bottoms}\n`;
+        if (outerwear) updatedProfile += `- เสื้อคลุม: ${outerwear}\n`;
+        if (shoes) updatedProfile += `- รองเท้า: ${shoes}\n`;
+        if (fabric) updatedProfile += `- วัสดุ/ผ้า: ${fabric}\n`;
+        updatedProfile += '\n';
+    }
+    
+    // 9. เครื่องประดับ
+    if (headAccessories || jewelry || otherAccessories) {
+        updatedProfile += '💎 **9. เครื่องประดับ (Accessories)**\n';
+        if (headAccessories) updatedProfile += `- ที่ศีรษะ: ${headAccessories}\n`;
+        if (jewelry) updatedProfile += `- เครื่องประดับ: ${jewelry}\n`;
+        if (otherAccessories) updatedProfile += `- อื่นๆ: ${otherAccessories}\n`;
+        updatedProfile += '\n';
+    }
+    
+    // 10. บุคลิกภาพ
+    if (personalityTraits || confidence || cameraPresence) {
+        updatedProfile += '🎭 **10. บุคลิกภาพ (Personality)**\n';
+        if (personalityTraits) updatedProfile += `- ลักษณะนิสัย: ${personalityTraits}\n`;
+        if (confidence) updatedProfile += `- ระดับความมั่นใจ: ${confidence}\n`;
+        if (cameraPresence) updatedProfile += `- ท่าทีต่อกล้อง: ${cameraPresence}\n`;
+        updatedProfile += '\n';
+    }
+    
+    // 11. ท่าทางเริ่มต้น
+    if (initialPose || bodyLanguage) {
+        updatedProfile += '🕴️ **11. ท่าทางเริ่มต้น (Starting Pose)**\n';
+        if (initialPose) updatedProfile += `- ท่าทางเริ่มต้น: ${initialPose}\n`;
+        if (bodyLanguage) updatedProfile += `- ภาษากาย: ${bodyLanguage}\n`;
+        updatedProfile += '\n';
+    }
+    
+    // 12. โทนเสียง
+    if (voicePitch || speakingStyle || accent || voiceCharacteristics) {
+        updatedProfile += '🎙️ **12. โทนเสียง (Voice Tone)**\n';
+        if (voicePitch) updatedProfile += `- ระดับเสียง: ${voicePitch}\n`;
+        if (speakingStyle) updatedProfile += `- ลักษณะการพูด: ${speakingStyle}\n`;
+        if (accent) updatedProfile += `- สำเนียง: ${accent}\n`;
+        if (voiceCharacteristics) updatedProfile += `- ลักษณะเสียง: ${voiceCharacteristics}\n`;
+        updatedProfile += '\n';
+    }
+    
+    // 13. ลักษณะพิเศษ
+    if (uniqueTraits || specialEffects) {
+        updatedProfile += '✨ **13. ลักษณะพิเศษ (Special Features)**\n';
+        if (uniqueTraits) updatedProfile += `- ลักษณะเฉพาะ: ${uniqueTraits}\n`;
+        if (specialEffects) updatedProfile += `- เอฟเฟกต์พิเศษ: ${specialEffects}\n`;
+        updatedProfile += '\n';
+    }
+    
+    // 14. ภาพความสมจริง
+    if (realismType) {
+        updatedProfile += '🖼️ **14. ภาพความสมจริง (Visual Style)**\n';
+        updatedProfile += `- ประเภทความสมจริง: ${realismType}\n`;
     }
     
     // Log the profile
@@ -2557,45 +2993,74 @@ async function sendMessage() {
     
     if (!message && window.imageUrls.length > 0) {
     if (currentMode === 'character') {
-        message = `วิเคราะห์รูปภาพนี้และสร้าง Character Profile แบบละเอียดครบทั้ง 8 หัวข้อ:
+        message = `วิเคราะห์รูปภาพนี้และสร้าง Character Profile แบบละเอียดครบทั้ง 14 หัวข้อ:
 
-📋 **CHARACTER IDENTITY TEMPLATE**
+📋 **CHARACTER IDENTITY TEMPLATE (Prompt D)**
 
-👩‍🏫 **1. ชื่อเรียก / บทบาท (Nickname / Role)**
+👤 **1. ชื่อ / บทบาท (Name / Role)**
+- ชื่อ: (ถ้าทราบ)
 - ชื่อเรียก: ใช้สรรพนามทั่วไป เช่น "เด็กผู้ชาย", "เด็กผู้หญิง", "คุณผู้ชาย", "คุณผู้หญิง", "วัยรุ่นชาย", "วัยรุ่นหญิง" ตามอายุที่ประเมิน
 - บทบาท: ประเมินอาชีพ/บทบาทจากการแต่งตัวและบุคลิก
 
 🧑‍🎨 **2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**
-- ระบุเพศ
-- ประมาณอายุให้เป็นช่วง (เช่น 25-30 ปี)
-- วิเคราะห์เชื้อชาติ/ภูมิหลัง
+- เพศ: ระบุเพศ
+- อายุ: ประมาณอายุให้เป็นช่วง (เช่น 25-30 ปี)
+- เชื้อชาติ: วิเคราะห์เชื้อชาติ/ภูมิหลัง
 
-💃 **3. รูปร่าง / ผิว / ท่าทาง (Body / Skin / Posture)**
-- บรรยายรูปร่างโดยรวม
-- ลักษณะและสีผิว
-- ท่าทางในรูป
+💃 **3. รูปร่าง / ผิว (Body / Skin)**
+- รูปร่าง: บรรยายรูปร่างโดยรวม
+- ส่วนสูง & น้ำหนัก: ประมาณการจากรูป
+- สีผิว: ลักษณะและสีผิว
 
-💇‍♀️ **4. ลักษณะผม / ใบหน้า (Hair / Face)**
-- รายละเอียดทรงผม สีผม ความยาว
-- รูปหน้า โครงหน้า จุดเด่น
+👤 **4. ใบหน้า (Face)**
+- รูปหน้า: บรรยายรูปทรงใบหน้า
+- ลักษณะหน้า: โครงหน้า จุดเด่น
 
-👓 **5. แว่น / เครื่องประดับ (Glasses / Accessories)**
-- มีแว่นหรือไม่ ถ้ามีเป็นแบบไหน
-- เครื่องประดับที่สวมใส่
+👁️ **5. ดวงตา / คิ้ว (Eyes / Eyebrows)**
+- ดวงตา: รูปร่าง สี ลักษณะพิเศษ
+- คิ้ว: ทรงคิ้ว ความหนา
 
-👗 **6. เครื่องแต่งกาย (Clothing)**
-- เสื้อ: บรรยายแบบ สี วัสดุ
-- เสื้อคลุม/สูท: ถ้ามี
+👄 **6. ริมฝีปาก (Lips)**
+- ริมฝีปาก: สี รูปทรง ลักษณะพิเศษ
+
+💇‍♀️ **7. ผม (Hair)**
+- ทรงผม: บรรยายทรงผม
+- สีผม: สีธรรมชาติหรือย้อม
+- รายละเอียดผม: ความยาว ลักษณะเส้นผม
+
+👗 **8. เครื่องแต่งกาย (Outfit)**
+- เสื้อ: บรรยายแบบ สี
 - กางเกง/กระโปรง: บรรยายแบบ สี
-- รองเท้า: ถ้าเห็นในรูป
+- เสื้อคลุม: (ถ้ามี)
+- รองเท้า: (ถ้าเห็นในรูป)
+- วัสดุ/ผ้า: ประเภทผ้าหรือวัสดุ
 
-🎙️ **7. น้ำเสียง / วิธีพูด (Voice / Speech)**
-- คาดเดาลักษณะน้ำเสียงจากบุคลิก
-- วิธีการพูดที่น่าจะเป็น
+💎 **9. เครื่องประดับ (Accessories)**
+- ที่ศีรษะ: หมวก ที่คาดผม
+- เครื่องประดับ: สร้อย ต่างหู
+- อื่นๆ: แว่น นาฬิกา เข็มขัด
 
-💼 **8. บุคลิกภายใน (Personality)**
-- ประเมินความมั่นใจจากท่าทาง
-- การแสดงออกต่อกล้อง
+🎭 **10. บุคลิกภาพ (Personality)**
+- ลักษณะนิสัย: ประเมินจากท่าทาง
+- ระดับความมั่นใจ: วิเคราะห์จากภาษากาย
+- ท่าทีต่อกล้อง: สบายหรือเขิน
+
+🕴️ **11. ท่าทางเริ่มต้น (Starting Pose)**
+- ท่าทางเริ่มต้น: ท่าทางในรูป
+- ภาษากาย: การวางมือ ท่ายืน
+
+🎙️ **12. โทนเสียง (Voice Tone)**
+- ระดับเสียง: คาดเดาจากบุคลิก
+- ลักษณะการพูด: วิธีการพูดที่น่าจะเป็น
+- สำเนียง: ประมาณการ
+- ลักษณะเสียง: นุ่มนวล ทุ้ม ใส
+
+✨ **13. ลักษณะพิเศษ (Special Features)**
+- ลักษณะเฉพาะ: ไฝ รอยสัก ลักยิ้ม
+- เอฟเฟกต์พิเศษ: (ถ้าต้องการเพิ่ม)
+
+🖼️ **14. ภาพความสมจริง (Visual Style)**
+- ประเภทความสมจริง: Photorealistic Human / 3D Anime Style / Semi-Real
 - บทบาทที่เหมาะในเรื่องราว
 
 ⚠️ สำคัญ: ต้องกรอกข้อมูลให้ครบทุกหัวข้อ ไม่เว้นว่าง ถ้าไม่แน่ใจให้ประเมินจากภาพที่เห็น`;
@@ -7027,13 +7492,36 @@ function updateCharacterTemplateButton() {
 function showCharacterTemplate() {
     document.getElementById('characterTemplateModal').style.display = 'flex';
     
-    // Clear all fields
+    // Clear all fields - updated for 14 sections
     const fields = [
-        'charNickname', 'charRole', 'charGender', 'charAge', 'charEthnicity',
-        'charBody', 'charSkin', 'charPosture', 'charHair', 'charFace',
-        'charGlasses', 'charAccessories', 'charShirt', 'charJacket', 
-        'charPants', 'charShoes', 'charVoiceTone', 'charSpeechStyle',
-        'charConfidence', 'charCameraPresence', 'charStoryRole'
+        // 1. Name/Role
+        'charName', 'charNickname', 'charRole',
+        // 2. Gender/Age/Ethnicity  
+        'charGender', 'charAge', 'charEthnicity',
+        // 3. Body/Skin
+        'charBody', 'charHeightWeight', 'charSkin',
+        // 4. Face
+        'charFaceShape', 'charFaceFeatures',
+        // 5. Eyes/Eyebrows
+        'charEyes', 'charEyebrows',
+        // 6. Lips
+        'charLips',
+        // 7. Hair
+        'charHairStyle', 'charHairColor', 'charHairDetails',
+        // 8. Outfit
+        'charShirt', 'charBottoms', 'charOuterwear', 'charShoes', 'charFabric',
+        // 9. Accessories
+        'charHeadAccessories', 'charJewelry', 'charOtherAccessories',
+        // 10. Personality
+        'charPersonalityTraits', 'charConfidence', 'charCameraPresence',
+        // 11. Starting Pose
+        'charInitialPose', 'charBodyLanguage',
+        // 12. Voice Tone
+        'charVoicePitch', 'charSpeakingStyle', 'charAccent', 'charVoiceCharacteristics',
+        // 13. Special Features
+        'charUniqueTraits', 'charSpecialEffects',
+        // 14. Visual Style
+        'charRealismType'
     ];
     
     fields.forEach(id => {
@@ -7079,98 +7567,187 @@ function closeCharacterTemplate() {
 
 // Generate Character Profile from Template
 function generateFromCharacterTemplate() {
-    // Collect all data
+    // Collect all data for 14 sections
     const data = {
-        nickname: document.getElementById('charNickname').value || '',
-        role: document.getElementById('charRole').value || '',
-        gender: document.getElementById('charGender').value || '',
-        age: document.getElementById('charAge').value || '',
-        ethnicity: document.getElementById('charEthnicity').value || '',
-        body: document.getElementById('charBody').value || '',
-        skin: document.getElementById('charSkin').value || '',
-        posture: document.getElementById('charPosture').value || '',
-        hair: document.getElementById('charHair').value || '',
-        face: document.getElementById('charFace').value || '',
-        glasses: document.getElementById('charGlasses').value || '',
-        accessories: document.getElementById('charAccessories').value || '',
-        shirt: document.getElementById('charShirt').value || '',
-        jacket: document.getElementById('charJacket').value || '',
-        pants: document.getElementById('charPants').value || '',
-        shoes: document.getElementById('charShoes').value || '',
-        voiceTone: document.getElementById('charVoiceTone').value || '',
-        speechStyle: document.getElementById('charSpeechStyle').value || '',
-        confidence: document.getElementById('charConfidence').value || '',
-        cameraPresence: document.getElementById('charCameraPresence').value || '',
-        storyRole: document.getElementById('charStoryRole').value || ''
+        // 1. Name/Role
+        name: document.getElementById('charName')?.value || '',
+        nickname: document.getElementById('charNickname')?.value || '',
+        role: document.getElementById('charRole')?.value || '',
+        // 2. Gender/Age/Ethnicity
+        gender: document.getElementById('charGender')?.value || '',
+        age: document.getElementById('charAge')?.value || '',
+        ethnicity: document.getElementById('charEthnicity')?.value || '',
+        // 3. Body/Skin
+        body: document.getElementById('charBody')?.value || '',
+        heightWeight: document.getElementById('charHeightWeight')?.value || '',
+        skin: document.getElementById('charSkin')?.value || '',
+        // 4. Face
+        faceShape: document.getElementById('charFaceShape')?.value || '',
+        faceFeatures: document.getElementById('charFaceFeatures')?.value || '',
+        // 5. Eyes/Eyebrows
+        eyes: document.getElementById('charEyes')?.value || '',
+        eyebrows: document.getElementById('charEyebrows')?.value || '',
+        // 6. Lips
+        lips: document.getElementById('charLips')?.value || '',
+        // 7. Hair
+        hairStyle: document.getElementById('charHairStyle')?.value || '',
+        hairColor: document.getElementById('charHairColor')?.value || '',
+        hairDetails: document.getElementById('charHairDetails')?.value || '',
+        // 8. Outfit
+        shirt: document.getElementById('charShirt')?.value || '',
+        bottoms: document.getElementById('charBottoms')?.value || '',
+        outerwear: document.getElementById('charOuterwear')?.value || '',
+        shoes: document.getElementById('charShoes')?.value || '',
+        fabric: document.getElementById('charFabric')?.value || '',
+        // 9. Accessories
+        headAccessories: document.getElementById('charHeadAccessories')?.value || '',
+        jewelry: document.getElementById('charJewelry')?.value || '',
+        otherAccessories: document.getElementById('charOtherAccessories')?.value || '',
+        // 10. Personality
+        personalityTraits: document.getElementById('charPersonalityTraits')?.value || '',
+        confidence: document.getElementById('charConfidence')?.value || '',
+        cameraPresence: document.getElementById('charCameraPresence')?.value || '',
+        // 11. Starting Pose
+        initialPose: document.getElementById('charInitialPose')?.value || '',
+        bodyLanguage: document.getElementById('charBodyLanguage')?.value || '',
+        // 12. Voice Tone
+        voicePitch: document.getElementById('charVoicePitch')?.value || '',
+        speakingStyle: document.getElementById('charSpeakingStyle')?.value || '',
+        accent: document.getElementById('charAccent')?.value || '',
+        voiceCharacteristics: document.getElementById('charVoiceCharacteristics')?.value || '',
+        // 13. Special Features
+        uniqueTraits: document.getElementById('charUniqueTraits')?.value || '',
+        specialEffects: document.getElementById('charSpecialEffects')?.value || '',
+        // 14. Visual Style
+        realismType: document.getElementById('charRealismType')?.value || ''
     };
     
     // Store data for later use
     characterTemplateData = data;
     
-    // Build character description
-    let prompt = 'สร้าง Character Profile แบบละเอียดมากจากข้อมูลนี้:\n\n';
+    // Build character description using new 14-section format
+    let prompt = 'สร้าง Character Profile แบบละเอียดตาม format 14 หัวข้อจากข้อมูลนี้:\n\n';
     
-    if (data.nickname || data.role) {
-        prompt += '👩‍🏫 **ชื่อเรียก / บทบาท**\n';
-        if (data.nickname) prompt += `- ชื่อเรียก: ${data.nickname}\n`;
-        if (data.role) prompt += `- บทบาท: ${data.role}\n`;
+    // 1. Name/Role
+    if (data.name || data.nickname || data.role) {
+        prompt += '👤 **1. ชื่อ / บทบาท (Name / Role)**\n';
+        if (data.name) prompt += `* Name: ${data.name}\n`;
+        if (data.nickname) prompt += `* Nickname: ${data.nickname}\n`;
+        if (data.role) prompt += `* Role: ${data.role}\n`;
         prompt += '\n';
     }
     
+    // 2. Gender/Age/Ethnicity
     if (data.gender || data.age || data.ethnicity) {
-        prompt += '🧑‍🎨 **เพศ / อายุ / เชื้อชาติ**\n';
-        if (data.gender) prompt += `- เพศ: ${data.gender}\n`;
-        if (data.age) prompt += `- อายุ: ${data.age}\n`;
-        if (data.ethnicity) prompt += `- เชื้อชาติ: ${data.ethnicity}\n`;
+        prompt += '🧑‍🎨 **2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**\n';
+        if (data.gender) prompt += `* Gender: ${data.gender}\n`;
+        if (data.age) prompt += `* Age: ${data.age}\n`;
+        if (data.ethnicity) prompt += `* Ethnicity: ${data.ethnicity}\n`;
         prompt += '\n';
     }
     
-    if (data.body || data.skin || data.posture) {
-        prompt += '💃 **รูปร่าง / ผิว / ท่าทาง**\n';
-        if (data.body) prompt += `- รูปร่าง: ${data.body}\n`;
-        if (data.skin) prompt += `- ผิว: ${data.skin}\n`;
-        if (data.posture) prompt += `- ท่าทาง: ${data.posture}\n`;
+    // 3. Body/Skin
+    if (data.body || data.heightWeight || data.skin) {
+        prompt += '💃 **3. รูปร่าง / ผิว (Body / Skin)**\n';
+        if (data.body) prompt += `* Body type: ${data.body}\n`;
+        if (data.heightWeight) prompt += `* Height & Weight: ${data.heightWeight}\n`;
+        if (data.skin) prompt += `* Skin tone: ${data.skin}\n`;
         prompt += '\n';
     }
     
-    if (data.hair || data.face) {
-        prompt += '💇‍♀️ **ลักษณะผม / ใบหน้า**\n';
-        if (data.hair) prompt += `- ทรงผม: ${data.hair}\n`;
-        if (data.face) prompt += `- ใบหน้า: ${data.face}\n`;
+    // 4. Face
+    if (data.faceShape || data.faceFeatures) {
+        prompt += '👤 **4. ใบหน้า (Face)**\n';
+        if (data.faceShape) prompt += `* Face shape: ${data.faceShape}\n`;
+        if (data.faceFeatures) prompt += `* Face features: ${data.faceFeatures}\n`;
         prompt += '\n';
     }
     
-    if (data.glasses || data.accessories) {
-        prompt += '👓 **แว่น / เครื่องประดับ**\n';
-        if (data.glasses) prompt += `- แว่น: ${data.glasses}\n`;
-        if (data.accessories) prompt += `- เครื่องประดับ: ${data.accessories}\n`;
+    // 5. Eyes/Eyebrows
+    if (data.eyes || data.eyebrows) {
+        prompt += '👁️ **5. ดวงตา / คิ้ว (Eyes / Eyebrows)**\n';
+        if (data.eyes) prompt += `* Eyes: ${data.eyes}\n`;
+        if (data.eyebrows) prompt += `* Eyebrows: ${data.eyebrows}\n`;
         prompt += '\n';
     }
     
-    if (data.shirt || data.jacket || data.pants || data.shoes) {
-        prompt += '👗 **เครื่องแต่งกาย**\n';
-        if (data.shirt) prompt += `- เสื้อ: ${data.shirt}\n`;
-        if (data.jacket) prompt += `- เสื้อคลุม/สูท: ${data.jacket}\n`;
-        if (data.pants) prompt += `- กางเกง/กระโปรง: ${data.pants}\n`;
-        if (data.shoes) prompt += `- รองเท้า: ${data.shoes}\n`;
+    // 6. Lips
+    if (data.lips) {
+        prompt += '👄 **6. ริมฝีปาก (Lips)**\n';
+        prompt += `* Lips: ${data.lips}\n\n`;
+    }
+    
+    // 7. Hair
+    if (data.hairStyle || data.hairColor || data.hairDetails) {
+        prompt += '💇‍♀️ **7. ผม (Hair)**\n';
+        if (data.hairStyle) prompt += `* Hair style: ${data.hairStyle}\n`;
+        if (data.hairColor) prompt += `* Hair color: ${data.hairColor}\n`;
+        if (data.hairDetails) prompt += `* Hair details: ${data.hairDetails}\n`;
         prompt += '\n';
     }
     
-    if (data.voiceTone || data.speechStyle) {
-        prompt += '🎙️ **น้ำเสียง / วิธีพูด**\n';
-        if (data.voiceTone) prompt += `- โทนเสียง: ${data.voiceTone}\n`;
-        if (data.speechStyle) prompt += `- ลักษณะการพูด: ${data.speechStyle}\n`;
+    // 8. Outfit
+    if (data.shirt || data.bottoms || data.outerwear || data.shoes || data.fabric) {
+        prompt += '👗 **8. เครื่องแต่งกาย (Outfit)**\n';
+        if (data.shirt) prompt += `* Top/Shirt: ${data.shirt}\n`;
+        if (data.bottoms) prompt += `* Bottom/Pants/Skirt: ${data.bottoms}\n`;
+        if (data.outerwear) prompt += `* Outerwear: ${data.outerwear}\n`;
+        if (data.shoes) prompt += `* Shoes: ${data.shoes}\n`;
+        if (data.fabric) prompt += `* Fabric/Material: ${data.fabric}\n`;
         prompt += '\n';
     }
     
-    if (data.confidence || data.cameraPresence || data.storyRole) {
-        prompt += '💼 **บุคลิกภายใน**\n';
-        if (data.confidence) prompt += `- ความมั่นใจ: ${data.confidence}\n`;
-        if (data.cameraPresence) prompt += `- ท่าทีต่อกล้อง: ${data.cameraPresence}\n`;
-        if (data.storyRole) prompt += `- บทบาทในเรื่อง: ${data.storyRole}\n`;
+    // 9. Accessories
+    if (data.headAccessories || data.jewelry || data.otherAccessories) {
+        prompt += '💎 **9. เครื่องประดับ (Accessories)**\n';
+        if (data.headAccessories) prompt += `* Head accessories: ${data.headAccessories}\n`;
+        if (data.jewelry) prompt += `* Jewelry: ${data.jewelry}\n`;
+        if (data.otherAccessories) prompt += `* Other accessories: ${data.otherAccessories}\n`;
+        prompt += '\n';
     }
     
-    prompt += '\n⚠️ สำคัญ: ให้สร้างเป็น Character Profile ภาษาอังกฤษ พร้อมคำอธิบายละเอียดมาก รวมทั้งลักษณะท่าทาง การเคลื่อนไหว และรายละเอียดที่จะช่วยให้ AI สร้างตัวละครได้สมจริง';
+    // 10. Personality
+    if (data.personalityTraits || data.confidence || data.cameraPresence) {
+        prompt += '🎭 **10. บุคลิกภาพ (Personality)**\n';
+        if (data.personalityTraits) prompt += `* Personality traits: ${data.personalityTraits}\n`;
+        if (data.confidence) prompt += `* Confidence level: ${data.confidence}\n`;
+        if (data.cameraPresence) prompt += `* Camera presence: ${data.cameraPresence}\n`;
+        prompt += '\n';
+    }
+    
+    // 11. Starting Pose
+    if (data.initialPose || data.bodyLanguage) {
+        prompt += '🕴️ **11. ท่าทางเริ่มต้น (Starting Pose)**\n';
+        if (data.initialPose) prompt += `* Initial pose: ${data.initialPose}\n`;
+        if (data.bodyLanguage) prompt += `* Body language: ${data.bodyLanguage}\n`;
+        prompt += '\n';
+    }
+    
+    // 12. Voice Tone
+    if (data.voicePitch || data.speakingStyle || data.accent || data.voiceCharacteristics) {
+        prompt += '🎙️ **12. โทนเสียง (Voice Tone)**\n';
+        if (data.voicePitch) prompt += `* Voice pitch: ${data.voicePitch}\n`;
+        if (data.speakingStyle) prompt += `* Speaking style: ${data.speakingStyle}\n`;
+        if (data.accent) prompt += `* Accent/Dialect: ${data.accent}\n`;
+        if (data.voiceCharacteristics) prompt += `* Voice characteristics: ${data.voiceCharacteristics}\n`;
+        prompt += '\n';
+    }
+    
+    // 13. Special Features
+    if (data.uniqueTraits || data.specialEffects) {
+        prompt += '✨ **13. ลักษณะพิเศษ (Special Features)**\n';
+        if (data.uniqueTraits) prompt += `* Unique traits: ${data.uniqueTraits}\n`;
+        if (data.specialEffects) prompt += `* Special effects: ${data.specialEffects}\n`;
+        prompt += '\n';
+    }
+    
+    // 14. Visual Style
+    if (data.realismType) {
+        prompt += '🖼️ **14. ภาพความสมจริง (Visual Style)**\n';
+        prompt += `* Realism type: ${data.realismType}\n\n`;
+    }
+    
+    prompt += '⚠️ IMPORTANT: Generate the complete character profile in ENGLISH following the exact 14-section format above.';
     
     // Insert into message input
     document.getElementById('messageInput').value = prompt;
