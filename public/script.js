@@ -738,6 +738,7 @@ async function showCreditPackages() {
                     
                     <!-- Upload Section -->
                     <div class="upload-slip-section" style="display: none;">
+                        <input type="file" id="slipFileInput" accept="image/*" style="display: none;" onchange="handleSlipSelect(event)">
                         <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
                             <div class="upload-icon">📤</div>
                             <div class="upload-text">อัพโหลดสลิป</div>
@@ -4823,7 +4824,9 @@ let selectedPackageData = null;
 
 // Handle slip file selection
 function handleSlipSelect(event) {
+    console.log('handleSlipSelect called', event);
     const file = event.target.files[0];
+    console.log('Selected file:', file);
     if (!file) return;
     
     // Check file type
@@ -4988,6 +4991,7 @@ window.backToChat = backToChat;
 window.showCreditPackages = showCreditPackages;
 window.closeCreditModal = closeCreditModal;
 window.uploadSlip = uploadSlip;
+window.handleSlipSelect = handleSlipSelect;
 window.resetUploadArea = resetUploadArea;
 window.generateQRCode = generateQRCode;
 window.selectPackage = selectPackage;
