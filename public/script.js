@@ -3618,6 +3618,13 @@ function copyPrompt(button) {
         const visualEffectsIndex = fullText.lastIndexOf('VISUAL EFFECTS');
         let endIndex = fullText.length;
         
+        // ตรวจสอบว่ามี ``` (code block) หรือไม่
+        const codeBlockEnd = fullText.lastIndexOf('```');
+        if (codeBlockEnd !== -1 && codeBlockEnd > visualEffectsIndex) {
+            // ถ้ามี code block ให้ตัดที่ตรงนั้น
+            endIndex = codeBlockEnd + 3; // +3 เพื่อรวม ``` ด้วย
+        }
+        
         if (visualEffectsIndex !== -1) {
             // หาบรรทัดสุดท้ายหลัง VISUAL EFFECTS
             const afterVisualEffects = fullText.substring(visualEffectsIndex);
@@ -3692,6 +3699,21 @@ function copyPrompt(button) {
             finalPrompt = fullText.substring(0, cutoffIndex).trim();
         }
     }
+    }
+    
+    // สำหรับ Prompt Master - ตัดที่ "All dialogue is AUDIO ONLY" + ```
+    if (currentMode === 'promptmaster' || finalPrompt.includes('AUDIO ONLY')) {
+        const audioOnlyIndex = finalPrompt.indexOf('All dialogue is AUDIO ONLY');
+        if (audioOnlyIndex !== -1) {
+            // หา ``` หลังจาก AUDIO ONLY
+            const afterAudioOnly = finalPrompt.substring(audioOnlyIndex);
+            const codeBlockIndex = afterAudioOnly.indexOf('```');
+            
+            if (codeBlockIndex !== -1) {
+                // ตัดที่ ``` (รวม ``` ด้วย)
+                finalPrompt = finalPrompt.substring(0, audioOnlyIndex + codeBlockIndex + 3);
+            }
+        }
     }
     
     // ลบบรรทัดว่างท้าย
