@@ -686,6 +686,12 @@ async function showCreditPackages() {
                     </p>
                 </div>
                 
+                <div style="background: rgba(147, 51, 234, 0.1); padding: 16px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                    <p style="color: var(--primary); font-weight: 600; margin: 0;">
+                        ขั้นตอนที่ 1: เลือกแพ็กเกจที่ต้องการสนับสนุน 👇
+                    </p>
+                </div>
+                
                 <div class="packages-grid">
                     ${packages.map(pkg => `
                         <div class="package-card ${pkg.is_popular ? 'popular' : ''}">
@@ -713,7 +719,7 @@ async function showCreditPackages() {
                         <h4>สแกนเพื่อสนับสนุน</h4>
                         <div class="qr-code" id="qrCodeDisplay"></div>
                         <p style="color: #f59e0b; font-size: 14px; margin-top: 12px;">
-                            💡 โอนตรงจำนวน ระบบจะเพิ่มเครดิตให้ทันที
+                            💡 โอนเงินให้ตรงกับแพ็กเกจที่เลือก แล้วกดแนบสลิปด้านล่าง
                         </p>
                     </div>
                     
@@ -731,7 +737,7 @@ async function showCreditPackages() {
                     </div>
                     
                     <!-- Upload Section -->
-                    <div class="upload-slip-section">
+                    <div class="upload-slip-section" style="display: none;">
                         <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
                             <div class="upload-icon">📤</div>
                             <div class="upload-text">อัพโหลดสลิป</div>
@@ -4880,6 +4886,7 @@ async function uploadSlip() {
         });
         
         const data = await response.json();
+        console.log('Slip verification response:', data);
         
         if (response.ok && data.success) {
             // Success!
@@ -4887,7 +4894,7 @@ async function uploadSlip() {
             statusDiv.innerHTML = `
                 🎉 ขอบคุณที่สนับสนุนเว็บของเรา!<br>
                 💖 การสนับสนุนของคุณมีค่ามาก<br>
-                ✨ คุณได้รับ ${data.newBalance} เครดิต
+                ✨ เครดิตของคุณตอนนี้: ${data.newBalance} เครดิต
             `;
             
             // Update credit display
@@ -4914,7 +4921,10 @@ async function uploadSlip() {
     } catch (error) {
         console.error('Upload error:', error);
         statusDiv.className = 'upload-status error';
-        statusDiv.innerHTML = '❌ เกิดข้อผิดพลาด กรุณาลองใหม่';
+        statusDiv.innerHTML = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+        
+        // แสดง error ใน notification ด้วย
+        showNotification(`❌ Error: ${error.message}`, 'error');
         
         setTimeout(() => {
             resetUploadArea();
