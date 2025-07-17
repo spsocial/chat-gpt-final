@@ -6985,16 +6985,18 @@ const ImagePromptStorage = {
         // Clear current messages
         chatMessages.innerHTML = '';
         
-        // Add welcome message
-        addWelcomeMessage('image');
-        
-        // Add saved messages
-        messages.forEach(msg => {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${msg.type}`;
-            messageDiv.innerHTML = `<div class="message-content">${msg.content}</div>`;
-            chatMessages.appendChild(messageDiv);
-        });
+        // Add welcome message only if no messages
+        if (messages.length === 0) {
+            addWelcomeMessage('image');
+        } else {
+            // Add saved messages
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.type}`;
+                messageDiv.innerHTML = `<div class="message-content">${msg.content}</div>`;
+                chatMessages.appendChild(messageDiv);
+            });
+        }
         
         // Scroll to bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
