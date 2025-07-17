@@ -749,7 +749,7 @@ async function showCreditPackages() {
                             <div class="slip-preview">
                                 <img id="slipImage" src="" alt="Slip preview">
                             </div>
-                            <button onclick="uploadSlip()" style="
+                            <button id="confirmUploadBtn" onclick="uploadSlip()" style="
                                 margin-top: 16px;
                                 padding: 12px 32px;
                                 background: var(--primary);
@@ -759,6 +759,7 @@ async function showCreditPackages() {
                                 cursor: pointer;
                                 font-size: 16px;
                                 font-weight: 600;
+                                transition: all 0.3s ease;
                             ">
                                 ✨ ยืนยันการสนับสนุน
                             </button>
@@ -4913,11 +4914,42 @@ async function uploadSlip() {
         return;
     }
     
-    // Show loading status
+    // Disable button and show loading
+    const confirmBtn = document.getElementById('confirmUploadBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.style.opacity = '0.6';
+        confirmBtn.style.cursor = 'not-allowed';
+        confirmBtn.innerHTML = '⏳ กำลังประมวลผล...';
+    }
+    
+    // Show loading status with animation
     const statusDiv = document.getElementById('uploadStatus');
     statusDiv.className = 'upload-status checking';
-    statusDiv.innerHTML = '🎆 กำลังตรวจสอบการสนับสนุน...';
+    statusDiv.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <div class="spinner" style="
+                width: 20px;
+                height: 20px;
+                border: 3px solid rgba(147, 51, 234, 0.3);
+                border-top: 3px solid #9333ea;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            "></div>
+            <span>🎆 กำลังตรวจสอบสลิปการโอนเงิน...</span>
+        </div>
+    `;
     statusDiv.style.display = 'block';
+    
+    // Add spinning animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    `;
+    document.head.appendChild(style);
     
     // Hide preview
     document.getElementById('slipPreview').style.display = 'none';
@@ -4939,7 +4971,7 @@ async function uploadSlip() {
         const data = await response.json();
         console.log('Slip verification response:', data);
         
-        if (response.ok && data.success) {
+        if (response.ok && data.success && !data.isDuplicate) {
             // Success!
             statusDiv.className = 'upload-status success';
             statusDiv.innerHTML = `
@@ -4958,28 +4990,95 @@ async function uploadSlip() {
                 showNotification('🎆 ขอบคุณที่สนับสนุนค่ะ!', 'success');
             }, 3000);
             
-        } else {
-            // Error
+        } else if (data.isDuplicate) {
+            // สลิปซ้ำ
+            const duplicateMessage = `
+                ⚠️ สลิปนี้ถูกใช้ไปแล้ว<br>
+                <small style="color: #a1a1aa;">
+                    ใช้เมื่อ: ${new Date(data.verifiedAt).toLocaleString('th-TH')}<br>
+                    หมายเลขอ้างอิง: ${data.transactionRef}
+                </small>
+            `;
+            
             statusDiv.className = 'upload-status error';
-            statusDiv.innerHTML = `❌ ${data.error || 'ตรวจสอบสลิปไม่สำเร็จ'}`;
+            statusDiv.innerHTML = duplicateMessage;
+            
+            showNotification('⚠️ สลิปนี้ถูกใช้ไปแล้ว กรุณาใช้สลิปใหม่', 'error');
+            
+            // Enable button again
+            const confirmBtn = document.getElementById('confirmUploadBtn');
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+                confirmBtn.innerHTML = '✨ ยืนยันการสนับสนุน';
+            }
             
             // Reset upload area
             setTimeout(() => {
                 resetUploadArea();
-            }, 3000);
+            }, 5000);
+            
+        } else {
+            // Error - ตรวจสอบประเภทของ error
+            let errorMessage = '';
+            
+            // ตรวจสอบว่าเป็นสลิปซ้ำหรือไม่
+            if (data.isDuplicate || data.error?.includes('ถูกใช้แล้ว') || data.error?.includes('duplicate')) {
+                errorMessage = '⚠️ สลิปนี้ถูกใช้ไปแล้ว กรุณาใช้สลิปใหม่';
+            } else if (data.error?.includes('จำนวนเงินไม่ตรง')) {
+                errorMessage = `❌ ${data.error}`;
+            } else if (data.error?.includes('ไม่สามารถอ่านข้อมูล')) {
+                errorMessage = '❌ ไม่สามารถอ่านข้อมูลจากสลิป กรุณาถ่ายภาพให้ชัดเจน';
+            } else if (data.error?.includes('ผู้รับเงินไม่ถูกต้อง')) {
+                errorMessage = '❌ หมายเลขผู้รับไม่ถูกต้อง กรุณาตรวจสอบการโอนเงิน';
+            } else {
+                errorMessage = `❌ ${data.error || 'ไม่สามารถตรวจสอบสลิปได้ กรุณาลองใหม่'}`;
+            }
+            
+            statusDiv.className = 'upload-status error';
+            statusDiv.innerHTML = errorMessage;
+            
+            // แสดง notification ด้วย
+            showNotification(errorMessage, 'error');
+            
+            // Enable button again
+            if (confirmBtn) {
+                confirmBtn.disabled = false;
+                confirmBtn.style.opacity = '1';
+                confirmBtn.style.cursor = 'pointer';
+                confirmBtn.innerHTML = '✨ ยืนยันการสนับสนุน';
+            }
+            
+            // Reset upload area
+            setTimeout(() => {
+                resetUploadArea();
+            }, 5000);
         }
         
     } catch (error) {
         console.error('Upload error:', error);
         statusDiv.className = 'upload-status error';
-        statusDiv.innerHTML = `❌ เกิดข้อผิดพลาด: ${error.message}`;
         
-        // แสดง error ใน notification ด้วย
-        showNotification(`❌ Error: ${error.message}`, 'error');
+        let errorMessage = '❌ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง';
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = '❌ ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบอินเทอร์เน็ต';
+        }
+        
+        statusDiv.innerHTML = errorMessage;
+        showNotification(errorMessage, 'error');
+        
+        // Enable button again
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.style.opacity = '1';
+            confirmBtn.style.cursor = 'pointer';
+            confirmBtn.innerHTML = '✨ ยืนยันการสนับสนุน';
+        }
         
         setTimeout(() => {
             resetUploadArea();
-        }, 3000);
+        }, 5000);
     }
 }
 
