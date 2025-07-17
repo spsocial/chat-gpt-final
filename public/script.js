@@ -1486,6 +1486,13 @@ function loadChatHistory(mode) {
         return;
     }
     
+    // ใช้ ImagePromptStorage สำหรับ image mode
+    if (mode === 'image') {
+        console.log(`📘 Using ImagePromptStorage for image mode`);
+        ImagePromptStorage.display();
+        return;
+    }
+    
     // ใช้ ChatStorage สำหรับ chat
     if (mode === 'chat') {
         console.log(`📘 Using ChatStorage for chat mode`);
@@ -3338,6 +3345,10 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
     if (currentMode === 'promptmaster' || currentMode === 'multichar') {
         setTimeout(() => {
             PromptStorage.save('multichar');
+        }, 100);
+    } else if (currentMode === 'image') {
+        setTimeout(() => {
+            ImagePromptStorage.save();
         }, 100);
     }
     
@@ -6565,7 +6576,7 @@ window.clearChatHistory = function() {
 const originalSwitchMode2 = window.switchMode;
 window.switchMode = function(mode) {
     // Save current mode history before switching
-    if (currentMode === 'general' || currentMode === 'multichar') {
+    if (currentMode === 'general' || currentMode === 'multichar' || currentMode === 'image') {
         PromptStorage.save(currentMode);
     } else if (currentMode === 'chat') {
         ChatStorage.save();
@@ -6830,6 +6841,9 @@ window.saveChatHistory = function(mode) {
     } else if (mode === 'general' || mode === 'multichar') {
         // ใช้ PromptStorage สำหรับ general และ multichar
         PromptStorage.save(mode);
+    } else if (mode === 'image') {
+        // ใช้ ImagePromptStorage สำหรับ image mode
+        ImagePromptStorage.save();
     } else {
         // โหมดอื่นๆ ใช้วิธีเดิม
         originalSaveChatHistory(mode);
@@ -6842,8 +6856,19 @@ window.saveChatHistory = function(mode) {
 const originalClearModeChat = window.clearModeChat;
 window.clearModeChat = function(mode) {
     if (mode === 'general' || mode === 'multichar') {
-        if (confirm(`ต้องการล้างประวัติ ${mode === 'general' ? 'General Prompt' : 'Prompt Master'} หรือไม่?`)) {
+        const modeName = mode === 'general' ? 'General Prompt' : 'Prompt Master';
+        if (confirm(`ต้องการล้างประวัติ ${modeName} หรือไม่?`)) {
             PromptStorage.clear(mode);
+            chatHistory[mode] = '';
+            if (currentMode === mode) {
+                clearChat();
+                addWelcomeMessage(mode);
+            }
+            showNotification('🗑️ ล้างประวัติแล้ว', 'success');
+        }
+    } else if (mode === 'image') {
+        if (confirm(`ต้องการล้างประวัติ Image Prompt หรือไม่?`)) {
+            ImagePromptStorage.clear();
             chatHistory[mode] = '';
             if (currentMode === mode) {
                 clearChat();
@@ -6861,6 +6886,8 @@ window.clearModeChat = function(mode) {
 setInterval(() => {
     if (currentMode === 'promptmaster' || currentMode === 'multichar') {
         PromptStorage.save('multichar');
+    } else if (currentMode === 'image') {
+        ImagePromptStorage.save();
     }
 }, 30000);
 
@@ -6868,6 +6895,8 @@ setInterval(() => {
 window.addEventListener('beforeunload', () => {
     if (currentMode === 'promptmaster' || currentMode === 'multichar') {
         PromptStorage.save('multichar');
+    } else if (currentMode === 'image') {
+        ImagePromptStorage.save();
     }
 });
 
@@ -6875,19 +6904,116 @@ window.addEventListener('beforeunload', () => {
 window.showPromptStorageInfo = function() {
     const generalSize = PromptStorage.getSize('general');
     const multicharSize = PromptStorage.getSize('multichar');
+    const imageSize = PromptStorage.getSize('image');
     const generalMessages = PromptStorage.load('general');
     const multicharMessages = PromptStorage.load('multichar');
+    const imageMessages = PromptStorage.load('image');
     
     console.log(`
 📊 Prompt Storage Info:
 - User: ${userId}
 - General Mode: ${generalMessages.length} messages (${generalSize})
 - Multichar Mode: ${multicharMessages.length} messages (${multicharSize})
+- Image Mode: ${imageMessages.length} messages (${imageSize})
 - Max allowed: ~5-10 MB per mode
     `);
 };
 
 console.log('✅ Prompt Storage System loaded');
+
+// ========== IMAGE PROMPT STORAGE SYSTEM ==========
+const ImagePromptStorage = {
+    MAX_MESSAGES: 30,
+    STORAGE_KEY: 'veo_image_prompt_history',
+    
+    save: function() {
+        if (currentMode !== 'image') return;
+        
+        console.log(`🔵 ImagePromptStorage.save called, userId: ${userId}`);
+        
+        if (!userId) {
+            console.error('❌ ImagePromptStorage.save: userId is not set!');
+            return;
+        }
+        
+        try {
+            const messages = [];
+            const chatElements = document.querySelectorAll('#chatMessages .message');
+            
+            chatElements.forEach(elem => {
+                const isUser = elem.classList.contains('user');
+                const content = elem.querySelector('.message-content');
+                
+                if (content) {
+                    messages.push({
+                        type: isUser ? 'user' : 'assistant',
+                        content: content.innerHTML,
+                        timestamp: Date.now()
+                    });
+                }
+            });
+            
+            const trimmedMessages = messages.slice(-this.MAX_MESSAGES);
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            localStorage.setItem(key, JSON.stringify(trimmedMessages));
+            console.log(`✅ Saved ${trimmedMessages.length} messages to image prompt storage`);
+        } catch (error) {
+            console.error('❌ Error saving image prompt history:', error);
+        }
+    },
+    
+    load: function() {
+        try {
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            const saved = localStorage.getItem(key);
+            
+            if (saved) {
+                const messages = JSON.parse(saved);
+                console.log(`📘 Loaded ${messages.length} messages from image prompt storage`);
+                return messages;
+            }
+        } catch (error) {
+            console.error('❌ Error loading image prompt history:', error);
+        }
+        return [];
+    },
+    
+    display: function() {
+        const messages = this.load();
+        const chatMessages = document.getElementById('chatMessages');
+        
+        // Clear current messages
+        chatMessages.innerHTML = '';
+        
+        // Add welcome message
+        addWelcomeMessage('image');
+        
+        // Add saved messages
+        messages.forEach(msg => {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.type}`;
+            messageDiv.innerHTML = `<div class="message-content">${msg.content}</div>`;
+            chatMessages.appendChild(messageDiv);
+        });
+        
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        
+        console.log(`✅ Displayed ${messages.length} messages from image prompt storage`);
+    },
+    
+    clear: function() {
+        try {
+            const key = `${this.STORAGE_KEY}_${userId}`;
+            localStorage.removeItem(key);
+            console.log('✅ Image prompt history cleared');
+        } catch (error) {
+            console.error('❌ Error clearing image prompt history:', error);
+        }
+    }
+};
+
+console.log('✅ Image Prompt Storage System loaded');
 
 // Debug function to check localStorage
 window.checkPromptStorage = function() {
@@ -6930,8 +7056,10 @@ window.checkPromptStorage = function() {
 
 // Function to clear current mode history
 window.clearCurrentModeHistory = function() {
-    if (currentMode === 'general' || currentMode === 'multichar') {
-        const modeName = currentMode === 'general' ? 'General Prompt' : 'Prompt Master';
+    if (currentMode === 'general' || currentMode === 'multichar' || currentMode === 'image') {
+        const modeName = currentMode === 'general' ? 'General Prompt' : 
+                        currentMode === 'multichar' ? 'Prompt Master' :
+                        'Image Prompt';
         if (confirm(`ต้องการล้างประวัติ ${modeName} ทั้งหมดหรือไม่?\n\nประวัติการสนทนาจะถูกลบถาวร`)) {
             PromptStorage.clear(currentMode);
             chatHistory[currentMode] = '';
