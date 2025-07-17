@@ -1258,7 +1258,7 @@ function switchMode(mode) {
     document.body.classList.add(`mode-${mode}`);
     
     // Save current chat history before switching
-    if (currentMode === 'general' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image') {
+    if (currentMode === 'promptmaster' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image') {
         saveChatHistory(currentMode);
     }
     
@@ -1470,7 +1470,7 @@ case 'imagegen':
 // ========== CHAT HISTORY MANAGEMENT ==========
 function saveChatHistory(mode) {
     const chatMessages = document.getElementById('chatMessages');
-    if (mode === 'general' || mode === 'character' || mode === 'multichar' || mode === 'image') {
+    if (mode === 'promptmaster' || mode === 'character' || mode === 'multichar' || mode === 'image') {
         chatHistory[mode] = chatMessages.innerHTML;
     }
 }
@@ -1479,8 +1479,8 @@ function loadChatHistory(mode) {
     console.log(`📘 loadChatHistory called for ${mode} mode`);
     const chatMessages = document.getElementById('chatMessages');
     
-    // ใช้ PromptStorage สำหรับ general และ multichar
-    if (mode === 'general' || mode === 'multichar') {
+    // ใช้ PromptStorage สำหรับ promptmaster และ multichar
+    if (mode === 'promptmaster' || mode === 'multichar') {
         console.log(`📘 Using PromptStorage for ${mode}`);
         PromptStorage.display(mode);
         return;
@@ -1517,7 +1517,7 @@ function clearChat() {
 }
 
 function clearModeChat(mode) {
-    if (mode === 'general' || mode === 'character') {
+    if (mode === 'promptmaster' || mode === 'character') {
         chatHistory[mode] = '';
         if (currentMode === mode) {
             clearChat();
@@ -6576,7 +6576,7 @@ window.clearChatHistory = function() {
 const originalSwitchMode2 = window.switchMode;
 window.switchMode = function(mode) {
     // Save current mode history before switching
-    if (currentMode === 'general' || currentMode === 'multichar' || currentMode === 'image') {
+    if (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'image') {
         PromptStorage.save(currentMode);
     } else if (currentMode === 'chat') {
         ChatStorage.save();
@@ -6624,13 +6624,13 @@ console.log('✅ Chat LocalStorage System loaded');
 const PromptStorage = {
     MAX_MESSAGES: 50,  // เก็บสูงสุด 50 ข้อความต่อโหมด
     STORAGE_KEYS: {
-        general: 'veo_general_history',
+        promptmaster: 'veo_promptmaster_history',
         multichar: 'veo_multichar_history'
     },
     
     // บันทึกประวัติ
     save: function(mode) {
-        if (mode !== 'general' && mode !== 'multichar') return;
+        if (mode !== 'promptmaster' && mode !== 'multichar') return;
         
         // ใช้ userId โดยตรงเหมือน ChatStorage
         console.log(`🔵 PromptStorage.save called for ${mode} mode, userId: ${userId}`);
@@ -6838,8 +6838,8 @@ window.saveChatHistory = function(mode) {
     if (mode === 'chat') {
         // ใช้ ChatStorage สำหรับ chat mode
         originalSaveChatHistory(mode);
-    } else if (mode === 'general' || mode === 'multichar') {
-        // ใช้ PromptStorage สำหรับ general และ multichar
+    } else if (mode === 'promptmaster' || mode === 'multichar') {
+        // ใช้ PromptStorage สำหรับ promptmaster และ multichar
         PromptStorage.save(mode);
     } else if (mode === 'image') {
         // ใช้ ImagePromptStorage สำหรับ image mode
@@ -6855,8 +6855,8 @@ window.saveChatHistory = function(mode) {
 // แก้ไข clearModeChat function
 const originalClearModeChat = window.clearModeChat;
 window.clearModeChat = function(mode) {
-    if (mode === 'general' || mode === 'multichar') {
-        const modeName = mode === 'general' ? 'General Prompt' : 'Prompt Master';
+    if (mode === 'promptmaster' || mode === 'multichar') {
+        const modeName = mode === 'promptmaster' ? 'Prompt Master' : 'Prompt Master';
         if (confirm(`ต้องการล้างประวัติ ${modeName} หรือไม่?`)) {
             PromptStorage.clear(mode);
             chatHistory[mode] = '';
@@ -6902,17 +6902,17 @@ window.addEventListener('beforeunload', () => {
 
 // Utility function สำหรับดูข้อมูล storage
 window.showPromptStorageInfo = function() {
-    const generalSize = PromptStorage.getSize('general');
+    const promptmasterSize = PromptStorage.getSize('promptmaster');
     const multicharSize = PromptStorage.getSize('multichar');
     const imageSize = PromptStorage.getSize('image');
-    const generalMessages = PromptStorage.load('general');
+    const promptmasterMessages = PromptStorage.load('promptmaster');
     const multicharMessages = PromptStorage.load('multichar');
     const imageMessages = PromptStorage.load('image');
     
     console.log(`
 📊 Prompt Storage Info:
 - User: ${userId}
-- General Mode: ${generalMessages.length} messages (${generalSize})
+- Prompt Master Mode: ${promptmasterMessages.length} messages (${promptmasterSize})
 - Multichar Mode: ${multicharMessages.length} messages (${multicharSize})
 - Image Mode: ${imageMessages.length} messages (${imageSize})
 - Max allowed: ~5-10 MB per mode
@@ -7056,8 +7056,8 @@ window.checkPromptStorage = function() {
 
 // Function to clear current mode history
 window.clearCurrentModeHistory = function() {
-    if (currentMode === 'general' || currentMode === 'multichar' || currentMode === 'image') {
-        const modeName = currentMode === 'general' ? 'General Prompt' : 
+    if (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'image') {
+        const modeName = currentMode === 'promptmaster' ? 'Prompt Master' : 
                         currentMode === 'multichar' ? 'Prompt Master' :
                         'Image Prompt';
         if (confirm(`ต้องการล้างประวัติ ${modeName} ทั้งหมดหรือไม่?\n\nประวัติการสนทนาจะถูกลบถาวร`)) {
@@ -7370,7 +7370,7 @@ let templateCharCount = 2;
 function updateTemplateButton() {
     const templateSection = document.getElementById('templateButtonSection');
     
-    if (currentMode === 'general' || currentMode === 'multichar' || currentMode === 'chat') {
+    if (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'chat') {
         templateSection.style.display = 'block';
     } else {
         templateSection.style.display = 'none';
@@ -7384,8 +7384,8 @@ function showTemplateForm() {
     
     modal.style.display = 'flex';
     
-    if (currentMode === 'general') {
-        title.innerHTML = '📋 General Prompt Template';
+    if (currentMode === 'promptmaster') {
+        title.innerHTML = '📋 Prompt Master Template';
     } else if (currentMode === 'multichar') {
         title.innerHTML = '🎭 Prompt Master Template';
     }
@@ -7483,8 +7483,8 @@ function saveCharacterData(index, value) {
 function generateFromTemplate() {
     let prompt = '';
     
-    if (currentMode === 'general') {
-        // General Template
+    if (currentMode === 'promptmaster') {
+        // Prompt Master Template
         const videoType = document.getElementById('videoType').value;
         const cameraAngle = document.getElementById('cameraAngle').value;
         const timeOfDay = document.getElementById('timeOfDay').value;
@@ -8651,7 +8651,7 @@ window.generateFromTemplate = function() {
             return value;
         };
         
-        if (currentMode === 'general' || currentMode === 'multichar') {
+        if (currentMode === 'promptmaster' || currentMode === 'multichar') {
             // รวบรวมข้อมูล
             const videoType = getValue('videoType');
             const cameraAngle = getValue('cameraAngle');
@@ -8667,8 +8667,8 @@ window.generateFromTemplate = function() {
             const additionalDetails = getValue('additionalDetails');
             
             // สร้าง prompt header
-            prompt = currentMode === 'general' ? 
-                'สร้าง Cinematic Veo Prompt แบบละเอียดสำหรับ:\n\n' :
+            prompt = currentMode === 'promptmaster' ? 
+                'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n' :
                 'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
             
             // เพิ่มข้อมูลที่มี

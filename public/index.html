@@ -1864,7 +1864,7 @@ window.generateFromTemplate = function() {
             return value;
         };
         
-        if (currentMode === 'general' || currentMode === 'multichar') {
+        if (currentMode === 'promptmaster' || currentMode === 'multichar') {
             // รวบรวมข้อมูลทั้งหมด
             const videoType = getValue('videoType');
             const cameraAngle = getValue('cameraAngle');
@@ -1880,8 +1880,8 @@ window.generateFromTemplate = function() {
             const additionalDetails = getValue('additionalDetails');
             
             // สร้าง prompt
-            prompt = currentMode === 'general' ? 
-                'สร้าง Cinematic Veo Prompt แบบละเอียดสำหรับ:\n\n' :
+            prompt = currentMode === 'promptmaster' ? 
+                'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n' :
                 'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
             
             // เพิ่มข้อมูลที่มี
