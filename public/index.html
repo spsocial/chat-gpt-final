@@ -1959,7 +1959,7 @@ window.generateFromTemplate = function() {
         }
         
         // ตรวจสอบว่ามี prompt หรือไม่
-        if (!prompt || prompt.length < 50) {
+        if (!prompt || prompt.trim().length === 0) {
             alert('กรุณากรอกข้อมูลก่อนสร้าง Prompt');
             return;
         }
