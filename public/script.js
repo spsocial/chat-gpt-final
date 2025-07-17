@@ -737,7 +737,7 @@ async function showCreditPackages() {
                     </div>
                     
                     <!-- Upload Section -->
-                    <div class="upload-slip-section" style="display: none;">
+                    <div class="upload-slip-section">
                         <input type="file" id="slipFileInput" accept="image/*" style="display: none;" onchange="handleSlipSelect(event)">
                         <div class="upload-area" onclick="document.getElementById('slipFileInput').click()">
                             <div class="upload-icon">📤</div>
@@ -4845,11 +4845,59 @@ function handleSlipSelect(event) {
     
     // Preview image
     const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('slipImage').src = e.target.result;
-        document.getElementById('slipPreview').style.display = 'block';
-        document.querySelector('.upload-area').style.display = 'none';
+    reader.onerror = function(error) {
+        console.error('FileReader error:', error);
+        showNotification('❌ ไม่สามารถอ่านไฟล์ได้', 'error');
     };
+    
+    reader.onload = function(e) {
+        console.log('FileReader loaded');
+        
+        // ค้นหา elements ภายใน modal โดยเฉพาะ
+        const modal = document.querySelector('.credit-modal');
+        console.log('Modal exists:', !!modal);
+        
+        if (!modal) {
+            console.error('Modal disappeared!');
+            showNotification('❌ กรุณาเปิดหน้าต่างใหม่', 'error');
+            return;
+        }
+        
+        const slipImage = modal.querySelector('#slipImage');
+        const slipPreview = modal.querySelector('#slipPreview');
+        const uploadArea = modal.querySelector('.upload-area');
+        
+        console.log('Elements found:', {
+            slipImage: !!slipImage,
+            slipPreview: !!slipPreview,
+            uploadArea: !!uploadArea
+        });
+        
+        if (slipImage) {
+            slipImage.src = e.target.result;
+            console.log('Image src set');
+        }
+        
+        if (slipPreview) {
+            slipPreview.style.display = 'block';
+            console.log('Preview display set to block');
+            
+            // Force reflow
+            slipPreview.offsetHeight;
+        }
+        
+        if (uploadArea) {
+            uploadArea.style.display = 'none';
+            console.log('Upload area hidden');
+        }
+        
+        // เลื่อนให้เห็น preview
+        if (slipPreview) {
+            slipPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    };
+    
+    console.log('Starting to read file...');
     reader.readAsDataURL(file);
 }
 
