@@ -1145,11 +1145,11 @@ window.addEventListener('click', function(event) {
     <div class="template-form-content">
         <button class="close-btn" onclick="closeTemplateForm()">✕</button>
         
-        <h2 id="templateFormTitle">📋 Template Form</h2>
+        <h2 id="templateFormTitle">📋 ฟอร์มสร้าง Prompt</h2>
         
         <!-- Quick Presets -->
         <div class="quick-presets">
-            <h3>⚡ Quick Presets - เลือกแนวที่ต้องการ</h3>
+            <h3>⚡ ตัวเลือกด่วน - เลือกแนวที่ต้องการ</h3>
             <div class="preset-buttons">
                 <button type="button" class="preset-btn" onclick="applyPreset('interview')">
                     🎤 สัมภาษณ์
@@ -1182,15 +1182,15 @@ window.addEventListener('click', function(event) {
                         <label>🎬 ประเภทวิดีโอ</label>
                         <select id="videoType" class="template-select" onchange="updateTemplatePreview()">
                             <option value="">-- เลือกประเภท --</option>
-                            <option value="cinematic">Cinematic (ภาพยนตร์)</option>
-                            <option value="documentary">Documentary (สารคดี)</option>
-                            <option value="commercial">Commercial (โฆษณา)</option>
-                            <option value="action">Action (แอ็คชั่น)</option>
-                            <option value="drama">Drama (ดราม่า)</option>
-                            <option value="horror">Horror (สยองขวัญ)</option>
-                            <option value="comedy">Comedy (ตลก)</option>
-                            <option value="travel">Travel (ท่องเที่ยว)</option>
-                            <option value="nature">Nature (ธรรมชาติ)</option>
+                            <option value="cinematic">ภาพยนตร์ (Cinematic)</option>
+                            <option value="documentary">สารคดี (Documentary)</option>
+                            <option value="commercial">โฆษณา (Commercial)</option>
+                            <option value="action">แอ็คชั่น (Action)</option>
+                            <option value="drama">ดราม่า (Drama)</option>
+                            <option value="horror">สยองขวัญ (Horror)</option>
+                            <option value="comedy">ตลก (Comedy)</option>
+                            <option value="travel">ท่องเที่ยว (Travel)</option>
+                            <option value="nature">ธรรมชาติ (Nature)</option>
                         </select>
                     </div>
                     
@@ -1225,16 +1225,16 @@ window.addEventListener('click', function(event) {
                         <label>📷 มุมกล้อง</label>
                         <select id="cameraAngle" class="template-select" onchange="updateTemplatePreview()">
                             <option value="">-- เลือกมุมกล้อง --</option>
-                            <option value="wide">Wide Shot (มุมกว้าง)</option>
-                            <option value="medium">Medium Shot (มุมกลาง)</option>
-                            <option value="closeup">Close-up (มุมใกล้)</option>
-                            <option value="extreme-closeup">Extreme Close-up</option>
-                            <option value="aerial">Aerial/Drone (มุมสูง)</option>
-                            <option value="low-angle">Low Angle (มุมต่ำ)</option>
-                            <option value="dutch">Dutch Angle (มุมเอียง)</option>
-                            <option value="pov">POV (มุมมองบุคคลที่ 1)</option>
-                            <option value="tracking">Tracking Shot</option>
-                            <option value="handheld">Handheld (ถือกล้อง)</option>
+                            <option value="wide">มุมกว้าง (Wide Shot)</option>
+                            <option value="medium">มุมกลาง (Medium Shot)</option>
+                            <option value="closeup">มุมใกล้ (Close-up)</option>
+                            <option value="extreme-closeup">มุมใกล้มาก (Extreme Close-up)</option>
+                            <option value="aerial">มุมสูง/โดรน (Aerial/Drone)</option>
+                            <option value="low-angle">มุมต่ำ (Low Angle)</option>
+                            <option value="dutch">มุมเอียง (Dutch Angle)</option>
+                            <option value="pov">มุมมองบุคคลที่ 1 (POV)</option>
+                            <option value="tracking">กล้องตามวัตถุ (Tracking Shot)</option>
+                            <option value="handheld">ถือกล้อง (Handheld)</option>
                         </select>
                     </div>
                     
@@ -1242,15 +1242,15 @@ window.addEventListener('click', function(event) {
                         <label>🎬 การเคลื่อนกล้อง</label>
                         <select id="cameraMovement" class="template-select" onchange="updateTemplatePreview()">
                             <option value="">-- เลือกการเคลื่อนกล้อง --</option>
-                            <option value="static">Static (กล้องนิ่ง)</option>
-                            <option value="pan">Pan (หมุนซ้าย-ขวา)</option>
-                            <option value="tilt">Tilt (หมุนบน-ล่าง)</option>
-                            <option value="dolly">Dolly (เคลื่อนเข้า-ออก)</option>
-                            <option value="tracking">Tracking (กล้องตาม)</option>
-                            <option value="handheld">Handheld (ถือกล้อง)</option>
-                            <option value="steadicam">Steadicam (นิ่มนวล)</option>
-                            <option value="drone">Drone (โดรน)</option>
-                            <option value="360">360 Degree</option>
+                            <option value="static">กล้องนิ่ง (Static)</option>
+                            <option value="pan">หมุนซ้าย-ขวา (Pan)</option>
+                            <option value="tilt">หมุนบน-ล่าง (Tilt)</option>
+                            <option value="dolly">เคลื่อนเข้า-ออก (Dolly)</option>
+                            <option value="tracking">กล้องตาม (Tracking)</option>
+                            <option value="handheld">ถือกล้อง (Handheld)</option>
+                            <option value="steadicam">กล้องนิ่มนวล (Steadicam)</option>
+                            <option value="drone">โดรน (Drone)</option>
+                            <option value="360">มุม 360 องศา (360 Degree)</option>
                         </select>
                     </div>
                 </div>
@@ -1260,14 +1260,14 @@ window.addEventListener('click', function(event) {
                         <label>🌅 ช่วงเวลา/แสง</label>
                         <select id="timeOfDay" class="template-select" onchange="updateTemplatePreview()">
                             <option value="">-- เลือกช่วงเวลา --</option>
-                            <option value="golden-hour">Golden Hour (แสงทอง)</option>
-                            <option value="blue-hour">Blue Hour</option>
-                            <option value="sunrise">Sunrise (พระอาทิตย์ขึ้น)</option>
-                            <option value="sunset">Sunset (พระอาทิตย์ตก)</option>
-                            <option value="midday">Midday (กลางวัน)</option>
-                            <option value="night">Night (กลางคืน)</option>
-                            <option value="overcast">Overcast (มืดครึ้ม)</option>
-                            <option value="studio">Studio Lighting</option>
+                            <option value="golden-hour">แสงทอง (Golden Hour)</option>
+                            <option value="blue-hour">ช่วงแสงน้ำเงิน (Blue Hour)</option>
+                            <option value="sunrise">พระอาทิตย์ขึ้น (Sunrise)</option>
+                            <option value="sunset">พระอาทิตย์ตก (Sunset)</option>
+                            <option value="midday">กลางวัน (Midday)</option>
+                            <option value="night">กลางคืน (Night)</option>
+                            <option value="overcast">มืดครึ้ม (Overcast)</option>
+                            <option value="studio">แสงสตูดิโอ (Studio Lighting)</option>
                         </select>
                     </div>
                     
@@ -1275,45 +1275,45 @@ window.addEventListener('click', function(event) {
                         <label>🎨 สไตล์/โทนสี</label>
                         <select id="visualStyle" class="template-select" onchange="updateTemplatePreview()">
                             <option value="">-- เลือกสไตล์ --</option>
-                            <option value="realistic">Realistic (สมจริง)</option>
-                            <option value="cinematic">Cinematic (ภาพยนตร์)</option>
-                            <option value="vintage">Vintage (ย้อนยุค)</option>
-                            <option value="modern">Modern (โมเดิร์น)</option>
-                            <option value="noir">Film Noir</option>
-                            <option value="vibrant">Vibrant (สีสดใส)</option>
-                            <option value="desaturated">Desaturated (สีจืด)</option>
-                            <option value="warm">Warm Tones (โทนอุ่น)</option>
-                            <option value="cold">Cold Tones (โทนเย็น)</option>
+                            <option value="realistic">สมจริง (Realistic)</option>
+                            <option value="cinematic">ภาพยนตร์ (Cinematic)</option>
+                            <option value="vintage">ย้อนยุค (Vintage)</option>
+                            <option value="modern">โมเดิร์น (Modern)</option>
+                            <option value="noir">ฟิล์มนัวร์ (Film Noir)</option>
+                            <option value="vibrant">สีสดใส (Vibrant)</option>
+                            <option value="desaturated">สีจืด (Desaturated)</option>
+                            <option value="warm">โทนอุ่น (Warm Tones)</option>
+                            <option value="cold">โทนเย็น (Cold Tones)</option>
                         </select>
                     </div>
                 </div>
                 
                 <div class="form-group">
-                    <label>✨ Special Effects</label>
+                    <label>✨ เอฟเฟกต์พิเศษ (Special Effects)</label>
                     <div class="effects-checkboxes">
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-slowmo" value="slowmo" onchange="updateTemplatePreview()">
-                            <span>Slow Motion</span>
+                            <span>สโลว์โมชั่น (Slow Motion)</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-timelapse" value="timelapse" onchange="updateTemplatePreview()">
-                            <span>Time Lapse</span>
+                            <span>ไทม์แลปส์ (Time Lapse)</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-blur" value="blur" onchange="updateTemplatePreview()">
-                            <span>Motion Blur</span>
+                            <span>ภาพเบลอจากการเคลื่อนไหว (Motion Blur)</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-particles" value="particles" onchange="updateTemplatePreview()">
-                            <span>Particles/Dust</span>
+                            <span>อนุภาค/ฝุ่น (Particles/Dust)</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-lens" value="lens" onchange="updateTemplatePreview()">
-                            <span>Lens Flare</span>
+                            <span>แสงแฟลร์ (Lens Flare)</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-bokeh" value="bokeh" onchange="updateTemplatePreview()">
-                            <span>Bokeh</span>
+                            <span>โบเก้ (Bokeh)</span>
                         </label>
                     </div>
                 </div>
