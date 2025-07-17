@@ -6993,7 +6993,17 @@ const ImagePromptStorage = {
             messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.type}`;
-                messageDiv.innerHTML = `<div class="message-content">${msg.content}</div>`;
+                
+                // Add avatar for assistant messages
+                if (msg.type === 'assistant') {
+                    messageDiv.innerHTML = `
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">${msg.content}</div>
+                    `;
+                } else {
+                    messageDiv.innerHTML = `<div class="message-content">${msg.content}</div>`;
+                }
+                
                 chatMessages.appendChild(messageDiv);
             });
         }
