@@ -225,7 +225,7 @@
         </div>
         <div class="tip-card">
             <h4>🎯 วิธีใช้ง่ายๆ</h4>
-            <p>1. คลิก "สร้าง Prompt master" เพื่อใช้ฟอร์ม<br>
+            <p>1. เลือกกรอกแบบฟอร์มที่ต้องการ<br>
                2. หรือพิมพ์บรรยายฉากโดยตรง</p>
         </div>
         <div class="tip-card">
@@ -238,7 +238,7 @@
     
     <!-- Quick Scene Builder Button -->
     <button class="scene-builder-btn" onclick="showSceneBuilder()">
-        🎬 สร้าง Prompt Master
+        🎬 สร้าง Template แบบง่าย
     </button>
 </div>
 
@@ -395,7 +395,7 @@
     <!-- Template Button Section -->
     <div class="template-button-inline" id="templateButtonSection" style="display: none;">
         <button class="template-form-btn-orange" onclick="showTemplateForm()">
-            📋 ใช้ Template Form
+            📋 กรอกฟอร์มแบบละเอียด
         </button>
     </div>
     
@@ -1293,27 +1293,27 @@ window.addEventListener('click', function(event) {
                     <div class="effects-checkboxes">
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-slowmo" value="slowmo" onchange="updateTemplatePreview()">
-                            <span>สโลว์โมชั่น (Slow Motion)</span>
+                            <span>สโลว์โมชั่น - ภาพเคลื่อนไหวช้า</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-timelapse" value="timelapse" onchange="updateTemplatePreview()">
-                            <span>ไทม์แลปส์ (Time Lapse)</span>
+                            <span>ไทม์แลปส์ - ภาพเคลื่อนไหวเร็ว</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-blur" value="blur" onchange="updateTemplatePreview()">
-                            <span>ภาพเบลอจากการเคลื่อนไหว (Motion Blur)</span>
+                            <span>ภาพเบลอ - ความไม่ชัดจากการเคลื่อนไหว</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-particles" value="particles" onchange="updateTemplatePreview()">
-                            <span>อนุภาค/ฝุ่น (Particles/Dust)</span>
+                            <span>ฝุ่นละออง - เศษฝุ่นล่องลอยในอากาศ</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-lens" value="lens" onchange="updateTemplatePreview()">
-                            <span>แสงแฟลร์ (Lens Flare)</span>
+                            <span>แสงกระทบเลนส์ - แสงกระทบเข้ากล้อง</span>
                         </label>
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-bokeh" value="bokeh" onchange="updateTemplatePreview()">
-                            <span>โบเก้ (Bokeh)</span>
+                            <span>โบเก้ - ภาพเบลอหลังสวย</span>
                         </label>
                     </div>
                 </div>
@@ -1334,6 +1334,16 @@ window.addEventListener('click', function(event) {
                             <option value="meeting">การประชุม/สัมภาษณ์</option>
                             <option value="party">งานปาร์ตี้</option>
                             <option value="dining">ฉากรับประทานอาหาร</option>
+                            <option value="walking">ฉากเดินคุยกัน</option>
+                            <option value="sports">ฉากกีฬา/ออกกำลังกาย</option>
+                            <option value="shopping">ฉากช้อปปิ้ง/ตลาด</option>
+                            <option value="travel">ฉากท่องเที่ยว</option>
+                            <option value="working">ฉากทำงาน/ออฟฟิศ</option>
+                            <option value="classroom">ฉากห้องเรียน/การศึกษา</option>
+                            <option value="romantic">ฉากโรแมนติก</option>
+                            <option value="celebration">ฉากเฉลิมฉลอง</option>
+                            <option value="argument">ฉากทะเลาะ/ขัดแย้ง</option>
+                            <option value="presentation">ฉากนำเสนองาน</option>
                         </select>
                     </div>
                     
