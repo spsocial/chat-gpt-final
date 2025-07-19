@@ -573,15 +573,40 @@ async function useCreditsNew(userId, amount, description) {
         
         // 2. ถ้าต้องหักจากเครดิตที่เติม
         if (creditUsage.used_from_paid > 0) {
-            const paidResult = await useCredits(
-                userId, 
-                creditUsage.used_from_paid, 
-                description
+            // ตรวจสอบเครดิตพอไหม (WITH LOCK)
+            const creditResult = await client.query(
+                'SELECT credits FROM user_credits WHERE user_id = $1 FOR UPDATE',
+                [userId]
             );
             
-            if (!paidResult.success) {
+            const currentCredits = parseFloat(creditResult.rows[0]?.credits || 0);
+            console.log(`[useCreditsNew] Current paid credits: ${currentCredits}, need to deduct: ${creditUsage.used_from_paid}`);
+            
+            if (currentCredits < creditUsage.used_from_paid) {
                 throw new Error('Insufficient paid credits');
             }
+            
+            const newBalance = currentCredits - creditUsage.used_from_paid;
+            
+            // บันทึก transaction
+            await client.query(
+                `INSERT INTO credit_transactions 
+                 (user_id, type, amount, balance_after, description)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [userId, 'USE', creditUsage.used_from_paid, newBalance, description]
+            );
+            
+            // อัพเดทเครดิต
+            await client.query(
+                `UPDATE user_credits 
+                 SET credits = credits - $2,
+                     total_used = total_used + $2,
+                     last_updated = NOW()
+                 WHERE user_id = $1`,
+                [userId, creditUsage.used_from_paid]
+            );
+            
+            console.log(`[useCreditsNew] ✅ Deducted ${creditUsage.used_from_paid} paid credits, new balance: ${newBalance}`);
         }
         
         await client.query('COMMIT');
