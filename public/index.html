@@ -1248,7 +1248,19 @@ window.addEventListener('click', function(event) {
                             <option value="dutch">มุมเอียง (Dutch Angle)</option>
                             <option value="pov">มุมมองบุคคลที่ 1 (POV)</option>
                             <option value="tracking">กล้องตามวัตถุ (Tracking Shot)</option>
-                            <option value="handheld">ถือกล้อง (Handheld)</option>
+                            <option value="handheld">สไตล์ Vlog (Handheld/Vlog)</option>
+                            <option value="over-shoulder">ข้ามไหล่ (Over-the-Shoulder)</option>
+                            <option value="two-shot">สองคนในเฟรม (Two Shot)</option>
+                            <option value="establishing">ภาพเปิดฉาก (Establishing Shot)</option>
+                            <option value="insert">ภาพแทรก (Insert Shot)</option>
+                            <option value="cutaway">ภาพตัดไป (Cutaway)</option>
+                            <option value="reaction">ภาพปฏิกิริยา (Reaction Shot)</option>
+                            <option value="birds-eye">มุมนกมอง (Bird's Eye View)</option>
+                            <option value="worms-eye">มุมหนอนมอง (Worm's Eye View)</option>
+                            <option value="profile">มุมข้าง (Profile Shot)</option>
+                            <option value="full-body">เต็มตัว (Full Body Shot)</option>
+                            <option value="cowboy">คาวบอย (Cowboy Shot)</option>
+                            <option value="master">มาสเตอร์ช็อต (Master Shot)</option>
                         </select>
                     </div>
                     
@@ -1261,10 +1273,20 @@ window.addEventListener('click', function(event) {
                             <option value="tilt">หมุนบน-ล่าง (Tilt)</option>
                             <option value="dolly">เคลื่อนเข้า-ออก (Dolly)</option>
                             <option value="tracking">กล้องตาม (Tracking)</option>
-                            <option value="handheld">ถือกล้อง (Handheld)</option>
+                            <option value="handheld">สไตล์ Vlog (Handheld/Vlog)</option>
                             <option value="steadicam">กล้องนิ่มนวล (Steadicam)</option>
                             <option value="drone">โดรน (Drone)</option>
                             <option value="360">มุม 360 องศา (360 Degree)</option>
+                            <option value="crane">เครน/บูม (Crane/Boom)</option>
+                            <option value="whip-pan">หมุนเร็วมาก (Whip Pan)</option>
+                            <option value="zoom">ซูมเข้า-ออก (Zoom In/Out)</option>
+                            <option value="rack-focus">เปลี่ยนโฟกัส (Rack Focus)</option>
+                            <option value="gimbal">กิมบอล (Gimbal)</option>
+                            <option value="slider">สไลเดอร์ (Slider)</option>
+                            <option value="orbit">โคจรรอบ (Orbit)</option>
+                            <option value="reveal">เปิดเผย (Reveal Shot)</option>
+                            <option value="push-in">ดันเข้า (Push In)</option>
+                            <option value="pull-out">ดึงออก (Pull Out)</option>
                         </select>
                     </div>
                 </div>
@@ -1282,6 +1304,15 @@ window.addEventListener('click', function(event) {
                             <option value="night">กลางคืน (Night)</option>
                             <option value="overcast">มืดครึ้ม (Overcast)</option>
                             <option value="studio">แสงสตูดิโอ (Studio Lighting)</option>
+                            <option value="candlelight">แสงเทียน (Candlelight)</option>
+                            <option value="neon-night">นีออนยามค่ำ (Neon Night)</option>
+                            <option value="underwater">ใต้น้ำ (Underwater)</option>
+                            <option value="foggy">หมอกหนา (Foggy)</option>
+                            <option value="lightning">ฟ้าแลบ (Lightning)</option>
+                            <option value="firelight">แสงไฟ (Firelight)</option>
+                            <option value="moonlight">แสงจันทร์ (Moonlight)</option>
+                            <option value="harsh-sun">แดดจ้า (Harsh Sunlight)</option>
+                            <option value="magic-hour">ชั่วโมงมหัศจรรย์ (Magic Hour)</option>
                         </select>
                     </div>
                     
@@ -1298,6 +1329,17 @@ window.addEventListener('click', function(event) {
                             <option value="desaturated">สีจืด (Desaturated)</option>
                             <option value="warm">โทนอุ่น (Warm Tones)</option>
                             <option value="cold">โทนเย็น (Cold Tones)</option>
+                            <option value="neon">นีออน (Neon/Cyberpunk)</option>
+                            <option value="pastel">พาสเทล (Pastel)</option>
+                            <option value="monochrome">ขาวดำ (Monochrome)</option>
+                            <option value="sepia">ซีเปีย (Sepia)</option>
+                            <option value="high-contrast">คอนทราสต์สูง (High Contrast)</option>
+                            <option value="flat">แฟลต (Flat/Log)</option>
+                            <option value="dreamy">ฝันหวาน (Dreamy)</option>
+                            <option value="gritty">หยาบกร้าน (Gritty)</option>
+                            <option value="ethereal">ลอยฟ้า (Ethereal)</option>
+                            <option value="documentary">สารคดี (Documentary)</option>
+                            <option value="music-video">มิวสิควิดีโอ (Music Video)</option>
                         </select>
                     </div>
                 </div>
@@ -1328,6 +1370,38 @@ window.addEventListener('click', function(event) {
                         <label class="checkbox-label">
                             <input type="checkbox" id="fx-bokeh" value="bokeh" onchange="updateTemplatePreview()">
                             <span>โบเก้ - ภาพเบลอหลังสวย</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-glitch" value="glitch" onchange="updateTemplatePreview()">
+                            <span>กลิตช์ - ภาพแตกพิกเซล</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-smoke" value="smoke" onchange="updateTemplatePreview()">
+                            <span>ควัน/หมอก - ควันพ่นกระจาย</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-rain" value="rain" onchange="updateTemplatePreview()">
+                            <span>ฝน - ฝนตกในฉาก</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-snow" value="snow" onchange="updateTemplatePreview()">
+                            <span>หิมะ - หิมะตก</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-fire" value="fire" onchange="updateTemplatePreview()">
+                            <span>ไฟ/ประกายไฟ - เปลวไฟหรือประกาย</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-reflection" value="reflection" onchange="updateTemplatePreview()">
+                            <span>การสะท้อน - ภาพสะท้อนบนพื้นผิว</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-double-exposure" value="double-exposure" onchange="updateTemplatePreview()">
+                            <span>ดับเบิ้ลเอ็กซ์โพเชอร์ - ภาพซ้อนภาพ</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="fx-split-screen" value="split-screen" onchange="updateTemplatePreview()">
+                            <span>แบ่งหน้าจอ - หลายฉากในเฟรมเดียว</span>
                         </label>
                     </div>
                 </div>
