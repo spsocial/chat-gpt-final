@@ -1278,6 +1278,7 @@ window.addEventListener('click', function(event) {
                             <option value="pov">มุมมองบุคคลที่ 1 (POV)</option>
                             <option value="tracking">กล้องตามวัตถุ (Tracking Shot)</option>
                             <option value="handheld">สไตล์ Vlog (Handheld/Vlog)</option>
+                            <option value="selfie">ถือกล้องถ่ายตัวเอง (Selfie/Vlog Style)</option>
                             <option value="over-shoulder">ข้ามไหล่ (Over-the-Shoulder)</option>
                             <option value="two-shot">สองคนในเฟรม (Two Shot)</option>
                             <option value="establishing">ภาพเปิดฉาก (Establishing Shot)</option>
@@ -1481,6 +1482,7 @@ window.addEventListener('click', function(event) {
                             <option value="gaming">ฉากเล่นเกม</option>
                             <option value="tutorial">ฉากสอน/แนะนำ</option>
                             <option value="reaction">ฉากรีแอคชั่น</option>
+                            <option value="vlogging">ฉากถ่าย Vlog (พูดกับกล้อง)</option>
                             <option value="unboxing">ฉากแกะกล่อง</option>
                             <option value="review">ฉากรีวิวสินค้า</option>
                             <option value="makeup">ฉากแต่งหน้า</option>
@@ -1751,12 +1753,12 @@ const workingTemplatePresets = {
     },
     vlog: {
         videoType: 'vlog',
-        cameraAngle: 'handheld',
+        cameraAngle: 'selfie',
         timeOfDay: 'golden-hour',
         visualStyle: 'modern',
         duration: '7-8 วินาที',
-        sceneType: 'walking',
-        location: 'ตลาด ถนน ในเมือง',
+        sceneType: 'vlogging',
+        location: 'ตลาด ถนน ในเมือง (ถือกล้องถ่ายตัวเอง)',
         cameraMovement: 'handheld',
         charCount: 1
     },
