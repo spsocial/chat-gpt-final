@@ -1183,6 +1183,18 @@ window.addEventListener('click', function(event) {
                 <button type="button" class="preset-btn" onclick="applyPreset('nature')">
                     🌿 ธรรมชาติ
                 </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('vlog')">
+                    🤳 Vlog/Lifestyle
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('anime')">
+                    ✨ อนิเมะ/การ์ตูน
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('food')">
+                    🍳 อาหาร/ทำครัว
+                </button>
+                <button type="button" class="preset-btn" onclick="applyPreset('musicvideo')">
+                    🎵 มิวสิควิดีโอ
+                </button>
             </div>
         </div>
         
@@ -1689,7 +1701,7 @@ const workingTemplatePresets = {
         cameraAngle: 'medium',
         timeOfDay: 'golden-hour',
         visualStyle: 'cinematic',
-        duration: '5-6 วินาที',
+        duration: '7-8 วินาที',
         sceneType: 'dialogue',
         location: 'ร้านกาแฟ บรรยากาศอบอุ่น',
         cameraMovement: 'tracking',
@@ -1700,7 +1712,7 @@ const workingTemplatePresets = {
         cameraAngle: 'handheld',
         timeOfDay: 'night',
         visualStyle: 'vibrant',
-        duration: '5-6 วินาที',
+        duration: '7-8 วินาที',
         sceneType: 'action',
         location: 'ตึกร้าง มืดๆ มีแสงนีออน',
         cameraMovement: 'handheld',
@@ -1722,7 +1734,7 @@ const workingTemplatePresets = {
         cameraAngle: 'medium',
         timeOfDay: 'studio',
         visualStyle: 'modern',
-        duration: '5-6 วินาที',
+        duration: '7-8 วินาที',
         location: 'พื้นหลังขาว สตูดิโอ',
         cameraMovement: 'tracking',
         charCount: 0
@@ -1736,6 +1748,50 @@ const workingTemplatePresets = {
         location: 'ภูเขา ทะเลหมอก',
         cameraMovement: 'tracking',
         charCount: 0
+    },
+    vlog: {
+        videoType: 'vlog',
+        cameraAngle: 'handheld',
+        timeOfDay: 'golden-hour',
+        visualStyle: 'modern',
+        duration: '7-8 วินาที',
+        sceneType: 'walking',
+        location: 'ตลาด ถนน ในเมือง',
+        cameraMovement: 'handheld',
+        charCount: 1
+    },
+    anime: {
+        videoType: 'animation',
+        cameraAngle: 'medium',
+        timeOfDay: 'sunset',
+        visualStyle: 'anime-3d',
+        duration: '7-8 วินาที',
+        sceneType: 'emotional',
+        location: 'สนามหญ้า โรงเรียน',
+        cameraMovement: 'static',
+        charCount: 2
+    },
+    food: {
+        videoType: 'food',
+        cameraAngle: 'closeup',
+        timeOfDay: 'studio',
+        visualStyle: 'vibrant',
+        duration: '7-8 วินาที',
+        sceneType: 'cooking',
+        location: 'ห้องครัวสวยงาม',
+        cameraMovement: 'tracking',
+        charCount: 1
+    },
+    musicvideo: {
+        videoType: 'music-video',
+        cameraAngle: 'wide',
+        timeOfDay: 'neon-night',
+        visualStyle: 'neon',
+        duration: '7-8 วินาที',
+        sceneType: 'dance',
+        location: 'คลับ แสงไฟนีออน',
+        cameraMovement: 'dolly',
+        charCount: 5
     }
 };
 
