@@ -3591,8 +3591,30 @@ function copyPrompt(button) {
             const jsonEnd = text.lastIndexOf('```');
             
             if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-                // Extract JSON block รวม ```json และ ``` ด้วย
-                fullText = text.substring(jsonStart, jsonEnd + 3).trim();
+                // Get HTML content to preserve formatting
+                const htmlContent = promptElement.innerHTML;
+                
+                // Try to extract formatted JSON from HTML
+                const jsonPattern = /```json([\s\S]*?)```/;
+                const match = htmlContent.match(jsonPattern);
+                
+                if (match && match[1]) {
+                    // Clean up HTML tags but preserve line breaks
+                    let jsonContent = match[1]
+                        .replace(/<br\s*\/?>/gi, '\n')
+                        .replace(/<\/?(div|p|span)[^>]*>/gi, '')
+                        .replace(/&nbsp;/g, ' ')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&amp;/g, '&')
+                        .trim();
+                    
+                    fullText = '```json\n' + jsonContent + '\n```';
+                } else {
+                    // Fallback: extract from text
+                    fullText = text.substring(jsonStart, jsonEnd + 3).trim();
+                }
             } else {
                 // Fallback ถ้าหา JSON block ไม่เจอ
                 fullText = text;
