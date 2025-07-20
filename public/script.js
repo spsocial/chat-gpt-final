@@ -3317,19 +3317,38 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
     const messageDiv = document.createElement('div');
     const id = `msg-${messageId++}`;
     
+    // สร้าง timestamp
+    const now = new Date();
+    const timeString = now.toLocaleTimeString('th-TH', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+    const dateString = now.toLocaleDateString('th-TH', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    });
+    
     messageDiv.id = id;
     messageDiv.className = `message ${type}`;
+    
+    // เพิ่ม timestamp ในทุกข้อความ
+    const timestampHTML = `<div class="message-timestamp">${timeString} • ${dateString}</div>`;
     
     if (type === 'user') {
         messageDiv.innerHTML = `
             <div class="message-avatar">👤</div>
-            <div class="message-content">${content}</div>
+            <div class="message-content">
+                ${content}
+                ${timestampHTML}
+            </div>
         `;
     } else if (isCharacterProfile) {
         messageDiv.innerHTML = `
             <div class="message-avatar">🤖</div>
             <div class="message-content">
                 ${formatCharacterProfile(content)}
+                ${timestampHTML}
             </div>
         `;
     } else if (isVeoPrompt) {
@@ -3337,12 +3356,16 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
             <div class="message-avatar">🤖</div>
             <div class="message-content">
                 ${formatVeoPrompt(content)}
+                ${timestampHTML}
             </div>
         `;
     } else {
         messageDiv.innerHTML = `
             <div class="message-avatar">🤖</div>
-            <div class="message-content">${content}</div>
+            <div class="message-content">
+                ${content}
+                ${timestampHTML}
+            </div>
         `;
     }
     
