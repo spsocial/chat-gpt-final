@@ -2796,6 +2796,49 @@ line-clamp: 3;
     color: white;
 }
 
+@media (max-width: 768px) {
+    .json-btn {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+    }
+    
+    /* ลดขนาดดาวและซ่อนข้อความคะแนน */
+    .star-rating {
+        font-size: 16px !important;
+        gap: 4px !important;
+        margin-bottom: 6px !important;
+    }
+    
+    .rating-labels {
+        display: none !important;
+    }
+    
+    /* ลดขนาดส่วนให้คะแนน */
+    .rating-section {
+        padding: 8px !important;
+        margin-top: 8px !important;
+    }
+    
+    .rating-header {
+        font-size: 11px !important;
+        margin-bottom: 4px !important;
+    }
+    
+    /* ลดขนาดปุ่มทั้งหมดในมือถือ */
+    .prompt-actions button,
+    .copy-btn,
+    .save-btn,
+    .share-btn,
+    .continue-btn,
+    .json-btn,
+    .favorite-btn {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+        gap: 4px !important;
+        min-height: 30px !important;
+    }
+}
+
 .continue-btn:hover {
     background: #9333ea;
     border-color: #9333ea;

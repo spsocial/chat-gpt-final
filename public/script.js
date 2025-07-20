@@ -3441,6 +3441,9 @@ function formatVeoPrompt(response) {
             <button class="share-btn" onclick="sharePromptById('${promptId}')">
                 📤 Share
             </button>
+            <button class="json-btn" onclick="requestJSON('${promptId}')">
+                📄 JSON
+            </button>
             <button class="continue-btn" onclick="continueScene('${promptId}')">
                 🎬 ต่อฉาก
             </button>
@@ -5776,6 +5779,38 @@ window.showCourse = function() {
     document.body.style.overflow = 'hidden';
     generateCalendar();
 };
+
+// ========== JSON REQUEST FUNCTION ==========
+function requestJSON(promptId) {
+    // หา prompt element
+    const promptElement = document.getElementById(`promptContent-${promptId}`);
+    if (!promptElement) return;
+    
+    // แปลง HTML เป็น text
+    const originalPrompt = promptElement.innerHTML
+        .replace(/<br><br>/g, '\n\n')
+        .replace(/<br>/g, '\n')
+        .replace(/• /g, '* ')
+        .replace(/<[^>]*>/g, '');
+    
+    // สร้างข้อความขอ JSON
+    const jsonRequest = `ขอแบบ json`;
+    
+    // ใส่ใน textarea
+    const messageInput = document.getElementById('messageInput');
+    messageInput.value = jsonRequest;
+    
+    // Auto resize textarea
+    messageInput.style.height = 'auto';
+    messageInput.style.height = messageInput.scrollHeight + 'px';
+    
+    // Focus และ scroll ไปที่ input
+    messageInput.focus();
+    messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // แสดง notification
+    showNotification('📄 พร้อมขอ JSON แล้ว! กด Enter หรือคลิก Send', 'info');
+}
 
 // ========== SCENE CONTINUITY FUNCTIONS ==========
 function continueScene(promptId) {
