@@ -3582,28 +3582,48 @@ function copyPrompt(button) {
         }
     } else {
         // Original method for other modes
-        // แปลง br tags เป็น newlines
-        const brElements = clonedElement.getElementsByTagName('br');
-        for (let i = brElements.length - 1; i >= 0; i--) {
-            const br = brElements[i];
-            const textNode = document.createTextNode('\n');
-            br.parentNode.replaceChild(textNode, br);
+        const text = promptElement.textContent || promptElement.innerText || '';
+        
+        // ตรวจสอบว่าเป็น JSON format หรือไม่ (มี ```json)
+        if (text.includes('```json') && text.includes('```')) {
+            // Extract JSON content
+            const jsonStart = text.indexOf('```json');
+            const jsonEnd = text.lastIndexOf('```');
+            
+            if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                // Extract JSON block รวม ```json และ ``` ด้วย
+                fullText = text.substring(jsonStart, jsonEnd + 3).trim();
+            } else {
+                // Fallback ถ้าหา JSON block ไม่เจอ
+                fullText = text;
+            }
+        } else {
+            // แปลง br tags เป็น newlines
+            const brElements = clonedElement.getElementsByTagName('br');
+            for (let i = brElements.length - 1; i >= 0; i--) {
+                const br = brElements[i];
+                const textNode = document.createTextNode('\n');
+                br.parentNode.replaceChild(textNode, br);
+            }
+            
+            // ดึง text content
+            fullText = clonedElement.textContent || clonedElement.innerText || '';
+            
+            // ทำความสะอาด text
+            fullText = fullText
+                .replace(/•\s/g, '* ')
+                .replace(/\n{3,}/g, '\n\n')
+                .trim();
         }
-        
-        // ดึง text content
-        fullText = clonedElement.textContent || clonedElement.innerText || '';
-        
-        // ทำความสะอาด text
-        fullText = fullText
-            .replace(/•\s/g, '* ')
-            .replace(/\n{3,}/g, '\n\n')
-            .trim();
     }
     
     let finalPrompt = '';
     
     // If we already have the full text for image mode, use it
     if (currentMode === 'image' && fullText && !fullText.includes('VEO3 MULTI-CHARACTER SCENE')) {
+        finalPrompt = fullText;
+    } else if (fullText.includes('```json')) {
+        // ถ้าเป็น JSON format ให้ใช้ fullText ที่ extract มาแล้ว
         finalPrompt = fullText;
     } else {
     
