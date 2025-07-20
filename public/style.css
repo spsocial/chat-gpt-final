@@ -2773,6 +2773,29 @@ line-clamp: 3;
     gap: 6px;
 }
 
+/* JSON Button Style */
+.json-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: 'Kanit', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.json-btn:hover {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
 .continue-btn:hover {
     background: #9333ea;
     border-color: #9333ea;
