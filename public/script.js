@@ -5781,7 +5781,7 @@ window.showCourse = function() {
 };
 
 // ========== JSON REQUEST FUNCTION ==========
-function requestJSON(promptId) {
+async function requestJSON(promptId) {
     // หา prompt element
     const promptElement = document.getElementById(`promptContent-${promptId}`);
     if (!promptElement) return;
@@ -5804,12 +5804,11 @@ function requestJSON(promptId) {
     messageInput.style.height = 'auto';
     messageInput.style.height = messageInput.scrollHeight + 'px';
     
-    // Focus และ scroll ไปที่ input
-    messageInput.focus();
-    messageInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    
     // แสดง notification
-    showNotification('📄 พร้อมขอ JSON แล้ว! กด Enter หรือคลิก Send', 'info');
+    showNotification('📄 กำลังขอ JSON...', 'info');
+    
+    // ส่งข้อความอัตโนมัติ
+    await sendMessage();
 }
 
 // ========== SCENE CONTINUITY FUNCTIONS ==========
