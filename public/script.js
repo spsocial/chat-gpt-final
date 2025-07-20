@@ -5845,6 +5845,124 @@ window.showCourse = function() {
     generateCalendar();
 };
 
+// ========== IMAGE UPLOAD FUNCTIONS ==========
+// Toggle feature flag for image upload
+const ENABLE_DIRECT_UPLOAD = false; // เปิด/ปิด feature ได้ที่นี่
+
+// Show/hide upload button based on feature flag
+window.addEventListener('DOMContentLoaded', () => {
+    if (ENABLE_DIRECT_UPLOAD) {
+        const uploadBtn = document.querySelector('.upload-local-btn');
+        if (uploadBtn) uploadBtn.style.display = 'inline-flex';
+    }
+});
+
+// Open file picker
+function openImageUpload() {
+    document.getElementById('localImageUpload').click();
+}
+
+// Handle local image upload
+async function handleLocalImageUpload(event) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Show loading state
+    showNotification('🔄 กำลังอัพโหลดรูป...', 'info');
+    
+    try {
+        for (const file of files) {
+            // Validate file
+            if (!file.type.startsWith('image/')) {
+                showNotification('❌ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+                continue;
+            }
+            
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification('❌ ขนาดไฟล์ต้องไม่เกิน 10MB', 'error');
+                continue;
+            }
+            
+            // Convert to base64 directly (skip ImgBB)
+            const imageUrl = await convertToBase64(file);
+            console.log('Base64 length:', imageUrl.length); // Debug
+            
+            if (imageUrl) {
+                // Ensure imageUrls array exists
+                if (!window.imageUrls) {
+                    window.imageUrls = [];
+                }
+                
+                // Add to image array same as URL method
+                window.imageUrls.push(imageUrl);
+                console.log('Added base64 image to array'); // Debug
+                
+                displayImagePreview();
+                showNotification('✅ อัพโหลดรูปสำเร็จ!', 'success');
+            } else {
+                showNotification('❌ ไม่สามารถแปลงรูปได้', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Upload error:', error);
+        showNotification('❌ อัพโหลดไม่สำเร็จ ลองใช้ URL แทน', 'error');
+    }
+    
+    // Reset input
+    event.target.value = '';
+}
+
+// Upload to ImgBB service
+async function uploadToImgBB(file) {
+    try {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+            method: 'POST',
+            body: formData,
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Upload failed');
+        }
+        
+        const data = await response.json();
+        console.log('ImgBB Response:', data); // Debug log
+        
+        if (data.success && data.data) {
+            // ตรวจสอบ structure ของ response
+            const imageUrl = data.data.display_url || data.data.url || data.data.image?.url;
+            console.log('Image URL:', imageUrl); // Debug log
+            
+            if (imageUrl) {
+                return imageUrl;
+            } else {
+                console.error('No URL found in response:', data);
+                throw new Error('No URL in response');
+            }
+        } else {
+            throw new Error(data.error?.message || 'Upload failed');
+        }
+    } catch (error) {
+        console.error('ImgBB upload error:', error);
+        // Fallback to base64 if ImgBB fails
+        return await convertToBase64(file);
+    }
+}
+
+// Convert to base64 as fallback
+async function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
 // ========== JSON REQUEST FUNCTION ==========
 async function requestJSON(promptId) {
     // หา prompt element

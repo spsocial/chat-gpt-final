@@ -403,6 +403,15 @@
     <button class="upload-btn" onclick="showImageUrlDialog()">
         🔗 เพิ่ม URL รูป
     </button>
+    <button class="upload-btn upload-local-btn" onclick="openImageUpload()" style="display: none;">
+        📷 อัพโหลดรูป
+    </button>
+    <input type="file" 
+           id="localImageUpload" 
+           accept="image/*" 
+           multiple 
+           style="display: none;" 
+           onchange="handleLocalImageUpload(event)">
     <button class="voice-btn" id="voiceButton" onclick="toggleVoiceInput()">
         🎤 พูดเลย
     </button>
@@ -1155,7 +1164,7 @@ window.addEventListener('click', function(event) {
 </div>
 
 <!-- Template Form Modal ที่จัดระเบียบใหม่ -->
-<div id="templateFormModal" class="template-form-modal" style="display: none;" onclick="closeTemplateFormOnOutsideClick(event)">
+<div id="templateFormModal" class="template-form-modal" style="display: none;">
     <div class="template-form-content">
         <button class="close-btn" onclick="closeTemplateForm()">✕</button>
         

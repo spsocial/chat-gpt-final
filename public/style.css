@@ -756,6 +756,18 @@
             background: var(--primary);
             border-color: var(--primary);
         }
+        
+        /* New upload button style */
+        .upload-local-btn {
+            background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%) !important;
+            color: white !important;
+            border: none !important;
+        }
+        
+        .upload-local-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
 
         .image-preview {
             display: flex;
