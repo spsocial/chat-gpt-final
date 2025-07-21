@@ -988,7 +988,8 @@ function playTutorialVideo(videoId) {
     const videoIds = {
         'VIDEO_ID_1': '10hVQcYX81E', // EP.1 สอนการใช้เว็บคร่าวๆ โดยรวม
         'VIDEO_ID_2': 'LkNjTXkAW3U', // EP.2 สอนการใช้การต่อฉาก Text to Video
-        'VIDEO_ID_3': 'LpH6m9RXzqw'  // EP.3 สอนการใช้ต่อฉาก Image to Video บน Flow Veo 3
+        'VIDEO_ID_3': 'LpH6m9RXzqw', // EP.3 สอนการใช้ต่อฉาก Image to Video บน Flow Veo 3
+        'VIDEO_ID_4': 'Ufbq_w71UUg'  // EP.4 การทำให้บทพูดตรงกับตัวละครไม่เพี้ยน
     };
     
     const actualVideoId = videoIds[videoId] || '';
@@ -1149,6 +1150,18 @@ window.addEventListener('click', function(event) {
                     <div class="video-info">
                         <h4>EP.3 สอนการใช้ต่อฉาก Image to Video บน Flow Veo 3 (Text to Video ก็ทำได้)</h4>
                         <p>การแปลงรูปภาพเป็นวิดีโอ และเทคนิคการต่อฉากบน Flow Veo 3</p>
+                    </div>
+                </div>
+                
+                <div class="video-item" onclick="playTutorialVideo('VIDEO_ID_4')">
+                    <div class="video-thumbnail">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="#FF0000">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                        </svg>
+                    </div>
+                    <div class="video-info">
+                        <h4>Ep.4 การทำให้บทพูดตรงกับตัวละครไม่เพี้ยน</h4>
+                        <p>เทคนิคการทำให้บทพูดตรงกับปากตัวละคร ไม่เพี้ยน ไม่หลุดตัวละคร</p>
                     </div>
                 </div>
             </div>
