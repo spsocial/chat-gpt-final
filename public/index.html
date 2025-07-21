@@ -52,9 +52,12 @@
                 </div>
                 <div class="usage-display" style="display: flex; align-items: center; gap: 15px;">
                     <!-- Login Button for Desktop -->
-                    <button class="desktop-login-btn" onclick="showLoginModal()" title="เข้าสู่ระบบ" style="background: #404040; color: #ccc; border: 1px solid #555; padding: 8px 16px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s ease;">
-                        <span style="font-size: 16px;">👤</span>
-                        <span>Login</span>
+                    <button class="desktop-login-btn" onclick="showLoginModal()" title="เข้าสู่ระบบเพื่อ Sync ข้อมูล (Optional)" style="background: #404040; color: #ccc; border: 1px solid #555; padding: 8px 16px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s ease; flex-direction: column; font-family: 'Kanit', sans-serif;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 16px;">👤</span>
+                            <span>Login</span>
+                        </div>
+                        <span style="font-size: 10px; opacity: 0.8;">Sync ข้ามอุปกรณ์</span>
                     </button>
                     
                     <!-- Tutorial Button for Desktop (ย้ายมาด้านหน้า) -->
@@ -70,6 +73,10 @@
                     <div class="user-info">
                         <div class="user-id" id="userId">user_xxx</div>
                         <div class="usage-info">
+                            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
+                                <span style="font-size: 11px; color: #4ade80;">🎁 เครดิตฟรี</span>
+                                <span style="font-size: 10px; color: #666;">FREE CREDITS</span>
+                            </div>
                             <div class="usage-bar">
                                 <div class="usage-progress" id="usageProgress"></div>
                             </div>
@@ -2557,6 +2564,10 @@ window.generateFromTemplate = function() {
                 </svg>
             </span>
         </button>
+        
+        <button class="fab-item login-button" onclick="showLoginModal(); closeFabMenu();" data-label="Login (Sync ข้ามอุปกรณ์)">
+            <span class="fab-icon">👤</span>
+        </button>
     </div>
 </div>
 
@@ -2570,10 +2581,24 @@ window.generateFromTemplate = function() {
 <div id="loginModal" class="modal" style="display: none;">
     <div class="modal-content" style="max-width: 400px;">
         <span class="close-modal" onclick="closeLoginModal()">&times;</span>
-        <h2 style="text-align: center; margin-bottom: 30px;">🔐 เข้าสู่ระบบ</h2>
+        <h2 style="text-align: center; margin-bottom: 20px;">🔐 เข้าสู่ระบบ</h2>
+        
+        <!-- Info Box -->
+        <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #3b82f6; margin: 0 0 10px 0; font-size: 14px;">✨ ประโยชน์ของการ Login:</h4>
+            <ul style="margin: 0; padding-left: 20px; color: #aaa; font-size: 13px; line-height: 1.6;">
+                <li><strong style="color: #3b82f6;">Sync ตัวละครที่บันทึก</strong> - ใช้ตัวละครเดียวกันได้ทุกอุปกรณ์</li>
+                <li><strong style="color: #3b82f6;">Sync เครดิต</strong> - เครดิตที่เติมใช้ได้ทุกที่</li>
+                <li><strong style="color: #3b82f6;">ใช้ User ID เดียวกัน</strong> - ไม่ต้องจำหลาย ID</li>
+            </ul>
+            <p style="margin: 10px 0 0 0; color: #888; font-size: 12px; text-align: center;">
+                💡 <strong>ไม่บังคับ Login</strong> - ใช้งานได้ปกติแม้ไม่ login
+            </p>
+        </div>
         
         <!-- Login Form -->
         <div id="loginForm" style="display: block;">
+            <div id="loginErrorMessage" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-family: 'Kanit', sans-serif;"></div>
             <div class="form-group">
                 <label>Username:</label>
                 <input type="text" id="loginUsername" placeholder="กรอก username" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
@@ -2589,14 +2614,29 @@ window.generateFromTemplate = function() {
                 ยังไม่ได้ผูกบัญชี? 
                 <a href="#" onclick="showLinkAccountForm()" style="color: var(--primary);">ผูกบัญชีที่นี่</a>
             </p>
+            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 10px; margin-top: 15px;">
+                <p style="margin: 0; color: #22c55e; font-size: 12px; text-align: center;">
+                    💡 <strong>Login ข้ามอุปกรณ์:</strong> วาง Login Token ในช่อง Username (ไม่ต้องใส่ Password)
+                </p>
+            </div>
         </div>
         
         <!-- Link Account Form -->
         <div id="linkAccountForm" style="display: none;">
-            <p style="color: #888; margin-bottom: 20px;">ผูก User ID ปัจจุบันของคุณกับ Username และ Password เพื่อใช้งานข้ามอุปกรณ์</p>
+            <div id="linkErrorMessage" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-family: 'Kanit', sans-serif;"></div>
+            <div id="linkSuccessMessage" style="display: none; background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; color: #22c55e; padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-family: 'Kanit', sans-serif;"></div>
+            <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid #fbbf24; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <h4 style="color: #fbbf24; margin: 0 0 10px 0; font-size: 14px;">📝 วิธีการผูกบัญชี:</h4>
+                <ol style="margin: 0; padding-left: 20px; color: #aaa; font-size: 13px; line-height: 1.6;">
+                    <li>ตั้ง <strong>Username</strong> (ภาษาอังกฤษ a-z, 0-9, _)</li>
+                    <li>ตั้ง <strong>Password</strong> (อย่างน้อย 6 ตัว)</li>
+                    <li>ระบบจะสร้าง <strong>Login Token</strong> ให้</li>
+                    <li>ใช้ Token หรือ Username/Password เพื่อ login ที่อื่น</li>
+                </ol>
+            </div>
             <div class="form-group">
                 <label>User ID ที่ต้องการผูก:</label>
-                <input type="text" id="linkUserId" placeholder="กรอก User ID (10 หลัก)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
+                <input type="text" id="linkUserId" placeholder="กรอก User ID" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
                 <small style="color: #666; display: block; margin-top: 5px;">User ID ปัจจุบันของคุณ: <span id="currentUserIdDisplay" style="color: var(--primary);"></span></small>
             </div>
             <div class="form-group" style="margin-top: 15px;">
@@ -2618,13 +2658,28 @@ window.generateFromTemplate = function() {
         <!-- Logged In View -->
         <div id="loggedInView" style="display: none; text-align: center;">
             <div style="margin-bottom: 20px;">
-                <div style="font-size: 48px; margin-bottom: 10px;">👤</div>
-                <h3 id="loggedInUsername" style="margin: 0; color: var(--primary);">Username</h3>
-                <p style="color: #888; margin: 5px 0;">User ID: <span id="loggedInUserId"></span></p>
-                <p style="color: #666; margin: 5px 0; font-size: 14px;">Credits: <span id="loggedInCredits" style="color: var(--success);"></span></p>
+                <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                <h3 style="margin: 0 0 5px 0; color: var(--success);">Login สำเร็จ!</h3>
+                <h4 id="loggedInUsername" style="margin: 0; color: var(--primary); font-size: 20px;">Username</h4>
+                <p style="color: #888; margin: 5px 0; font-size: 12px;">User ID: <span id="loggedInUserId"></span></p>
+            </div>
+            
+            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: 8px; padding: 15px; margin-bottom: 20px; text-align: left;">
+                <h4 style="color: #22c55e; margin: 0 0 10px 0; font-size: 14px;">✨ ข้อมูลที่ Sync แล้ว:</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #aaa; font-size: 13px; line-height: 1.8;">
+                    <li>💰 <strong>เครดิต:</strong> <span id="loggedInCredits" style="color: var(--success); font-weight: bold;"></span> เครดิต</li>
+                    <li>👥 <strong>ตัวละครที่บันทึก:</strong> ใช้ได้ทุกอุปกรณ์</li>
+                    <li>🆔 <strong>User ID:</strong> ใช้ ID เดียวกันทุกที่</li>
+                </ul>
+                <p style="margin: 10px 0 0 0; color: #666; font-size: 11px; text-align: center;">
+                    ⚠️ ประวัติแชทไม่ sync (เก็บในอุปกรณ์)
+                </p>
             </div>
             <button onclick="doLogout()" style="width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-family: 'Kanit', sans-serif;">
                 ออกจากระบบ
+            </button>
+            <button onclick="showMyToken()" style="width: 100%; margin-top: 10px; padding: 12px; background: #666; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: 'Kanit', sans-serif;">
+                🔑 ดู Login Token
             </button>
         </div>
     </div>

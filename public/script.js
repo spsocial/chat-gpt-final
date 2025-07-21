@@ -19,8 +19,9 @@ const FEATURES = {
     GOOGLE_AUTH: false  // Set to true when ready to enable Google Sign-In
 };
 
-// Firebase config - ใช้ฐานข้อมูลเดียวกับระบบเครดิต
-window.FIREBASE_DATABASE_URL = 'https://credit-wallet-e9b6e-default-rtdb.asia-southeast1.firebasedatabase.app';
+// Simple cloud storage using a public service (for demo only)
+// ในระบบจริงควรใช้ backend API ของตัวเอง
+window.CLOUD_STORAGE_URL = 'https://api.npoint.io/f1c6b0f3e8b9d2a4c5e7'; // Demo endpoint
 
 // ========== GLOBAL VARIABLES ==========
 let currentMode = 'promptmaster';
@@ -3307,7 +3308,10 @@ window.sendMessage = async function() {
     input.disabled = true;
     document.getElementById('sendButton').disabled = true;
     
-    let displayMessage = message;
+    // Clean timestamp patterns from message before displaying
+    let cleanedMessage = message.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+    
+    let displayMessage = cleanedMessage;
     if (window.imageUrls.length > 0) {
         displayMessage += ` <span style="color: #a1a1aa;">(พร้อมรูป ${window.imageUrls.length} รูป)</span>`;
     }
@@ -8300,12 +8304,152 @@ window.toggleFieldVoice = toggleFieldVoice;
 window.stopFieldVoice = stopFieldVoice;
 window.updateCharacterFormFields = updateCharacterFormFields;
 
+// Show current account token
+function showMyToken() {
+    const linkedAccount = localStorage.getItem('linkedAccount');
+    if (!linkedAccount) {
+        alert('❌ ไม่พบข้อมูลบัญชี');
+        return;
+    }
+    
+    try {
+        const account = JSON.parse(linkedAccount);
+        const loginToken = btoa(JSON.stringify({
+            username: account.username,
+            hashedPassword: account.hashedPassword,
+            userId: account.userId,
+            createdAt: account.createdAt
+        }));
+        
+        // สร้าง modal แสดง token
+        const tokenModal = document.createElement('div');
+        tokenModal.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1a1a1a;
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 30px;
+            z-index: 10001;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+        `;
+        
+        tokenModal.innerHTML = `
+            <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔑 Login Token ของคุณ</h3>
+            <p style="color: #888; margin-bottom: 15px;">Username: <strong style="color: white;">${account.username}</strong></p>
+            <textarea id="myTokenTextarea" style="
+                width: 100%;
+                height: 100px;
+                padding: 10px;
+                background: #2a2a2a;
+                border: 1px solid #444;
+                border-radius: 8px;
+                color: white;
+                font-family: monospace;
+                font-size: 12px;
+                resize: none;
+                margin-bottom: 15px;
+            " readonly>${loginToken}</textarea>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="
+                    document.getElementById('myTokenTextarea').select();
+                    document.execCommand('copy');
+                    this.textContent = '✅ Copied!';
+                    setTimeout(() => this.textContent = '📋 Copy Token', 2000);
+                " style="
+                    flex: 1;
+                    padding: 10px;
+                    background: var(--primary);
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-family: 'Kanit', sans-serif;
+                ">📋 Copy Token</button>
+                <button onclick="
+                    this.parentElement.parentElement.remove();
+                    document.getElementById('myTokenModalOverlay').remove();
+                " style="
+                    flex: 1;
+                    padding: 10px;
+                    background: #444;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-family: 'Kanit', sans-serif;
+                ">ปิด</button>
+            </div>
+            <p style="color: #666; font-size: 12px; margin-top: 15px; margin-bottom: 0;">
+                💡 ใช้ token นี้เพื่อ login ในอุปกรณ์อื่น หรือ login ด้วย Username/Password ก็ได้
+            </p>
+        `;
+        
+        const overlay = document.createElement('div');
+        overlay.id = 'myTokenModalOverlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 10000;
+        `;
+        
+        document.body.appendChild(overlay);
+        document.body.appendChild(tokenModal);
+        
+        // Auto select text
+        document.getElementById('myTokenTextarea').select();
+        
+    } catch (error) {
+        console.error('Show token error:', error);
+        alert('❌ เกิดข้อผิดพลาด');
+    }
+}
+
+window.showMyToken = showMyToken;
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     updateTemplateButton();
 });
 
 // ========== LOGIN SYSTEM FUNCTIONS ==========
+
+// Show error message in login modal
+function showLoginError(message) {
+    const errorDiv = document.getElementById('loginErrorMessage');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+}
+
+// Show error message in link account form
+function showLinkError(message) {
+    const errorDiv = document.getElementById('linkErrorMessage');
+    if (errorDiv) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        document.getElementById('linkSuccessMessage').style.display = 'none';
+    }
+}
+
+// Show success message in link account form
+function showLinkSuccess(message) {
+    const successDiv = document.getElementById('linkSuccessMessage');
+    if (successDiv) {
+        successDiv.textContent = message;
+        successDiv.style.display = 'block';
+        document.getElementById('linkErrorMessage').style.display = 'none';
+    }
+}
 
 // Show login modal
 function showLoginModal() {
@@ -8337,6 +8481,12 @@ function showLoginForm() {
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('linkAccountForm').style.display = 'none';
     document.getElementById('loggedInView').style.display = 'none';
+    // Clear error messages
+    const errorDiv = document.getElementById('loginErrorMessage');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+    }
 }
 
 // Show link account form
@@ -8345,8 +8495,21 @@ function showLinkAccountForm() {
     document.getElementById('linkAccountForm').style.display = 'block';
     document.getElementById('loggedInView').style.display = 'none';
     
+    // Clear error/success messages
+    const errorDiv = document.getElementById('linkErrorMessage');
+    const successDiv = document.getElementById('linkSuccessMessage');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+        errorDiv.textContent = '';
+    }
+    if (successDiv) {
+        successDiv.style.display = 'none';
+        successDiv.textContent = '';
+    }
+    
     // Pre-fill current user ID
     const currentUser = ensureUserId();
+    document.getElementById('currentUserIdDisplay').textContent = currentUser;
     document.getElementById('linkUserId').value = currentUser;
 }
 
@@ -8381,124 +8544,306 @@ async function linkAccount() {
     const password = document.getElementById('newPassword').value;
     
     // Validation
-    if (!userId || userId.length !== 10) {
-        showNotification('❌ User ID ต้องมี 10 หลัก', 'error');
+    if (!userId || userId.length < 5) {
+        showLinkError('❌ User ID ไม่ถูกต้อง');
         return;
     }
     
     if (!username || username.length < 3) {
-        showNotification('❌ Username ต้องมีอย่างน้อย 3 ตัวอักษร', 'error');
+        showLinkError('❌ Username ต้องมีอย่างน้อย 3 ตัวอักษร');
         return;
     }
     
     if (!/^[a-z0-9_]+$/.test(username)) {
-        showNotification('❌ Username ใช้ได้เฉพาะ a-z, 0-9, _ เท่านั้น', 'error');
+        showLinkError('❌ Username ใช้ได้เฉพาะ a-z, 0-9, _ เท่านั้น');
         return;
     }
     
     if (!password || password.length < 6) {
-        showNotification('❌ Password ต้องมีอย่างน้อย 6 ตัว', 'error');
+        showLinkError('❌ Password ต้องมีอย่างน้อย 6 ตัว');
         return;
     }
     
     try {
-        showNotification('🔄 กำลังผูกบัญชี...', 'info');
+        showLinkSuccess('🔄 กำลังผูกบัญชี...');
         
         // Hash password
         const hashedPassword = await simpleHash(password);
         
-        // Check if username already exists in Firebase
-        const checkResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/accounts/${username}.json`);
-        if (checkResponse.ok) {
-            const existingAccount = await checkResponse.json();
-            if (existingAccount) {
-                showNotification('❌ Username นี้ถูกใช้แล้ว', 'error');
-                return;
-            }
+        // First check in localStorage for existing accounts
+        const existingAccounts = JSON.parse(localStorage.getItem('localAccounts') || '{}');
+        if (existingAccounts[username]) {
+            showLinkError('❌ Username นี้ถูกใช้แล้ว');
+            return;
         }
         
-        // Save to Firebase
-        // 1. Save username -> userId mapping
-        await fetch(`${window.FIREBASE_DATABASE_URL}/accounts/${username}.json`, {
-            method: 'PUT',
-            body: JSON.stringify({
-                userId: userId,
-                createdAt: new Date().toISOString()
-            })
-        });
+        // For now, only check local storage
+        // ในอนาคตสามารถเพิ่ม backend API ได้
         
-        // 2. Save user data with linked account
-        const currentCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
-        await fetch(`${window.FIREBASE_DATABASE_URL}/users/${userId}.json`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-                linkedAccount: {
-                    username: username,
-                    hashedPassword: hashedPassword
-                },
-                credits: currentCredits,
-                updatedAt: new Date().toISOString()
-            })
-        });
-        
-        // Save to localStorage
+        // Save to localStorage first
         const account = {
             username: username,
             userId: userId,
-            hashedPassword: hashedPassword
+            hashedPassword: hashedPassword,
+            createdAt: new Date().toISOString()
         };
+        
+        // Save account mapping locally
+        existingAccounts[username] = {
+            userId: userId,
+            createdAt: account.createdAt
+        };
+        localStorage.setItem('localAccounts', JSON.stringify(existingAccounts));
+        
+        // Save user data locally
+        const currentCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+        const userData = {
+            linkedAccount: account,
+            credits: currentCredits,
+            updatedAt: new Date().toISOString()
+        };
+        localStorage.setItem(`userData_${userId}`, JSON.stringify(userData));
+        
+        // Save linked account info
         localStorage.setItem('linkedAccount', JSON.stringify(account));
         
-        showNotification('✅ ผูกบัญชีสำเร็จ!', 'success');
-        showLoggedInView(account);
+        // สร้าง login token สำหรับใช้ข้าม browser
+        const loginToken = btoa(JSON.stringify({
+            username: username,
+            hashedPassword: hashedPassword,
+            userId: userId,
+            createdAt: account.createdAt
+        }));
+        
+        // แสดงผลสำเร็จ
+        showLinkSuccess('✅ ผูกบัญชีสำเร็จ!');
+        
+        // สร้าง modal แสดง token ที่ copy ได้
+        setTimeout(() => {
+            const tokenModal = document.createElement('div');
+            tokenModal.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #1a1a1a;
+                border: 2px solid var(--primary);
+                border-radius: 12px;
+                padding: 30px;
+                z-index: 10001;
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            `;
+            
+            tokenModal.innerHTML = `
+                <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔑 Login Token สำเร็จ!</h3>
+                <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <p style="margin: 0 0 8px 0; color: #3b82f6; font-size: 13px; font-weight: bold;">✨ Token นี้ช่วยให้คุณ:</p>
+                    <ul style="margin: 0; padding-left: 20px; color: #aaa; font-size: 12px; line-height: 1.5;">
+                        <li>Login ได้ทุกอุปกรณ์ด้วย Token เดียว</li>
+                        <li>ไม่ต้องจำ Username/Password</li>
+                        <li>Sync เครดิตและตัวละครอัตโนมัติ</li>
+                    </ul>
+                </div>
+                <p style="color: #888; margin-bottom: 15px; font-size: 13px;">Copy token ด้านล่างเพื่อใช้ login ในอุปกรณ์อื่น:</p>
+                <textarea id="tokenTextarea" style="
+                    width: 100%;
+                    height: 100px;
+                    padding: 10px;
+                    background: #2a2a2a;
+                    border: 1px solid #444;
+                    border-radius: 8px;
+                    color: white;
+                    font-family: monospace;
+                    font-size: 12px;
+                    resize: none;
+                    margin-bottom: 15px;
+                " readonly>${loginToken}</textarea>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="
+                        document.getElementById('tokenTextarea').select();
+                        document.execCommand('copy');
+                        this.textContent = '✅ Copied!';
+                        setTimeout(() => this.textContent = '📋 Copy Token', 2000);
+                    " style="
+                        flex: 1;
+                        padding: 10px;
+                        background: var(--primary);
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-family: 'Kanit', sans-serif;
+                    ">📋 Copy Token</button>
+                    <button onclick="
+                        this.parentElement.parentElement.remove();
+                        document.getElementById('tokenModalOverlay').remove();
+                    " style="
+                        flex: 1;
+                        padding: 10px;
+                        background: #444;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-family: 'Kanit', sans-serif;
+                    ">ปิด</button>
+                </div>
+                <p style="color: #666; font-size: 12px; margin-top: 15px; margin-bottom: 0;">
+                    💡 วิธีใช้: วาง token ในช่อง Username แล้วกด Login (ไม่ต้องใส่ Password)
+                </p>
+            `;
+            
+            const overlay = document.createElement('div');
+            overlay.id = 'tokenModalOverlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.8);
+                z-index: 10000;
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(tokenModal);
+            
+            // Auto select text
+            document.getElementById('tokenTextarea').select();
+            
+            showLoggedInView(account);
+        }, 1000);
         
     } catch (error) {
         console.error('Link account error:', error);
-        showNotification('❌ เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+        showLinkError('❌ เกิดข้อผิดพลาด: ' + error.message);
     }
 }
 
 // Login
 async function doLogin() {
-    const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+    let username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     
-    if (!username || !password) {
-        showNotification('❌ กรุณากรอกข้อมูลให้ครบ', 'error');
+    // ตรวจสอบว่าเป็น token หรือไม่ (token จะยาวกว่า 50 ตัวอักษร)
+    const isToken = username.length > 50 && !password;
+    
+    if (!username) {
+        showLoginError('❌ กรุณากรอก Username หรือ Token');
         return;
     }
     
+    if (!isToken && !password) {
+        showLoginError('❌ กรุณากรอก Password');
+        return;
+    }
+    
+    // ถ้าไม่ใช่ token ให้ lowercase username
+    if (!isToken) {
+        username = username.toLowerCase();
+    }
+    
     try {
-        showNotification('🔄 กำลังเข้าสู่ระบบ...', 'info');
-        
-        // Get account from Firebase
-        const accountResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/accounts/${username}.json`);
-        if (!accountResponse.ok) {
-            showNotification('❌ ไม่พบ username นี้', 'error');
-            return;
+        // Clear any previous errors
+        const errorDiv = document.getElementById('loginErrorMessage');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
         }
         
-        const accountData = await accountResponse.json();
+        // First check localStorage
+        const localAccounts = JSON.parse(localStorage.getItem('localAccounts') || '{}');
+        let accountData = null;
+        
+        if (!isToken && localAccounts[username]) {
+            accountData = {
+                userId: localAccounts[username].userId,
+                hashedPassword: null // Will get from userData
+            };
+        }
+        
+        // ตรวจสอบว่าเป็น token login หรือไม่
+        if (isToken) {
+            try {
+                const tokenData = JSON.parse(atob(username));
+                if (tokenData.username && tokenData.hashedPassword && tokenData.userId) {
+                    // Import account from token
+                    accountData = tokenData;
+                    
+                    // Save to local storage
+                    localAccounts[tokenData.username] = {
+                        userId: tokenData.userId,
+                        createdAt: tokenData.createdAt
+                    };
+                    localStorage.setItem('localAccounts', JSON.stringify(localAccounts));
+                    
+                    const userData = {
+                        linkedAccount: tokenData,
+                        credits: 0
+                    };
+                    localStorage.setItem(`userData_${tokenData.userId}`, JSON.stringify(userData));
+                    
+                    // Auto login with token
+                    localStorage.setItem('userId', tokenData.userId);
+                    localStorage.setItem('linkedAccount', JSON.stringify(tokenData));
+                    
+                    // แสดงข้อความสำเร็จด้วยสีเขียว
+                    const errorDiv = document.getElementById('loginErrorMessage');
+                    if (errorDiv) {
+                        errorDiv.textContent = '✅ Login ด้วย token สำเร็จ! กำลังรีเฟรช...';
+                        errorDiv.style.display = 'block';
+                        errorDiv.style.background = 'rgba(34, 197, 94, 0.1)';
+                        errorDiv.style.border = '1px solid #22c55e';
+                        errorDiv.style.color = '#22c55e';
+                    }
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                    return;
+                }
+            } catch (e) {
+                showLoginError('❌ Token ไม่ถูกต้อง');
+                return;
+            }
+        }
+        
         if (!accountData) {
-            showNotification('❌ ไม่พบ username นี้', 'error');
+            showLoginError('❌ ไม่พบ username นี้');
             return;
         }
         
+        // Get user data - first try localStorage
+        let userData = null;
         const userId = accountData.userId;
+        const localUserData = localStorage.getItem(`userData_${userId}`);
         
-        // Get user data
-        const userResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/users/${userId}.json`);
-        const userData = await userResponse.json();
-        
-        if (!userData || !userData.linkedAccount) {
-            showNotification('❌ ข้อมูลบัญชีไม่ถูกต้อง', 'error');
-            return;
+        if (localUserData) {
+            userData = JSON.parse(localUserData);
         }
         
         // Verify password
         const hashedPassword = await simpleHash(password);
-        if (hashedPassword !== userData.linkedAccount.hashedPassword) {
-            showNotification('❌ รหัสผ่านไม่ถูกต้อง', 'error');
+        let passwordValid = false;
+        
+        // For cloud-based login, we already have the password hash
+        if (accountData.hashedPassword) {
+            if (hashedPassword === accountData.hashedPassword) {
+                passwordValid = true;
+            }
+        } else if (userData && userData.linkedAccount) {
+            // Fallback to local data
+            if (hashedPassword === userData.linkedAccount.hashedPassword) {
+                passwordValid = true;
+            }
+        }
+        
+        if (!passwordValid) {
+            if (!accountData.hashedPassword && (!userData || !userData.linkedAccount)) {
+                showLoginError('❌ ข้อมูลบัญชีไม่ถูกต้อง');
+            } else {
+                showLoginError('❌ รหัสผ่านไม่ถูกต้อง');
+            }
             return;
         }
         
@@ -8506,7 +8851,9 @@ async function doLogin() {
         localStorage.setItem('userId', userId);
         
         // Sync credits from cloud
-        if (userData.credits !== undefined) {
+        if (accountData.credits !== undefined) {
+            localStorage.setItem('totalCredits', accountData.credits.toString());
+        } else if (userData && userData.credits !== undefined) {
             localStorage.setItem('totalCredits', userData.credits.toString());
         }
         
@@ -8518,7 +8865,7 @@ async function doLogin() {
         };
         localStorage.setItem('linkedAccount', JSON.stringify(account));
         
-        showNotification('✅ เข้าสู่ระบบสำเร็จ!', 'success');
+        // Login successful - no need to show success message as we're redirecting
         showLoggedInView(account);
         
         // Refresh page to update UI
@@ -8528,7 +8875,7 @@ async function doLogin() {
         
     } catch (error) {
         console.error('Login error:', error);
-        showNotification('❌ เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+        showLoginError('❌ เกิดข้อผิดพลาด: ' + error.message);
     }
 }
 

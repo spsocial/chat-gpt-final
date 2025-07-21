@@ -3291,6 +3291,83 @@ line-clamp: 3;
     transform: translateY(-2px);
     box-shadow: 0 8px 20px rgba(147, 51, 234, 0.3);
 }
+
+/* Desktop Login Button */
+.desktop-login-btn {
+    background: #404040;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    font-family: 'Kanit', sans-serif;
+}
+
+.desktop-login-btn:hover {
+    background: #505050;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Hide desktop login button on mobile */
+@media (max-width: 768px) {
+    .desktop-login-btn {
+        display: none;
+    }
+}
+
+/* Mobile Login Button in FAB */
+.fab-action-btn[onclick*="showLoginModal"] {
+    background: #404040;
+}
+
+.fab-action-btn[onclick*="showLoginModal"]:hover {
+    background: #505050;
+}
+
+/* Free Credits Label Styling */
+.credits-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #22c55e;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+    white-space: nowrap;
+    z-index: 10;
+    font-family: 'Kanit', sans-serif;
+}
+
+/* Free Credits Label Mobile Styling */
+@media (max-width: 768px) {
+    .credits-label {
+        font-size: 10px;
+        padding: 2px 6px;
+        top: -22px;
+    }
+    
+    /* Adjust usage display on mobile when login button is present */
+    .usage-display {
+        gap: 5px;
+    }
+    
+    /* Ensure proper spacing in mobile FAB menu */
+    .fab-menu .fab-action-btn {
+        margin: 5px 0;
+    }
+}
 .mode-btn {
     padding: 10px 20px;
     border: none;
@@ -7572,5 +7649,35 @@ body.mode-character #characterTemplateButtonSection {
         width: 100%;
         margin: 10px 0;
         min-width: auto;
+    }
+}
+
+/* ========== LOGIN BUTTON & FREE CREDITS MOBILE ========== */
+@media (max-width: 768px) {
+    /* Free Credits Label */
+    .usage-info {
+        position: relative;
+        padding-top: 20px \!important;
+    }
+    
+    .usage-info > div:first-child {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        margin-bottom: 0 \!important;
+    }
+    
+    .usage-info > div:first-child span:first-child {
+        font-size: 10px \!important;
+        font-weight: bold;
+    }
+    
+    .usage-info > div:first-child span:last-child {
+        font-size: 9px \!important;
     }
 }
