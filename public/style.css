@@ -1284,6 +1284,54 @@
             font-family: 'Kanit', sans-serif;
         }
 
+        /* Desktop-specific compact sizes */
+        @media (min-width: 769px) {
+            /* ลดขนาดทุกอย่างบน Desktop เพื่อให้กระชับขึ้น */
+            .message {
+                padding: 8px 0 !important;
+            }
+            
+            .message-content {
+                line-height: 1.5 !important;
+            }
+            
+            .message-content h1 { font-size: 22px !important; }
+            .message-content h2 { font-size: 18px !important; }
+            .message-content h3 { font-size: 16px !important; }
+            .message-content p { font-size: 14px !important; }
+            
+            .rating-section {
+                padding: 10px !important;
+                margin-top: 6px !important;
+            }
+            
+            .action-buttons {
+                gap: 6px !important;
+                margin-top: 6px !important;
+            }
+            
+            .message-avatar {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 18px !important;
+            }
+            
+            .veo3-prompt, .character-profile {
+                padding: 14px !important;
+                margin-top: 8px !important;
+            }
+            
+            .prompt-content {
+                padding: 10px !important;
+                font-size: 13px !important;
+            }
+            
+            .prompt-header {
+                font-size: 14px !important;
+                margin-bottom: 8px !important;
+            }
+        }
+
         /* Dark Scrollbar */
         ::-webkit-scrollbar {
             width: 12px;
@@ -1442,15 +1490,15 @@
 
         .star-rating {
             display: flex;
-            gap: 8px;
-            font-size: 28px;
-            margin-bottom: 12px;
+            gap: 6px;
+            font-size: 20px;
+            margin-bottom: 8px;
         }
         .star-rating {
     display: flex;
-    gap: 8px;
-    font-size: 28px;
-    margin-bottom: 8px;
+    gap: 6px;
+    font-size: 20px;
+    margin-bottom: 6px;
     justify-content: center;
 }
 
@@ -2533,15 +2581,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px 16px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
     font-family: 'Kanit', sans-serif;
-    font-size: 14px;
+    font-size: 12px;
     transition: all 0.3s ease;
     position: relative;
 }
@@ -2554,7 +2602,7 @@
 }
 
 .action-icon {
-        font-size: 16px;    /* เพิ่มใหม่ - ลดจาก 18px */
+        font-size: 14px;
     }
 
 .favorites-count {

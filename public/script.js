@@ -1929,7 +1929,11 @@ function parseCharacterProfile(profile) {
         accent: '',
         voiceCharacteristics: '',
         speech: '',
-        theme: ''
+        theme: '',
+        // Additional fields for 14-field format
+        uniqueTraits: '',
+        specialEffects: '',
+        realismType: ''
     };
     
     // Extract data from each section
@@ -2013,13 +2017,15 @@ function parseCharacterProfile(profile) {
                 currentSection = 12;
                 collectedData[currentSection] = [];
             }
-            // Section 13: คำพูด
-            else if (trimmedLine.includes('**13.') || trimmedLine.includes('💬')) {
+            // Section 13: ลักษณะพิเศษ
+            else if (trimmedLine.includes('**13.') || trimmedLine.includes('💬') || trimmedLine.includes('✨') || 
+                     trimmedLine.includes('ลักษณะพิเศษ') || trimmedLine.includes('Special Features')) {
                 currentSection = 13;
                 collectedData[currentSection] = [];
             }
-            // Section 14: ธีม
-            else if (trimmedLine.includes('**14.') || trimmedLine.includes('🎨')) {
+            // Section 14: ภาพความสมจริง
+            else if (trimmedLine.includes('**14.') || trimmedLine.includes('🎨') || trimmedLine.includes('🖼️') || 
+                     trimmedLine.includes('ภาพความสมจริง') || trimmedLine.includes('Visual Style')) {
                 currentSection = 14;
                 collectedData[currentSection] = [];
             }
@@ -2082,6 +2088,12 @@ function parseCharacterProfile(profile) {
     
     // Process collected data
     console.log('Collected data:', collectedData);
+    console.log('Section 13 data:', collectedData[13]);
+    console.log('Section 14 data:', collectedData[14]);
+    
+    // Debug: Check which sections were detected
+    const detectedSections = Object.keys(collectedData).map(k => parseInt(k)).sort((a, b) => a - b);
+    console.log('Detected sections:', detectedSections);
     
     if (is14FieldFormat) {
         // Parse 14-field format
@@ -2274,21 +2286,47 @@ function parseCharacterProfile(profile) {
             parsed.speechStyle = parsed.speakingStyle; // For backward compatibility
         }
         
-        // Section 13: คำพูด
+        // Section 13: ลักษณะพิเศษ
         if (collectedData[13]) {
-            const speechData = collectedData[13].find(d => 
-                d.key.toLowerCase().includes('speech') || d.key.includes('คำพูด')
+            const uniqueTraitsData = collectedData[13].find(d => 
+                d.key.toLowerCase().includes('unique') || d.key.toLowerCase().includes('traits') || 
+                d.key.includes('ลักษณะเฉพาะ') || d.key.includes('ลักษณะพิเศษ')
             );
-            parsed.speech = speechData ? speechData.value : '';
+            const specialEffectsData = collectedData[13].find(d => 
+                d.key.toLowerCase().includes('effects') || d.key.toLowerCase().includes('special') || 
+                d.key.includes('เอฟเฟกต์') || d.key.includes('เอฟเฟกต์พิเศษ')
+            );
+            parsed.uniqueTraits = uniqueTraitsData ? uniqueTraitsData.value : '';
+            parsed.specialEffects = specialEffectsData ? specialEffectsData.value : '';
+            // For backward compatibility with speech
+            parsed.speech = parsed.uniqueTraits || parsed.specialEffects || '';
         }
         
-        // Section 14: ธีม
+        // Section 14: ภาพความสมจริง
         if (collectedData[14]) {
+            const realismData = collectedData[14].find(d => 
+                d.key.toLowerCase().includes('realism') || d.key.toLowerCase().includes('visual') || 
+                d.key.toLowerCase().includes('style') || d.key.includes('ความสมจริง') || 
+                d.key.includes('สไตล์') || d.key.includes('ภาพ') || d.key.includes('ประเภท')
+            );
+            parsed.realismType = realismData ? realismData.value : '';
+            
+            // If no realismType found, check if there's any data without a key
+            if (!parsed.realismType && collectedData[14].length > 0) {
+                const noKeyData = collectedData[14].find(d => !d.key || d.key === '');
+                if (noKeyData) {
+                    parsed.realismType = noKeyData.value;
+                }
+            }
+            
+            // For backward compatibility with theme
             const themeData = collectedData[14].find(d => 
                 d.key.toLowerCase().includes('theme') || d.key.includes('ธีม')
             );
-            parsed.theme = themeData ? themeData.value : '';
-            parsed.storyRole = parsed.theme; // For backward compatibility
+            if (!parsed.realismType && themeData) {
+                parsed.theme = themeData.value;
+                parsed.storyRole = parsed.theme;
+            }
         }
     } else {
         // Parse 8-field format (original logic)
@@ -2461,6 +2499,12 @@ function showEditCharacterModal(profileData) {
     
     // Fill form with existing data
     // The parsed data already contains clean values without labels
+    
+    // Debug logging
+    console.log('=== Filling form with parsed data ===');
+    console.log('Section 13 - uniqueTraits:', profileData.uniqueTraits);
+    console.log('Section 13 - specialEffects:', profileData.specialEffects);
+    console.log('Section 14 - realismType:', profileData.realismType);
     
     // Section 1: ชื่อ / บทบาท
     if (profileData.name) document.getElementById('charName').value = profileData.name;
