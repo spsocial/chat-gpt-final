@@ -381,6 +381,11 @@
             transform: scale(0.95);
         }
         
+        /* Mobile Login Container - Hidden by default */
+        .mobile-login-container {
+            display: none;
+        }
+        
         .credit-plus {
             display: flex;
             align-items: center;
@@ -7488,6 +7493,11 @@ body.mode-character #characterTemplateButtonSection {
     
     /* Show mobile total credits */
     .mobile-total-credits {
+        display: flex !important;
+    }
+    
+    /* Show mobile login container on mobile only */
+    .mobile-login-container {
         display: flex !important;
     }
     
