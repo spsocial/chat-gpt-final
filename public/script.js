@@ -6864,6 +6864,8 @@ const ChatStorage = {
                     } else {
                         mainContent = contentElem.textContent.trim();
                     }
+                    // Clean timestamp patterns from stored content
+                    mainContent = mainContent.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
                 } else {
                     // สำหรับ assistant message เก็บเป็น HTML เพื่อรักษา format
                     if (contentDiv) {
@@ -7003,8 +7005,9 @@ if (modelInfo && !isUser) {
                     addMessage(msg.content, msg.role);
                 }
             } else {
-                // User message แสดงแบบปกติ
-                addMessage(msg.content, msg.role);
+                // User message แสดงแบบปกติ - clean timestamps first
+                const cleanedContent = msg.content.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+                addMessage(cleanedContent, msg.role);
             }
         });
         
@@ -7274,7 +7277,9 @@ const PromptStorage = {
         // แสดงประวัติ
         messages.forEach(msg => {
             if (msg.role === 'user') {
-                addMessage(msg.content, 'user');
+                // Clean timestamp patterns from user messages before displaying
+                const cleanedContent = msg.content.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+                addMessage(cleanedContent, 'user');
             } else {
                 // สำหรับ assistant message สร้าง wrapper และใส่ HTML ที่บันทึกไว้
                 const messageId = `msg-${Date.now()}-${Math.random()}`;
@@ -7535,7 +7540,9 @@ const ImagePromptStorage = {
                         <div class="message-content">${msg.content}</div>
                     `;
                 } else {
-                    messageDiv.innerHTML = `<div class="message-content">${msg.content}</div>`;
+                    // Clean timestamp patterns from user messages before displaying
+                    const cleanedContent = msg.content.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+                    messageDiv.innerHTML = `<div class="message-content">${cleanedContent}</div>`;
                 }
                 
                 chatMessages.appendChild(messageDiv);
