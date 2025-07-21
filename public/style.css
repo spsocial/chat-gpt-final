@@ -353,6 +353,34 @@
             transform: scale(0.95);
         }
         
+        /* Mobile Login Button */
+        .mobile-login-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-left: 8px;
+            box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
+        }
+        
+        .mobile-login-btn:hover {
+            background: #1d4ed8;
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(37, 99, 235, 0.4);
+        }
+        
+        .mobile-login-btn:active {
+            transform: scale(0.95);
+        }
+        
         .credit-plus {
             display: flex;
             align-items: center;
@@ -7451,6 +7479,11 @@ body.mode-character #characterTemplateButtonSection {
     /* Show mobile credit button */
     .mobile-credit-btn {
         display: flex !important;
+    }
+    
+    /* Show mobile login button */
+    .mobile-login-btn {
+        display: inline-flex !important;
     }
     
     /* Show mobile total credits */
