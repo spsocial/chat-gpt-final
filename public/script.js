@@ -1882,6 +1882,9 @@ function parseCharacterProfile(profile) {
     console.log('Parsing profile:', profile);
     
     const parsed = {
+        // Character type fields
+        type: 'human',
+        species: '',
         // Original 8 fields for backward compatibility
         nickname: '',
         role: '',
@@ -2113,8 +2116,33 @@ function parseCharacterProfile(profile) {
             parsed.role = roleData ? roleData.value : '';
         }
         
-        // Section 2: เพศ / อายุ / เชื้อชาติ
+        // Section 2: เพศ / อายุ / เชื้อชาติ or Type / Species
         if (collectedData[2]) {
+            // Check for type/species data
+            const typeData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('type') || d.key.includes('ประเภท')
+            );
+            const speciesData = collectedData[2].find(d => 
+                d.key.toLowerCase().includes('species') || d.key.includes('ชนิด') || d.key.includes('พันธุ์')
+            );
+            
+            if (typeData) {
+                const typeValue = typeData.value.toLowerCase();
+                if (typeValue.includes('สัตว์') || typeValue.includes('animal')) {
+                    parsed.type = 'animal';
+                } else if (typeValue.includes('การ์ตูน') || typeValue.includes('cartoon') || typeValue.includes('แฟนตาซี')) {
+                    parsed.type = 'cartoon';
+                } else if (typeValue.includes('หุ่นยนต์') || typeValue.includes('robot') || typeValue.includes('ai')) {
+                    parsed.type = 'robot';
+                } else if (typeValue.includes('สิ่งมีชีวิต') || typeValue.includes('creature')) {
+                    parsed.type = 'creature';
+                }
+            }
+            
+            if (speciesData) {
+                parsed.species = speciesData.value;
+            }
+            
             const genderData = collectedData[2].find(d => 
                 d.key.toLowerCase().includes('gender') || d.key.includes('เพศ')
             );
@@ -2506,6 +2534,13 @@ function showEditCharacterModal(profileData) {
     console.log('Section 13 - specialEffects:', profileData.specialEffects);
     console.log('Section 14 - realismType:', profileData.realismType);
     
+    // Character Type
+    if (profileData.type) {
+        document.getElementById('charType').value = profileData.type;
+        updateCharacterFormFields(); // Update form fields based on type
+    }
+    if (profileData.species) document.getElementById('charSpecies').value = profileData.species;
+    
     // Section 1: ชื่อ / บทบาท
     if (profileData.name) document.getElementById('charName').value = profileData.name;
     if (profileData.nickname) document.getElementById('charNickname').value = profileData.nickname;
@@ -2627,6 +2662,10 @@ function saveEditedCharacter() {
     }
     
     // Get form data - support 14 fields format
+    // Character Type
+    const charType = document.getElementById('charType')?.value || 'human';
+    const species = document.getElementById('charSpecies')?.value.trim() || '';
+    
     // Section 1: ชื่อ / บทบาท
     const name = document.getElementById('charName')?.value.trim() || '';
     const nickname = document.getElementById('charNickname')?.value.trim() || '';
@@ -2704,12 +2743,33 @@ function saveEditedCharacter() {
         updatedProfile += '\n';
     }
     
-    // 2. เพศ / อายุ / เชื้อชาติ
-    if (gender || age || ethnicity) {
-        updatedProfile += '🧑‍🎨 **2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**\n';
+    // 2. เพศ / อายุ / เชื้อชาติ or Type / Species
+    if (charType === 'human') {
+        if (gender || age || ethnicity) {
+            updatedProfile += '🧑‍🎨 **2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**\n';
+            if (gender) updatedProfile += `- เพศ: ${gender}\n`;
+            if (age) updatedProfile += `- อายุ: ${age}\n`;
+            if (ethnicity) updatedProfile += `- เชื้อชาติ: ${ethnicity}\n`;
+            updatedProfile += '\n';
+        }
+    } else {
+        // For non-human characters
+        let characterTypeText = '';
+        if (charType === 'animal') {
+            characterTypeText = `สัตว์ประเภท ${species || 'ไม่ระบุ'}`;
+        } else if (charType === 'cartoon') {
+            characterTypeText = `ตัวการ์ตูน/แฟนตาซี ${species || ''}`;
+        } else if (charType === 'robot') {
+            characterTypeText = `หุ่นยนต์/AI ${species || ''}`;
+        } else if (charType === 'creature') {
+            characterTypeText = `สิ่งมีชีวิต ${species || ''}`;
+        }
+        
+        updatedProfile += '🧑‍🎨 **2. ประเภท / เพศ / อายุ (Type / Gender / Age)**\n';
+        updatedProfile += `- ประเภท: ${characterTypeText}\n`;
+        if (species) updatedProfile += `- ชนิด/พันธุ์: ${species}\n`;
         if (gender) updatedProfile += `- เพศ: ${gender}\n`;
         if (age) updatedProfile += `- อายุ: ${age}\n`;
-        if (ethnicity) updatedProfile += `- เชื้อชาติ: ${ethnicity}\n`;
         updatedProfile += '\n';
     }
     
@@ -8144,6 +8204,66 @@ window.switchMode = function(mode) {
     updateTemplateButton();
 };
 
+// Function to update form fields based on character type
+function updateCharacterFormFields() {
+    const charType = document.getElementById('charType').value;
+    const genderLabel = document.getElementById('genderLabel');
+    const genderSelect = document.getElementById('charGender');
+    const ethnicityGroup = document.getElementById('ethnicityGroup');
+    const speciesGroup = document.getElementById('speciesGroup');
+    
+    // Reset all fields visibility
+    ethnicityGroup.style.display = 'block';
+    speciesGroup.style.display = 'none';
+    
+    // Update based on character type
+    if (charType === 'animal') {
+        // For animals
+        genderLabel.textContent = 'เพศ:';
+        genderSelect.innerHTML = `
+            <option value="">-- เลือกเพศ --</option>
+            <option value="Male">ตัวผู้</option>
+            <option value="Female">ตัวเมีย</option>
+            <option value="Unknown">ไม่ระบุ</option>
+        `;
+        ethnicityGroup.style.display = 'none';
+        speciesGroup.style.display = 'block';
+    } else if (charType === 'robot' || charType === 'creature') {
+        // For robots and creatures
+        genderLabel.textContent = 'ลักษณะเพศ:';
+        genderSelect.innerHTML = `
+            <option value="">-- เลือกลักษณะ --</option>
+            <option value="Masculine">ลักษณะผู้ชาย</option>
+            <option value="Feminine">ลักษณะผู้หญิง</option>
+            <option value="Neutral">กลาง/ไม่มีเพศ</option>
+        `;
+        ethnicityGroup.style.display = 'none';
+        speciesGroup.style.display = 'block';
+    } else if (charType === 'cartoon') {
+        // For cartoons
+        genderLabel.textContent = 'เพศ:';
+        genderSelect.innerHTML = `
+            <option value="">-- เลือกเพศ --</option>
+            <option value="Male">ชาย</option>
+            <option value="Female">หญิง</option>
+            <option value="Non-binary">ไม่ระบุ</option>
+        `;
+        ethnicityGroup.style.display = 'none';
+        speciesGroup.style.display = 'block';
+    } else {
+        // Default (human)
+        genderLabel.textContent = 'เพศ:';
+        genderSelect.innerHTML = `
+            <option value="">-- เลือกเพศ --</option>
+            <option value="Male">ชาย</option>
+            <option value="Female">หญิง</option>
+            <option value="Non-binary">ไม่ระบุ</option>
+        `;
+        ethnicityGroup.style.display = 'block';
+        speciesGroup.style.display = 'none';
+    }
+}
+
 // Export functions
 window.showTemplateForm = showTemplateForm;
 window.closeTemplateForm = closeTemplateForm;
@@ -8152,6 +8272,7 @@ window.generateFromTemplate = generateFromTemplate;
 window.closeTemplateFormOnOutsideClick = closeTemplateFormOnOutsideClick;
 window.toggleFieldVoice = toggleFieldVoice;
 window.stopFieldVoice = stopFieldVoice;
+window.updateCharacterFormFields = updateCharacterFormFields;
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -8339,8 +8460,15 @@ function closeCharacterTemplate() {
 
 // Generate Character Profile from Template
 function generateFromCharacterTemplate() {
+    // Get character type
+    const charType = document.getElementById('charType')?.value || 'human';
+    const species = document.getElementById('charSpecies')?.value || '';
+    
     // Collect all data for 14 sections
     const data = {
+        // Character Type
+        type: charType,
+        species: species,
         // 1. Name/Role
         name: document.getElementById('charName')?.value || '',
         nickname: document.getElementById('charNickname')?.value || '',
@@ -8398,7 +8526,20 @@ function generateFromCharacterTemplate() {
     characterTemplateData = data;
     
     // Build character description using new 14-section format
-    let prompt = 'สร้าง Character Profile แบบละเอียดตาม format 14 หัวข้อจากข้อมูลนี้:\n\n';
+    let characterTypeText = '';
+    if (data.type === 'animal') {
+        characterTypeText = `สัตว์ประเภท ${data.species || 'ไม่ระบุ'}`;
+    } else if (data.type === 'cartoon') {
+        characterTypeText = `ตัวการ์ตูน/แฟนตาซี ${data.species || ''}`;
+    } else if (data.type === 'robot') {
+        characterTypeText = `หุ่นยนต์/AI ${data.species || ''}`;
+    } else if (data.type === 'creature') {
+        characterTypeText = `สิ่งมีชีวิต ${data.species || ''}`;
+    } else {
+        characterTypeText = 'มนุษย์';
+    }
+    
+    let prompt = `สร้าง Character Profile แบบละเอียดสำหรับ${characterTypeText} ตาม format 14 หัวข้อจากข้อมูลนี้:\n\n`;
     
     // 1. Name/Role
     if (data.name || data.nickname || data.role) {
@@ -8409,14 +8550,21 @@ function generateFromCharacterTemplate() {
         prompt += '\n';
     }
     
-    // 2. Gender/Age/Ethnicity
-    if (data.gender || data.age || data.ethnicity) {
-        prompt += '🧑‍🎨 **2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**\n';
+    // 2. Gender/Age/Ethnicity or Species
+    prompt += '🧑‍🎨 **2. ';
+    if (data.type === 'human') {
+        prompt += 'เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)**\n';
         if (data.gender) prompt += `* Gender: ${data.gender}\n`;
         if (data.age) prompt += `* Age: ${data.age}\n`;
         if (data.ethnicity) prompt += `* Ethnicity: ${data.ethnicity}\n`;
-        prompt += '\n';
+    } else {
+        prompt += `ประเภท / เพศ / อายุ (Type / Gender / Age)**\n`;
+        prompt += `* Type: ${characterTypeText}\n`;
+        if (data.species) prompt += `* Species: ${data.species}\n`;
+        if (data.gender) prompt += `* Gender: ${data.gender}\n`;
+        if (data.age) prompt += `* Age: ${data.age}\n`;
     }
+    prompt += '\n';
     
     // 3. Body/Skin
     if (data.body || data.heightWeight || data.skin) {

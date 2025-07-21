@@ -2266,10 +2266,20 @@ window.generateFromTemplate = function() {
 
             <!-- 2. เพศ / อายุ / เชื้อชาติ -->
             <div class="template-section">
-                <h3>🧑‍🎨 2. เพศ / อายุ / เชื้อชาติ (Gender / Age / Ethnicity)</h3>
+                <h3>🧑‍🎨 2. ประเภท / เพศ / อายุ (Type / Gender / Age)</h3>
                 <div class="form-row">
                     <div class="form-group">
-                        <label>เพศ:</label>
+                        <label>ประเภทตัวละคร:</label>
+                        <select id="charType" onchange="updateCharacterFormFields()">
+                            <option value="human">👤 มนุษย์ (Human)</option>
+                            <option value="animal">🐾 สัตว์ (Animal)</option>
+                            <option value="cartoon">🎭 การ์ตูน/ตัวละครแฟนตาซี (Cartoon/Fantasy)</option>
+                            <option value="robot">🤖 หุ่นยนต์/AI (Robot/AI)</option>
+                            <option value="creature">👾 สิ่งมีชีวิตอื่นๆ (Other Creature)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label id="genderLabel">เพศ:</label>
                         <select id="charGender">
                             <option value="">-- เลือกเพศ --</option>
                             <option value="Male">ชาย</option>
@@ -2282,9 +2292,13 @@ window.generateFromTemplate = function() {
                         <input type="text" id="charAge" placeholder='เช่น 30 ปี / วัยกลางคน / วัยรุ่น'>
                     </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="ethnicityGroup">
                     <label>เชื้อชาติ:</label>
                     <input type="text" id="charEthnicity" placeholder="เช่น ไทย / เอเชีย / ลูกครึ่ง">
+                </div>
+                <div class="form-group" id="speciesGroup" style="display: none;">
+                    <label>ชนิด/พันธุ์:</label>
+                    <input type="text" id="charSpecies" placeholder="เช่น แมว / สุนัข / มังกร / ยูนิคอร์น">
                 </div>
             </div>
 
