@@ -51,6 +51,12 @@
                     </div>
                 </div>
                 <div class="usage-display" style="display: flex; align-items: center; gap: 15px;">
+                    <!-- Login Button for Desktop -->
+                    <button class="desktop-login-btn" onclick="showLoginModal()" title="เข้าสู่ระบบ" style="background: #404040; color: #ccc; border: 1px solid #555; padding: 8px 16px; border-radius: 8px; font-size: 14px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.3s ease;">
+                        <span style="font-size: 16px;">👤</span>
+                        <span>Login</span>
+                    </button>
+                    
                     <!-- Tutorial Button for Desktop (ย้ายมาด้านหน้า) -->
                     <button class="desktop-tutorial-btn" onclick="showTutorialModal()" title="คู่มือการใช้งาน">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2558,6 +2564,70 @@ window.generateFromTemplate = function() {
 <div class="support-button" onclick="window.open('https://m.me/719837687869400', '_blank')">
     <div class="support-icon">💬</div>
     <div class="support-text">แจ้ง/ติดต่อ</div>
+</div>
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px;">
+        <span class="close-modal" onclick="closeLoginModal()">&times;</span>
+        <h2 style="text-align: center; margin-bottom: 30px;">🔐 เข้าสู่ระบบ</h2>
+        
+        <!-- Login Form -->
+        <div id="loginForm" style="display: block;">
+            <div class="form-group">
+                <label>Username:</label>
+                <input type="text" id="loginUsername" placeholder="กรอก username" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Password:</label>
+                <input type="password" id="loginPassword" placeholder="กรอก password" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
+            </div>
+            <button onclick="doLogin()" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-family: 'Kanit', sans-serif;">
+                เข้าสู่ระบบ
+            </button>
+            <p style="text-align: center; margin-top: 15px; color: #888;">
+                ยังไม่ได้ผูกบัญชี? 
+                <a href="#" onclick="showLinkAccountForm()" style="color: var(--primary);">ผูกบัญชีที่นี่</a>
+            </p>
+        </div>
+        
+        <!-- Link Account Form -->
+        <div id="linkAccountForm" style="display: none;">
+            <p style="color: #888; margin-bottom: 20px;">ผูก User ID ปัจจุบันของคุณกับ Username และ Password เพื่อใช้งานข้ามอุปกรณ์</p>
+            <div class="form-group">
+                <label>User ID ที่ต้องการผูก:</label>
+                <input type="text" id="linkUserId" placeholder="กรอก User ID (10 หลัก)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
+                <small style="color: #666; display: block; margin-top: 5px;">User ID ปัจจุบันของคุณ: <span id="currentUserIdDisplay" style="color: var(--primary);"></span></small>
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Username ใหม่:</label>
+                <input type="text" id="newUsername" placeholder="เลือก username (ภาษาอังกฤษ)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Password:</label>
+                <input type="password" id="newPassword" placeholder="เลือก password (อย่างน้อย 6 ตัว)" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; font-family: 'Kanit', sans-serif;">
+            </div>
+            <button onclick="linkAccount()" style="width: 100%; margin-top: 20px; padding: 12px; background: var(--success); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-family: 'Kanit', sans-serif;">
+                ผูกบัญชี
+            </button>
+            <p style="text-align: center; margin-top: 15px;">
+                <a href="#" onclick="showLoginForm()" style="color: var(--primary);">กลับไปหน้า Login</a>
+            </p>
+        </div>
+        
+        <!-- Logged In View -->
+        <div id="loggedInView" style="display: none; text-align: center;">
+            <div style="margin-bottom: 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">👤</div>
+                <h3 id="loggedInUsername" style="margin: 0; color: var(--primary);">Username</h3>
+                <p style="color: #888; margin: 5px 0;">User ID: <span id="loggedInUserId"></span></p>
+                <p style="color: #666; margin: 5px 0; font-size: 14px;">Credits: <span id="loggedInCredits" style="color: var(--success);"></span></p>
+            </div>
+            <button onclick="doLogout()" style="width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-family: 'Kanit', sans-serif;">
+                ออกจากระบบ
+            </button>
+        </div>
+    </div>
 </div>
 
 </body>

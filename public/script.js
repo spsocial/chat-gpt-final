@@ -19,6 +19,9 @@ const FEATURES = {
     GOOGLE_AUTH: false  // Set to true when ready to enable Google Sign-In
 };
 
+// Firebase config - ใช้ฐานข้อมูลเดียวกับระบบเครดิต
+window.FIREBASE_DATABASE_URL = 'https://credit-wallet-e9b6e-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 // ========== GLOBAL VARIABLES ==========
 let currentMode = 'promptmaster';
 let messageId = 0;
@@ -1042,6 +1045,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get or generate user ID using ensureUserId และอัพเดท global
     userId = ensureUserId();
     updateAuthUI();
+    
+    // Check if user is logged in and sync credits from cloud
+    const linkedAccount = localStorage.getItem('linkedAccount');
+    if (linkedAccount) {
+        try {
+            const account = JSON.parse(linkedAccount);
+            // Fetch latest credits from Firebase
+            const userResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/users/${account.userId}.json`);
+            if (userResponse.ok) {
+                const userData = await userResponse.json();
+                if (userData && userData.credits !== undefined) {
+                    // Update local credits with cloud data
+                    localStorage.setItem('totalCredits', userData.credits.toString());
+                    updateCreditsDisplay();
+                }
+            }
+        } catch (error) {
+            console.error('Error syncing credits on load:', error);
+        }
+    }
     
     // Initialize Google Sign-In with proper configuration
     const initializeGoogleSignIn = () => {
@@ -3102,6 +3125,9 @@ async function updateUsageDisplay() {
     try {
         const response = await fetch(`${API_URL}/usage/${userId}`);
         const data = await response.json();
+        
+        // Sync credits to cloud if logged in
+        syncCreditsToCloud();
         
         if (data.today) {
             // คำนวณเครดิตฟรีที่เหลือ
@@ -8278,6 +8304,269 @@ window.updateCharacterFormFields = updateCharacterFormFields;
 document.addEventListener('DOMContentLoaded', () => {
     updateTemplateButton();
 });
+
+// ========== LOGIN SYSTEM FUNCTIONS ==========
+
+// Show login modal
+function showLoginModal() {
+    const modal = document.getElementById('loginModal');
+    const currentUser = ensureUserId(); // ใช้ ensureUserId() แทน getUserId()
+    
+    // Update current user ID display
+    document.getElementById('currentUserIdDisplay').textContent = currentUser;
+    
+    // Check if already logged in
+    const linkedAccount = localStorage.getItem('linkedAccount');
+    if (linkedAccount) {
+        const account = JSON.parse(linkedAccount);
+        showLoggedInView(account);
+    } else {
+        showLoginForm();
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// Close login modal
+function closeLoginModal() {
+    document.getElementById('loginModal').style.display = 'none';
+}
+
+// Show login form
+function showLoginForm() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('linkAccountForm').style.display = 'none';
+    document.getElementById('loggedInView').style.display = 'none';
+}
+
+// Show link account form
+function showLinkAccountForm() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('linkAccountForm').style.display = 'block';
+    document.getElementById('loggedInView').style.display = 'none';
+    
+    // Pre-fill current user ID
+    const currentUser = ensureUserId();
+    document.getElementById('linkUserId').value = currentUser;
+}
+
+// Show logged in view
+function showLoggedInView(account) {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('linkAccountForm').style.display = 'none';
+    document.getElementById('loggedInView').style.display = 'block';
+    
+    document.getElementById('loggedInUsername').textContent = account.username;
+    document.getElementById('loggedInUserId').textContent = account.userId;
+    
+    // Get credits from localStorage
+    const credits = parseFloat(localStorage.getItem('totalCredits') || '0');
+    document.getElementById('loggedInCredits').textContent = credits.toFixed(2);
+}
+
+// Simple hash function (for demo - should use proper hashing in production)
+async function simpleHash(text) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+}
+
+// Link account
+async function linkAccount() {
+    const userId = document.getElementById('linkUserId').value.trim();
+    const username = document.getElementById('newUsername').value.trim().toLowerCase();
+    const password = document.getElementById('newPassword').value;
+    
+    // Validation
+    if (!userId || userId.length !== 10) {
+        showNotification('❌ User ID ต้องมี 10 หลัก', 'error');
+        return;
+    }
+    
+    if (!username || username.length < 3) {
+        showNotification('❌ Username ต้องมีอย่างน้อย 3 ตัวอักษร', 'error');
+        return;
+    }
+    
+    if (!/^[a-z0-9_]+$/.test(username)) {
+        showNotification('❌ Username ใช้ได้เฉพาะ a-z, 0-9, _ เท่านั้น', 'error');
+        return;
+    }
+    
+    if (!password || password.length < 6) {
+        showNotification('❌ Password ต้องมีอย่างน้อย 6 ตัว', 'error');
+        return;
+    }
+    
+    try {
+        showNotification('🔄 กำลังผูกบัญชี...', 'info');
+        
+        // Hash password
+        const hashedPassword = await simpleHash(password);
+        
+        // Check if username already exists in Firebase
+        const checkResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/accounts/${username}.json`);
+        if (checkResponse.ok) {
+            const existingAccount = await checkResponse.json();
+            if (existingAccount) {
+                showNotification('❌ Username นี้ถูกใช้แล้ว', 'error');
+                return;
+            }
+        }
+        
+        // Save to Firebase
+        // 1. Save username -> userId mapping
+        await fetch(`${window.FIREBASE_DATABASE_URL}/accounts/${username}.json`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                userId: userId,
+                createdAt: new Date().toISOString()
+            })
+        });
+        
+        // 2. Save user data with linked account
+        const currentCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+        await fetch(`${window.FIREBASE_DATABASE_URL}/users/${userId}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+                linkedAccount: {
+                    username: username,
+                    hashedPassword: hashedPassword
+                },
+                credits: currentCredits,
+                updatedAt: new Date().toISOString()
+            })
+        });
+        
+        // Save to localStorage
+        const account = {
+            username: username,
+            userId: userId,
+            hashedPassword: hashedPassword
+        };
+        localStorage.setItem('linkedAccount', JSON.stringify(account));
+        
+        showNotification('✅ ผูกบัญชีสำเร็จ!', 'success');
+        showLoggedInView(account);
+        
+    } catch (error) {
+        console.error('Link account error:', error);
+        showNotification('❌ เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    }
+}
+
+// Login
+async function doLogin() {
+    const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!username || !password) {
+        showNotification('❌ กรุณากรอกข้อมูลให้ครบ', 'error');
+        return;
+    }
+    
+    try {
+        showNotification('🔄 กำลังเข้าสู่ระบบ...', 'info');
+        
+        // Get account from Firebase
+        const accountResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/accounts/${username}.json`);
+        if (!accountResponse.ok) {
+            showNotification('❌ ไม่พบ username นี้', 'error');
+            return;
+        }
+        
+        const accountData = await accountResponse.json();
+        if (!accountData) {
+            showNotification('❌ ไม่พบ username นี้', 'error');
+            return;
+        }
+        
+        const userId = accountData.userId;
+        
+        // Get user data
+        const userResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/users/${userId}.json`);
+        const userData = await userResponse.json();
+        
+        if (!userData || !userData.linkedAccount) {
+            showNotification('❌ ข้อมูลบัญชีไม่ถูกต้อง', 'error');
+            return;
+        }
+        
+        // Verify password
+        const hashedPassword = await simpleHash(password);
+        if (hashedPassword !== userData.linkedAccount.hashedPassword) {
+            showNotification('❌ รหัสผ่านไม่ถูกต้อง', 'error');
+            return;
+        }
+        
+        // Login successful - switch to this user
+        localStorage.setItem('userId', userId);
+        
+        // Sync credits from cloud
+        if (userData.credits !== undefined) {
+            localStorage.setItem('totalCredits', userData.credits.toString());
+        }
+        
+        // Save login info
+        const account = {
+            username: username,
+            userId: userId,
+            hashedPassword: hashedPassword
+        };
+        localStorage.setItem('linkedAccount', JSON.stringify(account));
+        
+        showNotification('✅ เข้าสู่ระบบสำเร็จ!', 'success');
+        showLoggedInView(account);
+        
+        // Refresh page to update UI
+        setTimeout(() => {
+            location.reload();
+        }, 1500);
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        showNotification('❌ เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    }
+}
+
+// Logout
+function doLogout() {
+    localStorage.removeItem('linkedAccount');
+    showNotification('👋 ออกจากระบบแล้ว', 'info');
+    closeLoginModal();
+}
+
+// Sync credits to cloud
+async function syncCreditsToCloud() {
+    const linkedAccount = localStorage.getItem('linkedAccount');
+    if (!linkedAccount) return; // Not logged in
+    
+    try {
+        const account = JSON.parse(linkedAccount);
+        const currentCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+        
+        // Update credits in Firebase
+        await fetch(`${window.FIREBASE_DATABASE_URL}/users/${account.userId}/credits.json`, {
+            method: 'PUT',
+            body: JSON.stringify(currentCredits)
+        });
+    } catch (error) {
+        console.error('Sync credits error:', error);
+    }
+}
+
+// Export functions
+window.showLoginModal = showLoginModal;
+window.closeLoginModal = closeLoginModal;
+window.showLoginForm = showLoginForm;
+window.showLinkAccountForm = showLinkAccountForm;
+window.linkAccount = linkAccount;
+window.doLogin = doLogin;
+window.doLogout = doLogout;
+window.syncCreditsToCloud = syncCreditsToCloud;
 
 // Voice input for individual fields
 let fieldRecognition = null;
