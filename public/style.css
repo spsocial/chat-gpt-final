@@ -1399,6 +1399,17 @@
     .user-info {
         text-align: center; /* เปลี่ยนจาก right */
     }
+    
+    /* Fix overlap issue for free credits label on mobile */
+    .usage-info {
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .usage-info > div:first-child {
+        margin-bottom: 2px;
+    }
             
             .chat-panel {
                 height: calc(100vh - 250px);
