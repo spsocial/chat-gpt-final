@@ -324,7 +324,7 @@ async function sharePrompt(promptText) {
     const shareData = {
         title: 'Veo 3 Prompt Generator',
         text: `"${promptText}"\n\nสร้างด้วย`,
-        url: 'https://promptdee.net'
+        url: 'https://www.promptdee.net'
     };
     
     try {
