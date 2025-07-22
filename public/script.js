@@ -323,7 +323,7 @@ function shareFavorite(encodedPrompt) {
 async function sharePrompt(promptText) {
     const shareData = {
         title: 'Veo 3 Prompt Generator',
-        text: `Check out this amazing prompt:\n\n"${promptText}"\n\nสร้างด้วย`,
+        text: `"${promptText}"\n\nสร้างด้วย`,
         url: 'https://promptdee.net'
     };
     
