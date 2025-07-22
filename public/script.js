@@ -1968,6 +1968,10 @@ function parseCharacterProfile(profile) {
     let currentSection = null;
     let collectedData = {};
     
+    // Debug log to see the profile structure
+    console.log('Parsing profile lines:', lines.length);
+    console.log('First 10 lines:', lines.slice(0, 10));
+    
     // Count sections to determine format
     let sectionCount = 0;
     for (const line of lines) {
@@ -2127,7 +2131,11 @@ function parseCharacterProfile(profile) {
         // Section 1: ชื่อ / บทบาท
         if (collectedData[1]) {
             const nameData = collectedData[1].find(d => 
-                d.key.toLowerCase().includes('name') || d.key.includes('ชื่อ')
+                d.key.toLowerCase().includes('name') || 
+                d.key.includes('ชื่อ') || 
+                d.key.includes('Name') ||
+                d.key === 'ชื่อ' ||
+                (d.key === '' && d.value && !d.value.includes(':'))
             );
             const nicknameData = collectedData[1].find(d => 
                 d.key.toLowerCase().includes('nickname') || d.key.includes('ชื่อเรียก')
@@ -2276,15 +2284,30 @@ function parseCharacterProfile(profile) {
                 d.key.toLowerCase().includes('head') || d.key.includes('ที่ศีรษะ')
             );
             const jewelryData = collectedData[9].find(d => 
-                d.key.toLowerCase().includes('jewelry') || d.key.includes('เครื่องประดับ')
+                d.key.toLowerCase().includes('jewelry') || 
+                d.key.includes('เครื่องประดับ') ||
+                d.key.includes('สร้อยคอ') ||
+                d.key.includes('สร้อย') ||
+                d.key.includes('necklace') ||
+                d.key.includes('Necklace') ||
+                (d.key === '' && d.value && (d.value.includes('สร้อย') || d.value.includes('necklace')))
             );
             const otherAccessoriesData = collectedData[9].find(d => 
-                d.key.toLowerCase().includes('other') || d.key.includes('อื่นๆ')
+                d.key.toLowerCase().includes('other') || 
+                d.key.includes('อื่นๆ') ||
+                d.key.includes('แว่น') ||
+                d.key.includes('glasses') ||
+                (d.key === '' && d.value && (d.value.includes('แว่น') || d.value.includes('นาฬิกา')))
             );
             parsed.headAccessories = headAccessoriesData ? headAccessoriesData.value : '';
             parsed.jewelry = jewelryData ? jewelryData.value : '';
             parsed.otherAccessories = otherAccessoriesData ? otherAccessoriesData.value : '';
             parsed.accessories = `${parsed.headAccessories} ${parsed.jewelry} ${parsed.otherAccessories}`.trim();
+            
+            // Also check for glasses in accessories if not found elsewhere
+            if (!parsed.glasses && otherAccessoriesData && otherAccessoriesData.value.includes('แว่น')) {
+                parsed.glasses = otherAccessoriesData.value;
+            }
         }
         
         // Section 10: บุคลิกภาพ
@@ -2441,7 +2464,11 @@ function parseCharacterProfile(profile) {
         // Section 5: แว่น / เครื่องประดับ / Glasses / Accessories
         if (collectedData[5]) {
             const glassesData = collectedData[5].find(d => 
-                d.key.toLowerCase().includes('glasses') || d.key.includes('แว่น')
+                d.key.toLowerCase().includes('glasses') || 
+                d.key.includes('แว่น') ||
+                d.key.includes('แว่นตา') ||
+                d.key.includes('Glasses') ||
+                (d.key === '' && d.value && (d.value.includes('แว่น') || d.value.includes('glasses')))
             );
             const accessoriesData = collectedData[5].find(d => 
                 d.key.toLowerCase().includes('accessories') || d.key.includes('เครื่องประดับ')
