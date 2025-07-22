@@ -3470,10 +3470,12 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
     const timestampHTML = `<div class="message-timestamp">${timeString} • ${dateString}</div>`;
     
     if (type === 'user') {
+        // Preserve line breaks in user messages
+        const formattedContent = content.replace(/\n/g, '<br>');
         messageDiv.innerHTML = `
             <div class="message-avatar">👤</div>
             <div class="message-content">
-                ${content}
+                ${formattedContent}
                 ${timestampHTML}
             </div>
         `;
@@ -7279,6 +7281,7 @@ const PromptStorage = {
             if (msg.role === 'user') {
                 // Clean timestamp patterns from user messages before displaying
                 const cleanedContent = msg.content.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+                // Pass the cleaned content with newlines preserved
                 addMessage(cleanedContent, 'user');
             } else {
                 // สำหรับ assistant message สร้าง wrapper และใส่ HTML ที่บันทึกไว้
@@ -7541,7 +7544,11 @@ const ImagePromptStorage = {
                     `;
                 } else {
                     // Clean timestamp patterns from user messages before displaying
-                    const cleanedContent = msg.content.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+                    let cleanedContent = msg.content.replace(/\d{2}:\d{2} • \d{1,2} .+? \d{4}/g, '').trim();
+                    // If it's plain text (user message), preserve line breaks
+                    if (!cleanedContent.includes('<')) {
+                        cleanedContent = cleanedContent.replace(/\n/g, '<br>');
+                    }
                     messageDiv.innerHTML = `<div class="message-content">${cleanedContent}</div>`;
                 }
                 
