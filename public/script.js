@@ -8110,16 +8110,56 @@ if (charCount > 0) {
         
     } else if (currentMode === 'multichar') {
         // Prompt Master Template
+        const videoType = document.getElementById('videoType').value;
         const sceneType = document.getElementById('sceneType').value;
         const location = document.getElementById('location').value;
-        const cameraMovement = document.getElementById('cameraMovement').value;
+        const timeOfDay = document.getElementById('timeOfDay').value;
+        const visualStyle = document.getElementById('visualStyle').value;
+        const mood = document.getElementById('mood').value;
+        const soundType = document.getElementById('soundType').value;
+        const duration = document.getElementById('duration').value;
         const dialogue = document.getElementById('dialogueText').value;
+        const additionalDetails = document.getElementById('additionalDetails').value;
         
         prompt = 'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
         
-        if (sceneType) prompt += `🎭 ประเภทฉาก: ${getSceneTypeText(sceneType)}\n`;
+        if (videoType) prompt += `🎬 ประเภท: ${videoType}\n`;
+        if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
         if (location) prompt += `📍 สถานที่: ${location}\n`;
-        prompt += `👥 จำนวนตัวละคร: ${templateCharCount} คน\n\n`;
+        
+        // เพิ่มการดึงมุมกล้องจาก dynamic elements
+        const cameraAngleItems = document.querySelectorAll('.camera-angle-item');
+        if (cameraAngleItems.length > 0) {
+            let hasAngles = false;
+            let anglePrompt = '\n📷 มุมกล้อง:\n';
+            
+            cameraAngleItems.forEach((item, index) => {
+                const angleSelect = item.querySelector('.camera-angle-select') || item.querySelector('.template-select[id^="cameraAngle"]');
+                const movementSelect = item.querySelector('.camera-movement-select') || item.querySelector('.template-select[id^="cameraMovement"]');
+                
+                if (angleSelect && angleSelect.value) {
+                    hasAngles = true;
+                    anglePrompt += `  มุมที่ ${index + 1}: ${getCameraAngleText(angleSelect.value)}`;
+                    
+                    if (movementSelect && movementSelect.value) {
+                        anglePrompt += ` + ${getCameraMovementText(movementSelect.value)}`;
+                    }
+                    anglePrompt += '\n';
+                }
+            });
+            
+            if (hasAngles) {
+                prompt += anglePrompt;
+            }
+        }
+        
+        if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
+        if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
+        if (mood) prompt += `😊 อารมณ์: ${mood}\n`;
+        if (soundType) prompt += `🔊 เสียง: ${soundType}\n`;
+        if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
+        
+        prompt += `\n👥 จำนวนตัวละคร: ${templateCharCount} คน\n`;
 
         // Debug - ตรวจสอบค่าตัวละคร
 console.log('=== ตรวจสอบข้อมูลตัวละคร ===');
@@ -8160,8 +8200,21 @@ console.log('===========================');
             }
         }
         
-        if (cameraMovement) prompt += `\n🎬 Camera Movement: ${getCameraMovementText(cameraMovement)}\n`;
+        // Effects
+        const effects = [];
+        document.querySelectorAll('.effects-checkboxes input:checked').forEach(cb => {
+            const label = cb.nextElementSibling;
+            if (label) {
+                effects.push(label.textContent.trim());
+            }
+        });
+        if (effects.length > 0) {
+            prompt += `\n✨ Effects: ${effects.join(', ')}\n`;
+        }
+        
         if (dialogue) prompt += `\n💬 บทพูด:\n${dialogue}\n`;
+        
+        if (additionalDetails) prompt += `\n📝 รายละเอียดเพิ่มเติม: ${additionalDetails}\n`;
         
         prompt += '\n⚠️ สำคัญ: ต้องมี setting ละเอียด, ตัวละครชัดเจน, timing แม่นยำ, camera angles, audio layers และเอาท์พุตเป็นภาษาอังกฤษ';
     }
