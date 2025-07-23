@@ -9696,18 +9696,23 @@ function extractCharacterSummary(profile) {
 }
 
 // ฟังก์ชันเลือกตัวละครใส่ในช่อง
-// ฟังก์ชันเลือกตัวละครใส่ในช่อง (เวอร์ชันดึงเฉพาะ 8 หัวข้อ)
 function selectCharacterForField(index) {
     const character = characterLibrary[index];
     const field = document.getElementById(currentCharacterFieldId);
     
     if (!field || !character) return;
     
-    // ดึงเฉพาะ 8 หัวข้อหลัก
     let cleanProfile = '';
     
     if (character.profile) {
-        cleanProfile = extractMainCharacterInfo(character.profile);
+        // ตรวจสอบว่าเป็น Scene Builder หรือ Template Form
+        if (currentCharacterFieldId.startsWith('sceneChar')) {
+            // Scene Builder - ใช้ข้อมูลสรุปสั้นๆ
+            cleanProfile = extractCharacterSummary(character.profile);
+        } else {
+            // Template Form - ใช้ข้อมูลแบบละเอียด 14 ข้อ
+            cleanProfile = extractMainCharacterInfo(character.profile);
+        }
     } else {
         cleanProfile = character.preview || character.name;
     }
@@ -9750,16 +9755,22 @@ setTimeout(() => {
 function extractMainCharacterInfo(profile) {
     if (!profile) return '';
     
-    // หัวข้อที่ต้องการเก็บ
+    // หัวข้อที่ต้องการเก็บ - รองรับทั้ง 14 ข้อ
     const wantedSections = [
-        { emoji: '👩‍🏫', number: '1.', keywords: ['nickname', 'role'] },
-        { emoji: '🧑‍🎨', number: '2.', keywords: ['gender', 'age', 'ethnicity'] },
-        { emoji: '💃', number: '3.', keywords: ['body', 'skin', 'posture'] },
-        { emoji: '💇‍♀️', number: '4.', keywords: ['hair', 'face'] },
-        { emoji: '👓', number: '5.', keywords: ['glasses', 'accessories'] },
-        { emoji: '👗', number: '6.', keywords: ['clothing', 'shirt', 'jacket', 'pants', 'shoes'] },
-        { emoji: '🎙️', number: '7.', keywords: ['voice', 'speech'] },
-        { emoji: '💼', number: '8.', keywords: ['personality', 'confidence', 'camera', 'story'] }
+        { emoji: '👤', number: '1.', keywords: ['nickname', 'role', 'ชื่อ', 'บทบาท'] },
+        { emoji: '🧑‍🎨', number: '2.', keywords: ['gender', 'age', 'ethnicity', 'เพศ', 'อายุ', 'เชื้อชาติ'] },
+        { emoji: '💃', number: '3.', keywords: ['body', 'skin', 'posture', 'รูปร่าง', 'ผิว'] },
+        { emoji: '👁️', number: '4.', keywords: ['face', 'eyes', 'หน้าตา', 'ดวงตา'] },
+        { emoji: '👄', number: '5.', keywords: ['mouth', 'lips', 'smile', 'ปาก', 'ริมฝีปาก'] },
+        { emoji: '👃', number: '6.', keywords: ['nose', 'จมูก'] },
+        { emoji: '💇‍♀️', number: '7.', keywords: ['hair', 'ผม', 'ทรงผม'] },
+        { emoji: '👗', number: '8.', keywords: ['clothing', 'shirt', 'outfit', 'เครื่องแต่งกาย', 'เสื้อ'] },
+        { emoji: '👖', number: '9.', keywords: ['pants', 'shorts', 'skirt', 'กางเกง', 'กระโปรง'] },
+        { emoji: '👟', number: '10.', keywords: ['shoes', 'footwear', 'รองเท้า'] },
+        { emoji: '💍', number: '11.', keywords: ['accessories', 'jewelry', 'เครื่องประดับ', 'สร้อย'] },
+        { emoji: '🎙️', number: '12.', keywords: ['voice', 'speech', 'tone', 'โทนเสียง', 'การพูด'] },
+        { emoji: '🎭', number: '13.', keywords: ['expression', 'emotion', 'สีหน้า', 'อารมณ์'] },
+        { emoji: '🖼️', number: '14.', keywords: ['visual', 'style', 'ภาพ', 'ความสมจริง'] }
     ];
     
     const lines = profile.split('\n');
@@ -9821,8 +9832,67 @@ function extractMainCharacterInfo(profile) {
     return result.join('\n').trim();
 }
 
+// ฟังก์ชันสรุปข้อมูลตัวละครแบบสั้นสำหรับ Scene Builder
+function extractCharacterSummary(profile) {
+    if (!profile) return '';
+    
+    const lines = profile.split('\n');
+    const summary = [];
+    
+    // ดึงข้อมูลสำคัญจากทุกข้อ
+    lines.forEach(line => {
+        const trimmed = line.trim();
+        
+        // ชื่อ
+        if (trimmed.includes('ชื่อ:') || trimmed.includes('Name:')) {
+            const name = trimmed.split(':')[1]?.trim();
+            if (name) summary.push(`ชื่อ ${name}`);
+        }
+        
+        // เพศและอายุ
+        if (trimmed.includes('เพศ:') || trimmed.includes('Gender:')) {
+            const gender = trimmed.split(':')[1]?.trim();
+            if (gender) summary.push(gender === 'Male' ? 'ผู้ชาย' : 'ผู้หญิง');
+        }
+        if (trimmed.includes('อายุ:') || trimmed.includes('Age:')) {
+            const age = trimmed.split(':')[1]?.trim();
+            if (age) summary.push(`อายุ ${age}`);
+        }
+        
+        // ผม
+        if (trimmed.includes('ทรงผม:') || trimmed.includes('Hair style:')) {
+            const hair = trimmed.split(':')[1]?.trim();
+            if (hair) summary.push(`ผม${hair}`);
+        }
+        if (trimmed.includes('สีผม:') || trimmed.includes('Hair color:')) {
+            const hairColor = trimmed.split(':')[1]?.trim();
+            if (hairColor) summary.push(`สี${hairColor}`);
+        }
+        
+        // เสื้อผ้า
+        if (trimmed.includes('เสื้อ:') || trimmed.includes('Shirt:')) {
+            const shirt = trimmed.split(':')[1]?.trim();
+            if (shirt) summary.push(`ใส่${shirt}`);
+        }
+        if (trimmed.includes('กางเกง:') || trimmed.includes('Pants:')) {
+            const pants = trimmed.split(':')[1]?.trim();
+            if (pants) summary.push(pants);
+        }
+        
+        // เครื่องประดับ
+        if (trimmed.includes('เครื่องประดับ:') || trimmed.includes('Accessories:')) {
+            const accessories = trimmed.split(':')[1]?.trim();
+            if (accessories && accessories !== '-') summary.push(accessories);
+        }
+    });
+    
+    // รวมเป็นประโยค
+    return summary.length > 0 ? summary.join(' ') : profile.substring(0, 200);
+}
+
 // Export function เพิ่มเติม
 window.extractMainCharacterInfo = extractMainCharacterInfo;
+window.extractCharacterSummary = extractCharacterSummary;
 
 // ฟังก์ชันปิด Character Picker
 function closeCharacterPicker() {
