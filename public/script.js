@@ -8130,14 +8130,69 @@ if (charCount > 0) {
         if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
         if (location) prompt += `📍 สถานที่: ${location}\n`;
         
-        // เพิ่มการดึงมุมกล้องจาก dynamic elements
+        // เพิ่มการดึงมุมกล้อง - ใช้วิธีง่ายๆ ดึงจาก ID โดยตรง
+        console.log('=== ตรวจสอบมุมกล้อง (วิธีใหม่) ===');
+        let hasCameraAngles = false;
+        let hasCameraMovements = false;
+        let cameraAngleText = '';
+        let cameraMovementText = '';
+        
+        // ตรวจสอบมุมกล้องทั้ง 3 มุม
+        for (let i = 1; i <= 3; i++) {
+            const angleElem = document.getElementById(`cameraAngle${i}`);
+            const movementElem = document.getElementById(`cameraMovement${i}`);
+            
+            console.log(`มุมที่ ${i}:`, {
+                angle: angleElem?.value || 'ไม่มี',
+                movement: movementElem?.value || 'ไม่มี'
+            });
+            
+            if (angleElem && angleElem.value) {
+                if (!hasCameraAngles) {
+                    cameraAngleText = '📷 มุมกล้อง:\n';
+                    hasCameraAngles = true;
+                }
+                cameraAngleText += `  มุมที่ ${i}: ${getCameraAngleText(angleElem.value)}\n`;
+            }
+            
+            if (movementElem && movementElem.value) {
+                if (!hasCameraMovements) {
+                    cameraMovementText = '🎬 การเคลื่อนกล้อง:\n';
+                    hasCameraMovements = true;
+                }
+                cameraMovementText += `  ช็อตที่ ${i}: ${getCameraMovementText(movementElem.value)}\n`;
+            }
+        }
+        
+        // เพิ่มข้อมูลมุมกล้องใน prompt
+        if (hasCameraAngles) {
+            prompt += cameraAngleText;
+        }
+        if (hasCameraMovements) {
+            prompt += cameraMovementText;
+        }
+        
+        console.log('พบมุมกล้อง:', hasCameraAngles);
+        console.log('พบการเคลื่อนกล้อง:', hasCameraMovements);
+        
+        // เก็บโค้ดเดิมไว้เผื่อใช้ภายหลัง (comment out)
+        /*
         const cameraAngleItems = document.querySelectorAll('.camera-angle-item');
-        console.log('=== ตรวจสอบมุมกล้อง ===');
         console.log('จำนวน camera angle items:', cameraAngleItems.length);
         
         // ถ้าไม่เจอ ให้ลองวิธีอื่น
         if (cameraAngleItems.length === 0) {
             console.log('ไม่พบ .camera-angle-item, ลองค้นหาด้วยวิธีอื่น...');
+            
+            // แสดงค่าที่พบ
+            console.log('ค้นหาค่ามุมกล้อง:', {
+                angle1: document.getElementById('cameraAngle1')?.value,
+                angle2: document.getElementById('cameraAngle2')?.value,
+                angle3: document.getElementById('cameraAngle3')?.value,
+                movement1: document.getElementById('cameraMovement1')?.value,
+                movement2: document.getElementById('cameraMovement2')?.value,
+                movement3: document.getElementById('cameraMovement3')?.value
+            });
             
             // ลองดึงจาก ID โดยตรง
             const angle1 = document.getElementById('cameraAngle1');
@@ -8170,7 +8225,9 @@ if (charCount > 0) {
                 }
             }
         }
+        */
         
+        /* โค้ดเดิมที่ comment out
         if (cameraAngleItems.length > 0) {
             let hasAngles = false;
             let hasMovements = false;
@@ -8209,6 +8266,7 @@ if (charCount > 0) {
                 prompt += movementPrompt;
             }
         }
+        */
         
         if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
         if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
