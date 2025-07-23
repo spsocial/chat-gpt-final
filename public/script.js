@@ -8136,8 +8136,8 @@ if (charCount > 0) {
             let movementPrompt = '🎬 การเคลื่อนกล้อง:\n';
             
             cameraAngleItems.forEach((item, index) => {
-                const angleSelect = item.querySelector('.camera-angle-select') || item.querySelector('.template-select[id^="cameraAngle"]');
-                const movementSelect = item.querySelector('.camera-movement-select') || item.querySelector('.template-select[id^="cameraMovement"]');
+                const angleSelect = item.querySelector('[id^="cameraAngle"]');
+                const movementSelect = item.querySelector('[id^="cameraMovement"]');
                 
                 if (angleSelect && angleSelect.value) {
                     hasAngles = true;
@@ -10121,8 +10121,8 @@ window.generateFromTemplate = function() {
             const cameraAngles = [];
             const cameraAngleItems = document.querySelectorAll('.camera-angle-item');
             cameraAngleItems.forEach((item, index) => {
-                const angleSelect = item.querySelector('.camera-angle-select') || item.querySelector('.template-select[id^="cameraAngle"]');
-                const movementSelect = item.querySelector('.camera-movement-select') || item.querySelector('.template-select[id^="cameraMovement"]');
+                const angleSelect = item.querySelector('[id^="cameraAngle"]');
+                const movementSelect = item.querySelector('[id^="cameraMovement"]');
                 
                 if (angleSelect && movementSelect) {
                     const angle = angleSelect.value;
