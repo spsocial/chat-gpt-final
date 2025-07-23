@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ทดสอบมุมกล้อง</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-result {
+            background: #2a2a2a;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .info {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>ทดสอบระบบมุมกล้อง</h1>
+    
+    <div class="info">
+        <h3>วิธีทดสอบ:</h3>
+        <ol>
+            <li>เปิดไฟล์ index.html ในเบราว์เซอร์</li>
+            <li>เปิด Developer Console (F12)</li>
+            <li>เลือกโหมด "Prompt Master" หรือ "Scene Builder"</li>
+            <li>คลิก "กรอกฟอร์มแบบละเอียด"</li>
+            <li>กรอกข้อมูลทั่วไป</li>
+            <li>เพิ่มมุมกล้อง 2-3 มุม พร้อมการเคลื่อนกล้อง</li>
+            <li>คลิก "สร้าง Prompt"</li>
+            <li>ดู Console logs ที่แสดงข้อมูลมุมกล้อง</li>
+            <li>กด "สร้าง Prompt ✨" เพื่อส่งไปยัง AI</li>
+            <li>ดูผลลัพธ์ที่ได้รับจาก AI</li>
+        </ol>
+    </div>
+    
+    <div class="info">
+        <h3>สิ่งที่ควรเห็นใน Console:</h3>
+        <pre class="test-result">=== ตรวจสอบมุมกล้อง ===
+จำนวน camera angle items: 2
+มุมที่ 1: {
+  angleSelect: "cameraAngle1",
+  angleValue: "wide",
+  movementSelect: "cameraMovement1", 
+  movementValue: "pan"
+}
+มุมที่ 2: {
+  angleSelect: "cameraAngle2",
+  angleValue: "closeup",
+  movementSelect: "cameraMovement2",
+  movementValue: "dolly"
+}
+มีมุมกล้อง: true
+มีการเคลื่อนกล้อง: true
+
+=== Final Prompt Generated ===
+สร้าง Multi-Character Scene แบบละเอียดมาก:
+
+🎬 ประเภท: ...
+📍 สถานที่: ...
+📷 มุมกล้อง:
+  มุมที่ 1: Wide Shot - เห็นภาพรวม
+  มุมที่ 2: Close-up - ใกล้
+🎬 การเคลื่อนกล้อง:
+  ช็อตที่ 1: Pan - หมุนซ้าย-ขวา
+  ช็อตที่ 2: Dolly - เคลื่อนเข้า-ออก
+...</pre>
+    </div>
+    
+    <div class="info">
+        <h3>ปัญหาที่พบและวิธีแก้ไข:</h3>
+        <p><strong>ปัญหา:</strong> ID ของ cameraMovement ในมุมแรกไม่ตรงกัน (ไม่มีเลข 1)</p>
+        <p><strong>แก้ไข:</strong> เปลี่ยน ID จาก "cameraMovement" เป็น "cameraMovement1" ใน HTML</p>
+        <p><strong>ผลลัพธ์:</strong> ข้อมูลมุมกล้องควรแสดงในผลลัพธ์จาก AI แล้ว</p>
+    </div>
+    
+    <button onclick="window.location.href='index.html'">ไปที่หน้าหลัก</button>
+</body>
+</html>

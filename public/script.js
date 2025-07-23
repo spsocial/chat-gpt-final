@@ -3393,6 +3393,9 @@ window.sendMessage = async function() {
                 currentCharacterProfile = data.response;
                 addMessage(data.response, 'assistant', false, true);
             } else {
+                console.log('=== Response from AI ===');
+                console.log('Response:', data.response);
+                console.log('Original message:', message);
                 addMessage(data.response, 'assistant', true);
             }
             
@@ -8129,6 +8132,45 @@ if (charCount > 0) {
         
         // เพิ่มการดึงมุมกล้องจาก dynamic elements
         const cameraAngleItems = document.querySelectorAll('.camera-angle-item');
+        console.log('=== ตรวจสอบมุมกล้อง ===');
+        console.log('จำนวน camera angle items:', cameraAngleItems.length);
+        
+        // ถ้าไม่เจอ ให้ลองวิธีอื่น
+        if (cameraAngleItems.length === 0) {
+            console.log('ไม่พบ .camera-angle-item, ลองค้นหาด้วยวิธีอื่น...');
+            
+            // ลองดึงจาก ID โดยตรง
+            const angle1 = document.getElementById('cameraAngle1');
+            const movement1 = document.getElementById('cameraMovement1');
+            
+            if (angle1 && angle1.value) {
+                prompt += `📷 มุมกล้อง:\n  มุมที่ 1: ${getCameraAngleText(angle1.value)}\n`;
+            }
+            if (movement1 && movement1.value) {
+                prompt += `🎬 การเคลื่อนกล้อง:\n  ช็อตที่ 1: ${getCameraMovementText(movement1.value)}\n`;
+            }
+            
+            // ตรวจสอบมุมที่ 2 และ 3
+            for (let i = 2; i <= 3; i++) {
+                const angleElem = document.getElementById(`cameraAngle${i}`);
+                const movementElem = document.getElementById(`cameraMovement${i}`);
+                
+                if (angleElem && angleElem.value) {
+                    if (!prompt.includes('📷 มุมกล้อง:')) {
+                        prompt += '📷 มุมกล้อง:\n';
+                    }
+                    prompt += `  มุมที่ ${i}: ${getCameraAngleText(angleElem.value)}\n`;
+                }
+                
+                if (movementElem && movementElem.value) {
+                    if (!prompt.includes('🎬 การเคลื่อนกล้อง:')) {
+                        prompt += '🎬 การเคลื่อนกล้อง:\n';
+                    }
+                    prompt += `  ช็อตที่ ${i}: ${getCameraMovementText(movementElem.value)}\n`;
+                }
+            }
+        }
+        
         if (cameraAngleItems.length > 0) {
             let hasAngles = false;
             let hasMovements = false;
@@ -8138,6 +8180,13 @@ if (charCount > 0) {
             cameraAngleItems.forEach((item, index) => {
                 const angleSelect = item.querySelector('[id^="cameraAngle"]');
                 const movementSelect = item.querySelector('[id^="cameraMovement"]');
+                
+                console.log(`มุมที่ ${index + 1}:`, {
+                    angleSelect: angleSelect ? angleSelect.id : 'ไม่เจอ',
+                    angleValue: angleSelect ? angleSelect.value : 'ไม่มีค่า',
+                    movementSelect: movementSelect ? movementSelect.id : 'ไม่เจอ',
+                    movementValue: movementSelect ? movementSelect.value : 'ไม่มีค่า'
+                });
                 
                 if (angleSelect && angleSelect.value) {
                     hasAngles = true;
@@ -8149,6 +8198,9 @@ if (charCount > 0) {
                     movementPrompt += `  ช็อตที่ ${index + 1}: ${getCameraMovementText(movementSelect.value)}\n`;
                 }
             });
+            
+            console.log('มีมุมกล้อง:', hasAngles);
+            console.log('มีการเคลื่อนกล้อง:', hasMovements);
             
             if (hasAngles) {
                 prompt += anglePrompt;
@@ -8226,6 +8278,11 @@ console.log('===========================');
     
     // Insert prompt and close modal
     document.getElementById('messageInput').value = prompt;
+    
+    console.log('=== Final Prompt Generated ===');
+    console.log(prompt);
+    console.log('=== End of Prompt ===');
+    
     closeTemplateForm();
     
     // Auto resize textarea
