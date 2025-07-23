@@ -1876,13 +1876,22 @@ window.applyPreset = function(presetName) {
         
         // Apply all fields
         applyField('videoType', preset.videoType);
-        applyField('cameraAngle', preset.cameraAngle);
+        
+        // สำหรับมุมกล้อง - ใส่ในมุมแรก
+        if (preset.cameraAngle) {
+            applyField('cameraAngle1', preset.cameraAngle);
+        }
+        
         applyField('timeOfDay', preset.timeOfDay);
         applyField('visualStyle', preset.visualStyle);
         applyField('duration', preset.duration);
         applyField('sceneType', preset.sceneType);
         applyField('location', preset.location);
-        applyField('cameraMovement', preset.cameraMovement);
+        
+        // สำหรับการเคลื่อนกล้อง - ใส่ในมุมแรก
+        if (preset.cameraMovement) {
+            applyField('cameraMovement1', preset.cameraMovement);
+        }
         
         // Apply fields ใหม่ (ถ้ามี)
         applyField('mood', preset.mood);
@@ -1980,8 +1989,11 @@ function initTemplateFormListeners() {
     
     // 1. เพิ่ม event listeners ให้ทุก select
     const selectElements = [
-        'videoType', 'cameraAngle', 'timeOfDay', 'visualStyle',
-        'duration', 'sceneType', 'mood', 'soundType', 'cameraMovement'
+        'videoType', 'timeOfDay', 'visualStyle',
+        'duration', 'sceneType', 'mood', 'soundType',
+        // เพิ่ม camera angles
+        'cameraAngle1', 'cameraAngle2', 'cameraAngle3',
+        'cameraMovement1', 'cameraMovement2', 'cameraMovement3'
     ];
     
     selectElements.forEach(id => {
@@ -2035,15 +2047,13 @@ window.updateTemplatePreview = function() {
         // ดึงค่าจากฟอร์ม
         const formData = {
             videoType: document.getElementById('videoType')?.value || '',
-            cameraAngle: document.getElementById('cameraAngle')?.value || '',
             timeOfDay: document.getElementById('timeOfDay')?.value || '',
             visualStyle: document.getElementById('visualStyle')?.value || '',
             duration: document.getElementById('duration')?.value || '',
             location: document.getElementById('location')?.value || '',
             mood: document.getElementById('mood')?.value || '',
             soundType: document.getElementById('soundType')?.value || '',
-            sceneType: document.getElementById('sceneType')?.value || '',
-            cameraMovement: document.getElementById('cameraMovement')?.value || ''
+            sceneType: document.getElementById('sceneType')?.value || ''
         };
         
         // สร้าง preview HTML
@@ -2051,15 +2061,31 @@ window.updateTemplatePreview = function() {
         
         // แสดงข้อมูลฟอร์ม
         if (formData.videoType) previewHTML += `🎬 <strong>ประเภท:</strong> ${formData.videoType}<br>`;
-        if (formData.cameraAngle) previewHTML += `📷 <strong>มุมกล้อง:</strong> ${formData.cameraAngle}<br>`;
+        if (formData.sceneType) previewHTML += `🎭 <strong>ประเภทฉาก:</strong> ${formData.sceneType}<br>`;
+        if (formData.location) previewHTML += `📍 <strong>สถานที่:</strong> ${formData.location}<br>`;
+        
+        // แสดงมุมกล้องหลายมุม
+        let hasCamera = false;
+        for (let i = 1; i <= 3; i++) {
+            const angle = document.getElementById(`cameraAngle${i}`)?.value;
+            const movement = document.getElementById(`cameraMovement${i}`)?.value;
+            
+            if (angle || movement) {
+                if (!hasCamera) {
+                    previewHTML += `<br><strong>📷 มุมกล้องและการเคลื่อนไหว:</strong><br>`;
+                    hasCamera = true;
+                }
+                if (angle) previewHTML += `&nbsp;&nbsp;มุมที่ ${i}: ${angle}`;
+                if (movement) previewHTML += ` + ${movement}`;
+                previewHTML += '<br>';
+            }
+        }
+        
         if (formData.timeOfDay) previewHTML += `🌅 <strong>แสง/เวลา:</strong> ${formData.timeOfDay}<br>`;
         if (formData.visualStyle) previewHTML += `🎨 <strong>สไตล์:</strong> ${formData.visualStyle}<br>`;
-        if (formData.duration) previewHTML += `⏱️ <strong>ความยาว:</strong> ${formData.duration}<br>`;
-        if (formData.location) previewHTML += `📍 <strong>สถานที่:</strong> ${formData.location}<br>`;
         if (formData.mood) previewHTML += `😊 <strong>อารมณ์:</strong> ${formData.mood}<br>`;
         if (formData.soundType) previewHTML += `🔊 <strong>เสียง:</strong> ${formData.soundType}<br>`;
-        if (formData.sceneType) previewHTML += `🎭 <strong>ประเภทฉาก:</strong> ${formData.sceneType}<br>`;
-        if (formData.cameraMovement) previewHTML += `🎬 <strong>การเคลื่อนกล้อง:</strong> ${formData.cameraMovement}<br>`;
+        if (formData.duration) previewHTML += `⏱️ <strong>ความยาว:</strong> ${formData.duration}<br>`;
         
         // ========== เพิ่มส่วนแสดงตัวละคร ==========
         const charCount = window.templateCharCount || 0;
