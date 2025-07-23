@@ -2184,8 +2184,47 @@ window.generateFromTemplate = function() {
             if (videoType) prompt += `🎬 ประเภท: ${videoType}\n`;
             if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
             if (location) prompt += `📍 สถานที่: ${location}\n`;
-            if (cameraAngle) prompt += `📷 มุมกล้อง: ${cameraAngle}\n`;
-            if (cameraMovement) prompt += `🎬 การเคลื่อนกล้อง: ${cameraMovement}\n`;
+            
+            // เพิ่มมุมกล้องหลายมุม
+            let hasCameraAngles = false;
+            let hasCameraMovements = false;
+            let cameraAngleText = '';
+            let cameraMovementText = '';
+            
+            for (let i = 1; i <= 3; i++) {
+                const angle = getValue(`cameraAngle${i}`);
+                const movement = getValue(`cameraMovement${i}`);
+                
+                if (angle) {
+                    if (!hasCameraAngles) {
+                        cameraAngleText = '📷 มุมกล้อง:\n';
+                        hasCameraAngles = true;
+                    }
+                    cameraAngleText += `  มุมที่ ${i}: ${angle}\n`;
+                }
+                
+                if (movement) {
+                    if (!hasCameraMovements) {
+                        cameraMovementText = '🎬 การเคลื่อนกล้อง:\n';
+                        hasCameraMovements = true;
+                    }
+                    cameraMovementText += `  ช็อตที่ ${i}: ${movement}\n`;
+                }
+            }
+            
+            // ถ้าไม่มีมุมกล้องหลายมุม ให้ใช้แบบเดี่ยว (fallback)
+            if (!hasCameraAngles && cameraAngle) {
+                prompt += `📷 มุมกล้อง: ${cameraAngle}\n`;
+            } else if (hasCameraAngles) {
+                prompt += cameraAngleText;
+            }
+            
+            if (!hasCameraMovements && cameraMovement) {
+                prompt += `🎬 การเคลื่อนกล้อง: ${cameraMovement}\n`;
+            } else if (hasCameraMovements) {
+                prompt += cameraMovementText;
+            }
+            
             if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
             if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
             if (mood) prompt += `😊 อารมณ์: ${mood}\n`;
