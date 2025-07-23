@@ -8131,7 +8131,9 @@ if (charCount > 0) {
         const cameraAngleItems = document.querySelectorAll('.camera-angle-item');
         if (cameraAngleItems.length > 0) {
             let hasAngles = false;
+            let hasMovements = false;
             let anglePrompt = '\n📷 มุมกล้อง:\n';
+            let movementPrompt = '\n🎬 การเคลื่อนกล้อง:\n';
             
             cameraAngleItems.forEach((item, index) => {
                 const angleSelect = item.querySelector('.camera-angle-select') || item.querySelector('.template-select[id^="cameraAngle"]');
@@ -8139,17 +8141,20 @@ if (charCount > 0) {
                 
                 if (angleSelect && angleSelect.value) {
                     hasAngles = true;
-                    anglePrompt += `  มุมที่ ${index + 1}: ${getCameraAngleText(angleSelect.value)}`;
-                    
-                    if (movementSelect && movementSelect.value) {
-                        anglePrompt += ` + ${getCameraMovementText(movementSelect.value)}`;
-                    }
-                    anglePrompt += '\n';
+                    anglePrompt += `  มุมที่ ${index + 1}: ${getCameraAngleText(angleSelect.value)}\n`;
+                }
+                
+                if (movementSelect && movementSelect.value) {
+                    hasMovements = true;
+                    movementPrompt += `  ช็อตที่ ${index + 1}: ${getCameraMovementText(movementSelect.value)}\n`;
                 }
             });
             
             if (hasAngles) {
                 prompt += anglePrompt;
+            }
+            if (hasMovements) {
+                prompt += movementPrompt;
             }
         }
         
@@ -9755,7 +9760,7 @@ setTimeout(() => {
 function extractMainCharacterInfo(profile) {
     if (!profile) return '';
     
-    // หัวข้อที่ต้องการเก็บ - รองรับทั้ง 14 ข้อ
+    // หัวข้อที่ต้องการเก็บ - รองรับทั้ง 17 ข้อ (รวมมุมกล้อง)
     const wantedSections = [
         { emoji: '👤', number: '1.', keywords: ['nickname', 'role', 'ชื่อ', 'บทบาท'] },
         { emoji: '🧑‍🎨', number: '2.', keywords: ['gender', 'age', 'ethnicity', 'เพศ', 'อายุ', 'เชื้อชาติ'] },
@@ -9770,7 +9775,10 @@ function extractMainCharacterInfo(profile) {
         { emoji: '💍', number: '11.', keywords: ['accessories', 'jewelry', 'เครื่องประดับ', 'สร้อย'] },
         { emoji: '🎙️', number: '12.', keywords: ['voice', 'speech', 'tone', 'โทนเสียง', 'การพูด'] },
         { emoji: '🎭', number: '13.', keywords: ['expression', 'emotion', 'สีหน้า', 'อารมณ์'] },
-        { emoji: '🖼️', number: '14.', keywords: ['visual', 'style', 'ภาพ', 'ความสมจริง'] }
+        { emoji: '🖼️', number: '14.', keywords: ['visual', 'style', 'ภาพ', 'ความสมจริง'] },
+        { emoji: '📹', number: '15.', keywords: ['camera', 'angle', 'shot', 'มุมกล้อง', 'ระยะ'] },
+        { emoji: '🎬', number: '16.', keywords: ['scene', 'movement', 'กล้อง', 'การเคลื่อนไหว'] },
+        { emoji: '🎥', number: '17.', keywords: ['filming', 'transition', 'ถ่ายทำ', 'การเปลี่ยน'] }
     ];
     
     const lines = profile.split('\n');
