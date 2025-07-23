@@ -8263,9 +8263,50 @@ function getCameraMovementText(movement) {
         'dolly': 'Dolly - เคลื่อนเข้า-ออก',
         'tracking': 'Tracking - กล้องตาม',
         'handheld': 'Handheld - ถือกล้อง',
-        'steadicam': 'Steadicam - นิ่มนวล'
+        'steadicam': 'Steadicam - นิ่มนวล',
+        'drone': 'โดรน',
+        '360': 'มุม 360 องศา',
+        'crane': 'เครน/บูม',
+        'whip-pan': 'หมุนเร็วมาก',
+        'zoom': 'ซูมเข้า-ออก',
+        'rack-focus': 'เปลี่ยนโฟกัส',
+        'gimbal': 'กิมบอล',
+        'slider': 'สไลเดอร์',
+        'orbit': 'โคจรรอบ',
+        'reveal': 'เปิดเผย',
+        'push-in': 'ดันเข้า',
+        'pull-out': 'ดึงออก'
     };
     return movements[movement] || movement;
+}
+
+function getMoodText(mood) {
+    const moods = {
+        'happy': 'สดใส ร่าเริง',
+        'sad': 'เศร้า อารมณ์ลง',
+        'serious': 'จริงจัง เคร่งเครียด',
+        'romantic': 'โรแมนติก อบอุ่น',
+        'mysterious': 'ลึกลับ น่าค้นหา',
+        'energetic': 'กระฉับกระเฉง มีพลัง',
+        'calm': 'สงบ ผ่อนคลาย',
+        'tense': 'ตึงเครียด กดดัน',
+        'nostalgic': 'คิดถึงอดีต ย้อนความหลัง'
+    };
+    return moods[mood] || mood;
+}
+
+function getSoundTypeText(soundType) {
+    const sounds = {
+        'dialogue': 'บทพูด',
+        'music': 'ดนตรีประกอบ',
+        'ambient': 'เสียงบรรยากาศ',
+        'sfx': 'เอฟเฟกต์เสียง',
+        'silent': 'ไม่มีเสียง',
+        'natural': 'เสียงธรรมชาติ',
+        'dramatic-music': 'ดนตรีดราม่า',
+        'upbeat-music': 'ดนตรีสนุกสนาน'
+    };
+    return sounds[soundType] || soundType;
 }
 
 // Update switchMode to show/hide template button
@@ -9945,15 +9986,25 @@ window.generateFromTemplate = function() {
             // รวบรวมข้อมูล
             const videoType = getValue('videoType');
             
-            // Get camera angles
+            // Get camera angles from dynamic elements
             const cameraAngles = [];
-            for (let i = 1; i <= 3; i++) {
-                const angle = getValue(`cameraAngle${i}`);
-                const movement = getValue(`cameraMovement${i}`);
-                if (angle || movement) {
-                    cameraAngles.push({ angle, movement, index: i });
+            const cameraAngleItems = document.querySelectorAll('.camera-angle-item');
+            cameraAngleItems.forEach((item, index) => {
+                const angleSelect = item.querySelector('.camera-angle-select') || item.querySelector('.template-select[id^="cameraAngle"]');
+                const movementSelect = item.querySelector('.camera-movement-select') || item.querySelector('.template-select[id^="cameraMovement"]');
+                
+                if (angleSelect && movementSelect) {
+                    const angle = angleSelect.value;
+                    const movement = movementSelect.value;
+                    if (angle || movement) {
+                        cameraAngles.push({ 
+                            angle: angle, 
+                            movement: movement, 
+                            index: index + 1
+                        });
+                    }
                 }
-            }
+            });
             
             const timeOfDay = getValue('timeOfDay');
             const visualStyle = getValue('visualStyle');
@@ -9971,26 +10022,32 @@ window.generateFromTemplate = function() {
                 'สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n';
             
             // เพิ่มข้อมูลที่มี
-            if (videoType) prompt += `🎬 ประเภท: ${videoType}\n`;
-            if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
+            if (videoType) prompt += `🎬 ประเภท: ${getVideoTypeText(videoType)}\n`;
+            if (sceneType) prompt += `🎭 ประเภทฉาก: ${getSceneTypeText(sceneType)}\n`;
             if (location) prompt += `📍 สถานที่: ${location}\n`;
             
             // Add camera angles
             if (cameraAngles.length > 0) {
-                prompt += `📷 มุมกล้อง:\n`;
-                cameraAngles.forEach((cam, idx) => {
-                    prompt += `  Camera ${idx + 1}: ${cam.angle || 'ไม่ระบุ'}`;
+                prompt += `\n📷 มุมกล้อง:\n`;
+                cameraAngles.forEach((cam) => {
+                    prompt += `  มุมที่ ${cam.index}: `;
+                    if (cam.angle) {
+                        prompt += getCameraAngleText(cam.angle);
+                    } else {
+                        prompt += 'ไม่ระบุมุม';
+                    }
+                    
                     if (cam.movement) {
-                        prompt += `, ${cam.movement}`;
+                        prompt += ` + ${getCameraMovementText(cam.movement)}`;
                     }
                     prompt += '\n';
                 });
             }
             
-            if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
-            if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
-            if (mood) prompt += `😊 อารมณ์: ${mood}\n`;
-            if (soundType) prompt += `🔊 เสียง: ${soundType}\n`;
+            if (timeOfDay) prompt += `🌅 แสง/เวลา: ${getTimeOfDayText(timeOfDay)}\n`;
+            if (visualStyle) prompt += `🎨 สไตล์: ${getVisualStyleText(visualStyle)}\n`;
+            if (mood) prompt += `😊 อารมณ์: ${getMoodText(mood)}\n`;
+            if (soundType) prompt += `🔊 เสียง: ${getSoundTypeText(soundType)}\n`;
             if (duration) prompt += `⏱️ ความยาว: ${duration}\n`;
             
             // ตัวละคร
