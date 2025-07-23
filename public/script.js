@@ -8132,8 +8132,8 @@ if (charCount > 0) {
         if (cameraAngleItems.length > 0) {
             let hasAngles = false;
             let hasMovements = false;
-            let anglePrompt = '\n📷 มุมกล้อง:\n';
-            let movementPrompt = '\n🎬 การเคลื่อนกล้อง:\n';
+            let anglePrompt = '📷 มุมกล้อง:\n';
+            let movementPrompt = '🎬 การเคลื่อนกล้อง:\n';
             
             cameraAngleItems.forEach((item, index) => {
                 const angleSelect = item.querySelector('.camera-angle-select') || item.querySelector('.template-select[id^="cameraAngle"]');
