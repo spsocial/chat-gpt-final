@@ -1302,10 +1302,16 @@ window.addEventListener('click', function(event) {
             <div class="form-section">
                 <h4 class="form-section-title">📷 กล้องและภาพ</h4>
                 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>📷 มุมกล้อง</label>
-                        <select id="cameraAngle" class="template-select" onchange="updateTemplatePreview()">
+                <!-- Camera Angles Section -->
+                <div id="cameraAnglesContainer">
+                    <div class="camera-angle-item" data-angle-index="1">
+                        <div class="camera-angle-header">
+                            <h5>📷 มุมกล้องที่ 1</h5>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>มุมกล้อง</label>
+                                <select id="cameraAngle1" class="template-select" onchange="updateTemplatePreview()">
                             <option value="">-- เลือกมุมกล้อง --</option>
                             <option value="wide">มุมกว้าง (Wide Shot)</option>
                             <option value="medium">มุมกลาง (Medium Shot)</option>
@@ -1356,8 +1362,18 @@ window.addEventListener('click', function(event) {
                             <option value="reveal">เปิดเผย (Reveal Shot)</option>
                             <option value="push-in">ดันเข้า (Push In)</option>
                             <option value="pull-out">ดึงออก (Pull Out)</option>
-                        </select>
+                                </select>
+                            </div>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Add Camera Angle Button -->
+                <div class="add-camera-angle-container">
+                    <button type="button" class="add-camera-angle-btn" onclick="addCameraAngle()">
+                        ➕ เพิ่มมุมกล้อง
+                    </button>
+                    <span class="camera-angle-hint">สามารถเพิ่มได้สูงสุด 3 มุม</span>
                 </div>
                 
                 <div class="form-row">

@@ -5035,6 +5035,84 @@ line-clamp: 3;
     margin-bottom: 24px;
 }
 
+/* Camera Angle Styles */
+.camera-angle-item {
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.camera-angle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.camera-angle-header h5 {
+    margin: 0;
+    color: var(--primary);
+    font-size: 16px;
+}
+
+.remove-camera-angle-btn {
+    background: var(--error);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+}
+
+.remove-camera-angle-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+.add-camera-angle-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.add-camera-angle-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.add-camera-angle-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
+.add-camera-angle-btn:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.camera-angle-hint {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
 .template-form label {
     display: block;
     color: var(--primary);

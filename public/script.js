@@ -9860,17 +9860,26 @@ window.updateTemplatePreview = function() {
             return elem ? elem.value : '';
         };
         
+        // Get camera angles
+        const cameraAngles = [];
+        for (let i = 1; i <= 3; i++) {
+            const angle = getValue(`cameraAngle${i}`);
+            const movement = getValue(`cameraMovement${i}`);
+            if (angle || movement) {
+                cameraAngles.push({ angle, movement, index: i });
+            }
+        }
+        
         const formData = {
             videoType: getValue('videoType'),
-            cameraAngle: getValue('cameraAngle'),
+            cameraAngles: cameraAngles, // Use array instead of single values
             timeOfDay: getValue('timeOfDay'),
             visualStyle: getValue('visualStyle'),
             duration: getValue('duration'),
             location: getValue('location'),
             mood: getValue('mood'),
             soundType: getValue('soundType'),
-            sceneType: getValue('sceneType'),
-            cameraMovement: getValue('cameraMovement')
+            sceneType: getValue('sceneType')
         };
         
         // สร้าง preview HTML
@@ -9935,7 +9944,17 @@ window.generateFromTemplate = function() {
         if (currentMode === 'promptmaster' || currentMode === 'multichar') {
             // รวบรวมข้อมูล
             const videoType = getValue('videoType');
-            const cameraAngle = getValue('cameraAngle');
+            
+            // Get camera angles
+            const cameraAngles = [];
+            for (let i = 1; i <= 3; i++) {
+                const angle = getValue(`cameraAngle${i}`);
+                const movement = getValue(`cameraMovement${i}`);
+                if (angle || movement) {
+                    cameraAngles.push({ angle, movement, index: i });
+                }
+            }
+            
             const timeOfDay = getValue('timeOfDay');
             const visualStyle = getValue('visualStyle');
             const duration = getValue('duration');
@@ -9943,7 +9962,6 @@ window.generateFromTemplate = function() {
             const mood = getValue('mood');
             const soundType = getValue('soundType');
             const sceneType = getValue('sceneType');
-            const cameraMovement = getValue('cameraMovement');
             const dialogueText = getValue('dialogueText');
             const additionalDetails = getValue('additionalDetails');
             
@@ -9956,8 +9974,19 @@ window.generateFromTemplate = function() {
             if (videoType) prompt += `🎬 ประเภท: ${videoType}\n`;
             if (sceneType) prompt += `🎭 ประเภทฉาก: ${sceneType}\n`;
             if (location) prompt += `📍 สถานที่: ${location}\n`;
-            if (cameraAngle) prompt += `📷 มุมกล้อง: ${cameraAngle}\n`;
-            if (cameraMovement) prompt += `🎬 การเคลื่อนกล้อง: ${cameraMovement}\n`;
+            
+            // Add camera angles
+            if (cameraAngles.length > 0) {
+                prompt += `📷 มุมกล้อง:\n`;
+                cameraAngles.forEach((cam, idx) => {
+                    prompt += `  Camera ${idx + 1}: ${cam.angle || 'ไม่ระบุ'}`;
+                    if (cam.movement) {
+                        prompt += `, ${cam.movement}`;
+                    }
+                    prompt += '\n';
+                });
+            }
+            
             if (timeOfDay) prompt += `🌅 แสง/เวลา: ${timeOfDay}\n`;
             if (visualStyle) prompt += `🎨 สไตล์: ${visualStyle}\n`;
             if (mood) prompt += `😊 อารมณ์: ${mood}\n`;
@@ -10189,11 +10218,150 @@ window.initTemplateFormListeners = initTemplateFormListeners;
 
 console.log('✅ Template Form Final Fix Applied!');
 
+// ========== CAMERA ANGLE FUNCTIONS ==========
+let cameraAngleCount = 1;
+
+function addCameraAngle() {
+    if (cameraAngleCount >= 3) {
+        return;
+    }
+    
+    cameraAngleCount++;
+    const container = document.getElementById('cameraAnglesContainer');
+    
+    const newAngleDiv = document.createElement('div');
+    newAngleDiv.className = 'camera-angle-item';
+    newAngleDiv.setAttribute('data-angle-index', cameraAngleCount);
+    
+    newAngleDiv.innerHTML = `
+        <div class="camera-angle-header">
+            <h5>📷 มุมกล้องที่ ${cameraAngleCount}</h5>
+            <button type="button" class="remove-camera-angle-btn" onclick="removeCameraAngle(${cameraAngleCount})">
+                ❌ ลบ
+            </button>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>มุมกล้อง</label>
+                <select id="cameraAngle${cameraAngleCount}" class="template-select" onchange="updateTemplatePreview()">
+                    <option value="">-- เลือกมุมกล้อง --</option>
+                    <option value="wide">มุมกว้าง (Wide Shot)</option>
+                    <option value="medium">มุมกลาง (Medium Shot)</option>
+                    <option value="closeup">มุมใกล้ (Close-up)</option>
+                    <option value="extreme-closeup">มุมใกล้มาก (Extreme Close-up)</option>
+                    <option value="aerial">มุมสูง/โดรน (Aerial/Drone)</option>
+                    <option value="low-angle">มุมต่ำ (Low Angle)</option>
+                    <option value="dutch">มุมเอียง (Dutch Angle)</option>
+                    <option value="pov">มุมมองบุคคลที่ 1 (POV)</option>
+                    <option value="tracking">กล้องตามวัตถุ (Tracking Shot)</option>
+                    <option value="selfie">เซลฟี่/ถือกล้องเอง (Selfie/Handheld)</option>
+                    <option value="twoshot">สองคนในเฟรม (Two Shot)</option>
+                    <option value="over-shoulder">ข้ามไหล่ (Over the Shoulder)</option>
+                    <option value="establishing">แนะนำสถานที่ (Establishing Shot)</option>
+                    <option value="insert">ภาพแทรก (Insert Shot)</option>
+                    <option value="cutaway">ภาพตัดไป (Cutaway)</option>
+                    <option value="reaction">ภาพปฏิกิริยา (Reaction Shot)</option>
+                    <option value="birds-eye">มุมนกมอง (Bird's Eye View)</option>
+                    <option value="worms-eye">มุมหนอนมอง (Worm's Eye View)</option>
+                    <option value="profile">มุมข้าง (Profile Shot)</option>
+                    <option value="full-body">เต็มตัว (Full Body Shot)</option>
+                    <option value="cowboy">คาวบอย (Cowboy Shot)</option>
+                    <option value="master">มาสเตอร์ช็อต (Master Shot)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>การเคลื่อนกล้อง</label>
+                <select id="cameraMovement${cameraAngleCount}" class="template-select" onchange="updateTemplatePreview()">
+                    <option value="">-- เลือกการเคลื่อนกล้อง --</option>
+                    <option value="static">กล้องนิ่ง (Static)</option>
+                    <option value="pan">หมุนซ้าย-ขวา (Pan)</option>
+                    <option value="tilt">หมุนบน-ล่าง (Tilt)</option>
+                    <option value="dolly">เคลื่อนเข้า-ออก (Dolly)</option>
+                    <option value="tracking">กล้องตาม (Tracking)</option>
+                    <option value="handheld">สไตล์ Vlog (Handheld/Vlog)</option>
+                    <option value="steadicam">กล้องนิ่มนวล (Steadicam)</option>
+                    <option value="drone">โดรน (Drone)</option>
+                    <option value="360">มุม 360 องศา (360 Degree)</option>
+                    <option value="crane">เครน/บูม (Crane/Boom)</option>
+                    <option value="whip-pan">หมุนเร็วมาก (Whip Pan)</option>
+                    <option value="zoom">ซูมเข้า-ออก (Zoom In/Out)</option>
+                    <option value="rack-focus">เปลี่ยนโฟกัส (Rack Focus)</option>
+                    <option value="gimbal">กิมบอล (Gimbal)</option>
+                    <option value="slider">สไลเดอร์ (Slider)</option>
+                    <option value="orbit">โคจรรอบ (Orbit)</option>
+                    <option value="reveal">เปิดเผย (Reveal Shot)</option>
+                    <option value="push-in">ดันเข้า (Push In)</option>
+                    <option value="pull-out">ดึงออก (Pull Out)</option>
+                </select>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(newAngleDiv);
+    
+    // Update button state
+    if (cameraAngleCount >= 3) {
+        document.querySelector('.add-camera-angle-btn').disabled = true;
+    }
+    
+    updateTemplatePreview();
+}
+
+function removeCameraAngle(index) {
+    const angleItem = document.querySelector(`[data-angle-index="${index}"]`);
+    if (angleItem) {
+        angleItem.remove();
+    }
+    
+    // Renumber remaining angles
+    const remainingAngles = document.querySelectorAll('.camera-angle-item');
+    cameraAngleCount = remainingAngles.length;
+    
+    remainingAngles.forEach((item, idx) => {
+        const newIndex = idx + 1;
+        item.setAttribute('data-angle-index', newIndex);
+        item.querySelector('h5').textContent = `📷 มุมกล้องที่ ${newIndex}`;
+        
+        // Update IDs
+        const angleSelect = item.querySelector('select[id^="cameraAngle"]');
+        const movementSelect = item.querySelector('select[id^="cameraMovement"]');
+        if (angleSelect) angleSelect.id = `cameraAngle${newIndex}`;
+        if (movementSelect) movementSelect.id = `cameraMovement${newIndex}`;
+        
+        // Update remove button
+        const removeBtn = item.querySelector('.remove-camera-angle-btn');
+        if (removeBtn) {
+            removeBtn.setAttribute('onclick', `removeCameraAngle(${newIndex})`);
+        }
+    });
+    
+    // Enable add button
+    document.querySelector('.add-camera-angle-btn').disabled = false;
+    
+    updateTemplatePreview();
+}
+
+window.addCameraAngle = addCameraAngle;
+window.removeCameraAngle = removeCameraAngle;
+
 window.showTemplateForm = function() {
     const modal = document.getElementById('templateFormModal');
     if (!modal) return;
     
     modal.style.display = 'flex';
+    
+    // Reset camera angles to 1
+    cameraAngleCount = 1;
+    const container = document.getElementById('cameraAnglesContainer');
+    if (container) {
+        const extraAngles = container.querySelectorAll('.camera-angle-item[data-angle-index]:not([data-angle-index="1"])');
+        extraAngles.forEach(item => item.remove());
+    }
+    
+    // Enable add button
+    const addBtn = document.querySelector('.add-camera-angle-btn');
+    if (addBtn) addBtn.disabled = false;
     
     // Reset template data
     templateFormData = {
