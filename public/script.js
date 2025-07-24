@@ -625,13 +625,23 @@ window.addEventListener('scroll', () => {
 // Track free credits usage
 function trackFreeCreditsUsage(amount) {
     const originalUserId = localStorage.getItem('originalUserId') || userId;
+    const today = new Date().toDateString();
+    const lastResetDate = localStorage.getItem(`freeCreditsResetDate_${originalUserId}`);
+    
+    // Reset if new day
+    if (lastResetDate !== today) {
+        localStorage.setItem(`usedFreeCredits_${originalUserId}`, '0');
+        localStorage.setItem(`freeCreditsResetDate_${originalUserId}`, today);
+        console.log('New day detected, free credits reset');
+    }
+    
     const usedFreeCredits = parseFloat(localStorage.getItem(`usedFreeCredits_${originalUserId}`) || '0');
     const newUsedAmount = usedFreeCredits + amount;
     
     // Store the used amount
     localStorage.setItem(`usedFreeCredits_${originalUserId}`, newUsedAmount.toString());
     
-    console.log('Free credits used:', newUsedAmount, 'of 5');
+    console.log('Free credits used today:', newUsedAmount, 'of 5');
 }
 
 async function loadUserCredits() {
@@ -1083,6 +1093,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Get or generate user ID using ensureUserId และอัพเดท global
     userId = ensureUserId();
     updateAuthUI();
+    
+    // Check for new day and reset free credits if needed (for non-logged in users)
+    const originalUserId = localStorage.getItem('originalUserId') || userId;
+    const today = new Date().toDateString();
+    const lastResetDate = localStorage.getItem(`freeCreditsResetDate_${originalUserId}`);
+    
+    if (!localStorage.getItem('linkedAccount') && lastResetDate !== today) {
+        // Reset free credits for new day
+        localStorage.setItem(`usedFreeCredits_${originalUserId}`, '0');
+        localStorage.setItem(`freeCreditsResetDate_${originalUserId}`, today);
+        
+        // Update credits display if not logged in
+        const currentCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+        if (currentCredits < 5) {
+            localStorage.setItem('totalCredits', '5');
+            console.log('New day: Free credits reset to 5');
+        }
+    }
     
     // Check if user is logged in and sync credits from cloud
     const linkedAccount = localStorage.getItem('linkedAccount');
@@ -9156,7 +9184,13 @@ async function doLogin() {
             return;
         }
         
-        // Login successful - switch to this user
+        // Login successful - save original userId before switching
+        const currentUserId = localStorage.getItem('userId');
+        if (!localStorage.getItem('originalUserId')) {
+            localStorage.setItem('originalUserId', currentUserId);
+        }
+        
+        // Switch to logged in user
         localStorage.setItem('userId', userId);
         
         // Sync credits from cloud
@@ -9208,11 +9242,25 @@ function doLogout() {
     localStorage.setItem('userId', originalUserId);
     userId = originalUserId;
     
-    // Clear purchased credits but keep track of used free credits
-    const usedFreeCredits = parseFloat(localStorage.getItem(`usedFreeCredits_${originalUserId}`) || '0');
+    // Log for debugging
+    console.log('Logout - Restored to original userId:', originalUserId);
+    
+    // Check if new day for free credits reset
+    const today = new Date().toDateString();
+    const lastResetDate = localStorage.getItem(`freeCreditsResetDate_${originalUserId}`);
+    
+    let usedFreeCredits = parseFloat(localStorage.getItem(`usedFreeCredits_${originalUserId}`) || '0');
+    
+    // Reset if new day
+    if (lastResetDate !== today) {
+        usedFreeCredits = 0;
+        localStorage.setItem(`usedFreeCredits_${originalUserId}`, '0');
+        localStorage.setItem(`freeCreditsResetDate_${originalUserId}`, today);
+    }
+    
     const remainingFreeCredits = Math.max(0, 5 - usedFreeCredits);
     
-    // Set credits to remaining free credits
+    // Set credits to remaining free credits for today
     localStorage.setItem('totalCredits', remainingFreeCredits.toString());
     
     // Clear user-specific purchased credits data
