@@ -7331,14 +7331,7 @@ const PromptStorage = {
                     content = tempDiv.textContent.trim();
                 } else {
                     // สำหรับ assistant message เก็บ innerHTML ทั้งหมด
-                    // แต่ต้องลบ timestamp ออกก่อนเก็บ
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = contentElem.innerHTML;
-                    const timestampElem = tempDiv.querySelector('.message-timestamp');
-                    if (timestampElem) {
-                        timestampElem.remove();
-                    }
-                    content = tempDiv.innerHTML.trim();
+                    content = contentElem.innerHTML;
                 }
                 
                 // ไม่เก็บ loading, error messages
@@ -7432,28 +7425,10 @@ const PromptStorage = {
                 messageDiv.id = messageId;
                 messageDiv.className = 'message assistant';
                 
-                // ใช้ HTML ที่บันทึกไว้โดยตรง แต่ต้องตรวจสอบว่ามี timestamp หรือไม่
-                let contentHTML = msg.content;
-                
-                // ถ้าไม่มี timestamp ให้เพิ่มใหม่
-                if (!contentHTML.includes('message-timestamp')) {
-                    const now = new Date();
-                    const timeString = now.toLocaleTimeString('th-TH', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                    });
-                    const dateString = now.toLocaleDateString('th-TH', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric'
-                    });
-                    const timestampHTML = `<div class="message-timestamp">${timeString} • ${dateString}</div>`;
-                    contentHTML = contentHTML.replace('</div>', '') + timestampHTML + '</div>';
-                }
-                
+                // ใช้ HTML ที่บันทึกไว้โดยตรง
                 messageDiv.innerHTML = `
                     <div class="message-avatar">🤖</div>
-                    <div class="message-content">${contentHTML}</div>
+                    <div class="message-content">${msg.content}</div>
                 `;
                 
                 chatMessages.appendChild(messageDiv);
