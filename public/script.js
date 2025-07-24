@@ -662,11 +662,10 @@ async function loadUserCredits() {
         
         updateCreditDisplay();
         
-        // อัพเดทยอดเครดิตคงเหลือในมือถือ
-        const totalCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+        // อัพเดทยอดเครดิตคงเหลือในมือถือ - ใช้ userCredits เหมือนในคอม
         const mobileCreditsBalance = document.getElementById('mobileCreditsBalance');
         if (mobileCreditsBalance) {
-            mobileCreditsBalance.textContent = totalCredits.toFixed(2);
+            mobileCreditsBalance.textContent = userCredits.toFixed(2);
         }
     } catch (error) {
         console.error('Error loading credits:', error);
@@ -3280,12 +3279,8 @@ async function updateUsageDisplay() {
                 usageBar.title = `เครดิตฟรีคงเหลือ: ${remaining.toFixed(2)} บาท จาก ${limit} บาท`;
             }
             
-            // อัพเดทยอดเครดิตคงเหลือในมือถือ
-            const totalCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
-            const mobileCreditsBalance = document.getElementById('mobileCreditsBalance');
-            if (mobileCreditsBalance) {
-                mobileCreditsBalance.textContent = totalCredits.toFixed(2);
-            }
+            // อัพเดทยอดเครดิตคงเหลือในมือถือ - ใช้ userCredits เหมือนในคอม
+            loadUserCredits(); // โหลดเครดิตล่าสุดเพื่อให้แน่ใจว่าข้อมูลถูกต้อง
         }
     } catch (error) {
         console.error('Error updating usage:', error);
