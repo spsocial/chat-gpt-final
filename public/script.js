@@ -3617,10 +3617,12 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
             </div>
         `;
     } else {
+        // Preserve line breaks in assistant messages too
+        const formattedContent = content.replace(/\n/g, '<br>');
         messageDiv.innerHTML = `
             <div class="message-avatar">🤖</div>
             <div class="message-content">
-                ${content}
+                ${formattedContent}
                 ${timestampHTML}
             </div>
         `;
@@ -7317,7 +7319,14 @@ const PromptStorage = {
                     content = contentElem.textContent.trim();
                 } else {
                     // สำหรับ assistant message เก็บ innerHTML ทั้งหมด
-                    content = contentElem.innerHTML;
+                    // แต่ต้องลบ timestamp ออกก่อนเก็บ
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = contentElem.innerHTML;
+                    const timestampElem = tempDiv.querySelector('.message-timestamp');
+                    if (timestampElem) {
+                        timestampElem.remove();
+                    }
+                    content = tempDiv.innerHTML.trim();
                 }
                 
                 // ไม่เก็บ loading, error messages
@@ -7411,10 +7420,28 @@ const PromptStorage = {
                 messageDiv.id = messageId;
                 messageDiv.className = 'message assistant';
                 
-                // ใช้ HTML ที่บันทึกไว้โดยตรง
+                // ใช้ HTML ที่บันทึกไว้โดยตรง แต่ต้องตรวจสอบว่ามี timestamp หรือไม่
+                let contentHTML = msg.content;
+                
+                // ถ้าไม่มี timestamp ให้เพิ่มใหม่
+                if (!contentHTML.includes('message-timestamp')) {
+                    const now = new Date();
+                    const timeString = now.toLocaleTimeString('th-TH', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    });
+                    const dateString = now.toLocaleDateString('th-TH', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric'
+                    });
+                    const timestampHTML = `<div class="message-timestamp">${timeString} • ${dateString}</div>`;
+                    contentHTML = contentHTML.replace('</div>', '') + timestampHTML + '</div>';
+                }
+                
                 messageDiv.innerHTML = `
                     <div class="message-avatar">🤖</div>
-                    <div class="message-content">${msg.content}</div>
+                    <div class="message-content">${contentHTML}</div>
                 `;
                 
                 chatMessages.appendChild(messageDiv);
@@ -10450,20 +10477,27 @@ window.generateFromTemplate = function() {
             
             // Add camera angles
             if (cameraAngles.length > 0) {
-                prompt += `\n📷 มุมกล้อง:\n`;
-                cameraAngles.forEach((cam) => {
-                    prompt += `  มุมที่ ${cam.index}: `;
-                    if (cam.angle) {
-                        prompt += getCameraAngleText(cam.angle);
-                    } else {
-                        prompt += 'ไม่ระบุมุม';
-                    }
-                    
-                    if (cam.movement) {
-                        prompt += ` + ${getCameraMovementText(cam.movement)}`;
-                    }
-                    prompt += '\n';
-                });
+                // แยกแสดงมุมกล้องและการเคลื่อนกล้อง
+                const hasAngles = cameraAngles.some(cam => cam.angle);
+                const hasMovements = cameraAngles.some(cam => cam.movement);
+                
+                if (hasAngles) {
+                    prompt += '📷 มุมกล้อง:\n';
+                    cameraAngles.forEach((cam) => {
+                        if (cam.angle) {
+                            prompt += `  มุมที่ ${cam.index}: ${getCameraAngleText(cam.angle)}\n`;
+                        }
+                    });
+                }
+                
+                if (hasMovements) {
+                    prompt += '🎬 การเคลื่อนกล้อง:\n';
+                    cameraAngles.forEach((cam) => {
+                        if (cam.movement) {
+                            prompt += `  ช็อตที่ ${cam.index}: ${getCameraMovementText(cam.movement)}\n`;
+                        }
+                    });
+                }
             }
             
             if (timeOfDay) prompt += `🌅 แสง/เวลา: ${getTimeOfDayText(timeOfDay)}\n`;
@@ -10497,7 +10531,15 @@ window.generateFromTemplate = function() {
                 }
             });
             if (effects.length > 0) {
-                prompt += `\n✨ Effects: ${effects.join(', ')}\n`;
+                prompt += '\n✨ Effects: ';
+                effects.forEach((effect, index) => {
+                    if (index === 0) {
+                        prompt += effect;
+                    } else {
+                        prompt += `, ${effect}`;
+                    }
+                });
+                prompt += '\n';
             }
             
             // Dialogue
