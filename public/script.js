@@ -3617,12 +3617,10 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
             </div>
         `;
     } else {
-        // Preserve line breaks in assistant messages too
-        const formattedContent = content.replace(/\n/g, '<br>');
         messageDiv.innerHTML = `
             <div class="message-avatar">🤖</div>
             <div class="message-content">
-                ${formattedContent}
+                ${content}
                 ${timestampHTML}
             </div>
         `;
