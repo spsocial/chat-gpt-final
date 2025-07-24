@@ -7315,8 +7315,20 @@ const PromptStorage = {
                 let content = '';
                 
                 if (isUser) {
-                    // สำหรับ user message ดึงข้อความตรงๆ
-                    content = contentElem.textContent.trim();
+                    // สำหรับ user message ต้องแปลง <br> กลับเป็น \n ก่อนเก็บ
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = contentElem.innerHTML;
+                    // ลบ timestamp ถ้ามี
+                    const timestampElem = tempDiv.querySelector('.message-timestamp');
+                    if (timestampElem) {
+                        timestampElem.remove();
+                    }
+                    // แปลง <br> เป็น \n
+                    let html = tempDiv.innerHTML;
+                    html = html.replace(/<br\s*\/?>/gi, '\n');
+                    // แปลง HTML entities กลับเป็นข้อความปกติ
+                    tempDiv.innerHTML = html;
+                    content = tempDiv.textContent.trim();
                 } else {
                     // สำหรับ assistant message เก็บ innerHTML ทั้งหมด
                     // แต่ต้องลบ timestamp ออกก่อนเก็บ
