@@ -277,21 +277,255 @@
 <div class="info-panel" id="imageInfo" style="display: none;">
     <div class="info-section">
         <h3>🖼️ Image Prompt Creator</h3>
-        <div class="tip-card">
-            <h4>✨ สร้าง Prompt สำหรับรูปภาพ</h4>
-            <p>AI จะช่วยสร้าง prompt ที่ละเอียดสำหรับการสร้างภาพ</p>
+        
+        <!-- Image Prompt Form -->
+        <div class="image-prompt-form">
+            <!-- Quick Templates -->
+            <div class="tip-card">
+                <h4>⚡ Quick Templates</h4>
+                <div class="quick-template-buttons">
+                    <button class="quick-template-btn" onclick="applyImageTemplate('portrait')">
+                        👤 บุคคล
+                    </button>
+                    <button class="quick-template-btn" onclick="applyImageTemplate('landscape')">
+                        🏞️ ทิวทัศน์
+                    </button>
+                    <button class="quick-template-btn" onclick="applyImageTemplate('product')">
+                        📦 สินค้า
+                    </button>
+                    <button class="quick-template-btn" onclick="applyImageTemplate('fantasy')">
+                        🦄 แฟนตาซี
+                    </button>
+                </div>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="form-section">
+                <h4>📋 ข้อมูลพื้นฐาน</h4>
+                <div class="form-group">
+                    <label>หัวเรื่อง/ธีม <span style="color: #ef4444;">*</span></label>
+                    <input type="text" id="imageTheme" placeholder="เช่น ครูสาวในโรงเรียน, แมวน่ารัก, ทิวทัศน์ภูเขา" class="form-input">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>สไตล์ภาพ</label>
+                        <select id="imageStyle" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="photorealistic">Photorealistic</option>
+                            <option value="anime">Anime/Manga</option>
+                            <option value="digital_art">Digital Art</option>
+                            <option value="oil_painting">Oil Painting</option>
+                            <option value="watercolor">Watercolor</option>
+                            <option value="3d_render">3D Render</option>
+                            <option value="minimalist">Minimalist</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>อารมณ์ภาพ</label>
+                        <select id="imageMood" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="happy">Happy/ร่าเริง</option>
+                            <option value="dramatic">Dramatic/ดราม่า</option>
+                            <option value="peaceful">Peaceful/สงบ</option>
+                            <option value="mysterious">Mysterious/ลึกลับ</option>
+                            <option value="romantic">Romantic/โรแมนติก</option>
+                            <option value="energetic">Energetic/มีพลัง</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Character Section -->
+            <div class="form-section">
+                <h4>👤 ตัวละคร (ถ้ามี)</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>เพศ</label>
+                        <div class="radio-group">
+                            <label><input type="radio" name="imageGender" value="male"> ชาย</label>
+                            <label><input type="radio" name="imageGender" value="female"> หญิง</label>
+                            <label><input type="radio" name="imageGender" value="" checked> ไม่ระบุ</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>อายุ</label>
+                        <input type="number" id="imageAge" min="1" max="100" placeholder="เช่น 25" class="form-input">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>เชื้อชาติ/รูปลักษณ์</label>
+                    <select id="imageEthnicity" class="form-select">
+                        <option value="">AI เลือกให้</option>
+                        <option value="asian">Asian/เอเชีย</option>
+                        <option value="southeast_asian">Southeast Asian/เอเชียตะวันออกเฉียงใต้</option>
+                        <option value="caucasian">Caucasian/ผิวขาว</option>
+                        <option value="african">African/แอฟริกัน</option>
+                        <option value="latin">Latin/ลาติน</option>
+                        <option value="mixed">Mixed/ลูกครึ่ง</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>ท่าทาง/กิริยา</label>
+                    <input type="text" id="imagePose" placeholder="เช่น ยืนยิ้ม, นั่งอ่านหนังสือ, วิ่ง" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label>เครื่องแต่งกาย</label>
+                    <input type="text" id="imageClothing" placeholder="เช่น ชุดครู, ชุดลำลอง, ชุดแฟนตาซี" class="form-input">
+                </div>
+            </div>
+
+            <!-- Background Section -->
+            <div class="form-section">
+                <h4>🏞️ ฉากหลัง</h4>
+                <div class="form-group">
+                    <label>สถานที่</label>
+                    <input type="text" id="imageLocation" placeholder="เช่น โรงเรียน, สวนสาธารณะ, ริมทะเล" class="form-input">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>เวลา</label>
+                        <select id="imageTime" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="morning">เช้า/Morning</option>
+                            <option value="afternoon">กลางวัน/Afternoon</option>
+                            <option value="golden_hour">Golden Hour</option>
+                            <option value="evening">เย็น/Evening</option>
+                            <option value="night">กลางคืน/Night</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>บรรยากาศ</label>
+                        <input type="text" id="imageAtmosphere" placeholder="เช่น แสงนุ่ม, หมอกจาง, ฝนตก" class="form-input">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Camera Settings -->
+            <div class="form-section">
+                <h4>📷 การตั้งค่ากล้อง</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>มุมกล้อง</label>
+                        <select id="imageCameraAngle" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="full_body">Full Body/เต็มตัว</option>
+                            <option value="portrait">Portrait/ครึ่งตัว</option>
+                            <option value="close_up">Close-up/ระยะใกล้</option>
+                            <option value="wide_angle">Wide Angle/มุมกว้าง</option>
+                            <option value="aerial">Aerial/มุมสูง</option>
+                            <option value="low_angle">Low Angle/มุมต่ำ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>เลนส์</label>
+                        <select id="imageLens" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="24mm">24mm (Wide)</option>
+                            <option value="35mm">35mm (Normal Wide)</option>
+                            <option value="50mm">50mm (Normal)</option>
+                            <option value="85mm">85mm (Portrait)</option>
+                            <option value="135mm">135mm (Telephoto)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Aperture</label>
+                        <select id="imageAperture" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="f/1.4">f/1.4 (Very Shallow)</option>
+                            <option value="f/2.8">f/2.8 (Shallow)</option>
+                            <option value="f/5.6">f/5.6 (Moderate)</option>
+                            <option value="f/8">f/8 (Deep)</option>
+                            <option value="f/11">f/11 (Very Deep)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>ISO</label>
+                        <select id="imageISO" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="100">ISO 100</option>
+                            <option value="200">ISO 200</option>
+                            <option value="400">ISO 400</option>
+                            <option value="800">ISO 800</option>
+                            <option value="1600">ISO 1600</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality Settings -->
+            <div class="form-section">
+                <h4>⚙️ คุณภาพ</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ความละเอียด</label>
+                        <select id="imageResolution" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="HD">HD (1920x1080)</option>
+                            <option value="4K">4K (3840x2160)</option>
+                            <option value="8K">8K (7680x4320)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>อัตราส่วน</label>
+                        <select id="imageAspectRatio" class="form-select">
+                            <option value="">AI เลือกให้</option>
+                            <option value="16:9">16:9 (Landscape)</option>
+                            <option value="9:16">9:16 (Portrait)</option>
+                            <option value="1:1">1:1 (Square)</option>
+                            <option value="4:3">4:3 (Classic)</option>
+                            <option value="3:2">3:2 (Photo)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div class="form-section">
+                <h4>✨ รายละเอียดเพิ่มเติม</h4>
+                <div class="form-group">
+                    <label>Props/วัตถุเพิ่มเติม และรายละเอียดอื่นๆ</label>
+                    <textarea id="imageAdditionalDetails" 
+                             rows="3" 
+                             placeholder="เช่น มีกล่องของขวัญวางอยู่บนโต๊ะ, รถจอดข้างๆ, มีดอกไม้ประดับ, แสงแดดส่องผ่านหน้าต่าง" 
+                             class="form-textarea"></textarea>
+                    <small style="color: #888;">💡 ใส่รายละเอียดเพิ่มเติมที่อยากให้มีในภาพ จะช่วยให้ภาพมีความน่าสนใจมากขึ้น</small>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <button class="generate-prompt-btn" onclick="generateImagePromptFromForm()">
+                    🎨 สร้าง Prompt
+                </button>
+                <button class="clear-form-btn" onclick="clearImagePromptForm()">
+                    🗑️ ล้างฟอร์ม
+                </button>
+            </div>
         </div>
-        <div class="tip-card">
-            <h4>🎨 วิธีใช้งาน</h4>
-            <p>1. บอกไอเดียภาพที่ต้องการ</p>
-            <p>2. AI จะสร้าง prompt แบบละเอียด</p>
-            <p>3. คัดลอก prompt ไปใช้ได้เลย</p>
-        </div>
-        <div class="tip-card">
-            <h4>💡 ตัวอย่างคำสั่ง</h4>
-            <p>• "ภาพแมวน่ารักสวมแว่น"</p>
-            <p>• "ภาพภูเขาตอนพระอาทิตย์ขึ้น"</p>
-            <p>• "ผู้หญิงในชุดสไตล์ cyberpunk"</p>
+
+        <!-- Tips -->
+        <div class="tip-card" style="margin-top: 20px;">
+            <h4>💡 เคล็ดลับ</h4>
+            <ul style="margin: 0; padding-left: 20px;">
+                <li>กรอกเฉพาะส่วนที่ต้องการ AI จะเติมส่วนที่เหลือให้</li>
+                <li>ยิ่งใส่รายละเอียดมาก ภาพยิ่งตรงใจ</li>
+                <li>ลองใช้ Quick Templates เพื่อเริ่มต้นอย่างรวดเร็ว</li>
+                <li>สามารถปรับแต่ง prompt ที่ได้อีกครั้งในภายหลัง</li>
+            </ul>
         </div>
     </div>
 </div>

@@ -929,10 +929,18 @@ function signOut() {
     // Clear Google user data
     googleUser = null;
     localStorage.removeItem('googleUser');
+    localStorage.removeItem('linkedAccount');
+    
+    // Clear credits data
+    localStorage.removeItem('totalCredits');
+    localStorage.removeItem('creditsData');
     
     // Generate new local userId
     userId = 'user_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('userId', userId);
+    
+    // Reset to default free credits
+    localStorage.setItem('totalCredits', '5');
     
     // Reload chat histories
     ChatStorage.init();
@@ -940,6 +948,12 @@ function signOut() {
     MultiCharChatHistory.init();
     AIChatHistory.init();
     CharacterChatHistory.init();
+    
+    // Clear character library if exists
+    characterLibrary = [];
+    if (currentMode === 'library') {
+        displayCharacterLibrary();
+    }
     
     // Update UI
     updateAuthUI();
@@ -1052,14 +1066,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (linkedAccount) {
         try {
             const account = JSON.parse(linkedAccount);
+            // Backup current credits before sync
+            const currentCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+            console.log('Current local credits before sync:', currentCredits);
+            
             // Fetch latest credits from Firebase
             const userResponse = await fetch(`${window.FIREBASE_DATABASE_URL}/users/${account.userId}.json`);
             if (userResponse.ok) {
                 const userData = await userResponse.json();
                 if (userData && userData.credits !== undefined) {
-                    // Update local credits with cloud data
-                    localStorage.setItem('totalCredits', userData.credits.toString());
+                    const cloudCredits = parseFloat(userData.credits);
+                    console.log('Cloud credits:', cloudCredits);
+                    
+                    // Use the higher value between local and cloud
+                    const finalCredits = Math.max(currentCredits, cloudCredits);
+                    localStorage.setItem('totalCredits', finalCredits.toString());
                     updateCreditsDisplay();
+                    
+                    // If local was higher, update cloud
+                    if (currentCredits > cloudCredits) {
+                        await updateCloudCredits(account.userId, finalCredits);
+                    }
+                } else {
+                    // No cloud data, keep local credits and update cloud
+                    console.log('No cloud data found, keeping local credits');
+                    await updateCloudCredits(account.userId, currentCredits);
                 }
             }
         } catch (error) {
@@ -9136,9 +9167,46 @@ async function doLogin() {
 
 // Logout
 function doLogout() {
+    // Get current userId before logout
+    const currentUserId = localStorage.getItem('userId');
+    
+    // Clear linked account
     localStorage.removeItem('linkedAccount');
+    
+    // Generate new guest userId
+    const newUserId = 'user_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('userId', newUserId);
+    
+    // Clear user-specific data
+    localStorage.removeItem('totalCredits');
+    localStorage.removeItem('creditsData');
+    localStorage.removeItem(`userData_${currentUserId}`);
+    
+    // Reset to default free credits
+    localStorage.setItem('totalCredits', '5');
+    
+    // Clear character library
+    characterLibrary = [];
+    
+    // Reinitialize chat histories with new userId
+    userId = newUserId;
+    ChatStorage.init();
+    MasterChatHistory.init();
+    MultiCharChatHistory.init();
+    AIChatHistory.init();
+    CharacterChatHistory.init();
+    
+    // Update UI
+    updateCreditsDisplay();
+    updateUserId();
+    
     showNotification('👋 ออกจากระบบแล้ว', 'info');
     closeLoginModal();
+    
+    // Refresh page to reset everything
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 }
 
 // Sync credits to cloud
@@ -9157,6 +9225,24 @@ async function syncCreditsToCloud() {
         });
     } catch (error) {
         console.error('Sync credits error:', error);
+    }
+}
+
+// Update cloud credits function
+async function updateCloudCredits(userId, credits) {
+    try {
+        const response = await fetch(`${window.FIREBASE_DATABASE_URL}/users/${userId}/credits.json`, {
+            method: 'PUT',
+            body: JSON.stringify(credits)
+        });
+        
+        if (!response.ok) {
+            console.error('Failed to update cloud credits');
+        } else {
+            console.log('Cloud credits updated successfully:', credits);
+        }
+    } catch (error) {
+        console.error('Error updating cloud credits:', error);
     }
 }
 
@@ -10775,3 +10861,179 @@ window.updateFabBadge = updateFabBadge;
 window.openVideoAnalyzer = openVideoAnalyzer;
 
 // ========== END CHARACTER TEMPLATE SYSTEM ==========
+
+// ========== IMAGE PROMPT FORM FUNCTIONS ==========
+
+// Apply quick template
+function applyImageTemplate(templateType) {
+    const templates = {
+        portrait: {
+            theme: 'พนักงานสาวออฟฟิศยิ้มแย้ม',
+            style: 'photorealistic',
+            mood: 'happy',
+            gender: 'female',
+            age: '25',
+            clothing: 'ชุดทำงานสุภาพ เสื้อเชิ้ตขาว',
+            location: 'ออฟฟิศสมัยใหม่',
+            cameraAngle: 'portrait',
+            lens: '85mm',
+            aperture: 'f/2.8',
+            resolution: '4K'
+        },
+        landscape: {
+            theme: 'ทิวทัศน์ภูเขาตอนพระอาทิตย์ขึ้น',
+            style: 'photorealistic',
+            mood: 'peaceful',
+            location: 'ภูเขา',
+            time: 'golden_hour',
+            cameraAngle: 'wide_angle',
+            lens: '24mm'
+        },
+        product: {
+            theme: 'ถ่ายภาพสินค้า',
+            style: 'photorealistic',
+            mood: 'happy',
+            cameraAngle: 'close_up',
+            lens: '50mm',
+            aperture: 'f/5.6'
+        },
+        fantasy: {
+            theme: 'โลกแฟนตาซีมหัศจรรย์',
+            style: 'digital_art',
+            mood: 'mysterious',
+            atmosphere: 'หมอกจางๆ แสงมหัศจรรย์'
+        }
+    };
+    
+    const template = templates[templateType];
+    if (!template) return;
+    
+    // Apply template values
+    if (template.theme) document.getElementById('imageTheme').value = template.theme;
+    if (template.style) document.getElementById('imageStyle').value = template.style;
+    if (template.mood) document.getElementById('imageMood').value = template.mood;
+    if (template.gender) {
+        document.querySelectorAll('input[name="imageGender"]').forEach(radio => {
+            radio.checked = radio.value === template.gender;
+        });
+    }
+    if (template.age) document.getElementById('imageAge').value = template.age;
+    if (template.clothing) document.getElementById('imageClothing').value = template.clothing;
+    if (template.location) document.getElementById('imageLocation').value = template.location;
+    if (template.time) document.getElementById('imageTime').value = template.time;
+    if (template.atmosphere) document.getElementById('imageAtmosphere').value = template.atmosphere;
+    if (template.cameraAngle) document.getElementById('imageCameraAngle').value = template.cameraAngle;
+    if (template.lens) document.getElementById('imageLens').value = template.lens;
+    if (template.aperture) document.getElementById('imageAperture').value = template.aperture;
+    if (template.resolution) document.getElementById('imageResolution').value = template.resolution;
+}
+
+// Clear form
+function clearImagePromptForm() {
+    const form = document.querySelector('.image-prompt-form');
+    if (!form) return;
+    
+    // Clear all inputs
+    form.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(input => {
+        input.value = '';
+    });
+    
+    // Reset all selects
+    form.querySelectorAll('select').forEach(select => {
+        select.selectedIndex = 0;
+    });
+    
+    // Reset radio buttons
+    form.querySelectorAll('input[type="radio"]').forEach(radio => {
+        if (radio.value === '') radio.checked = true;
+        else radio.checked = false;
+    });
+}
+
+// Generate prompt from form
+async function generateImagePromptFromForm() {
+    const formData = {
+        theme: document.getElementById('imageTheme').value,
+        style: document.getElementById('imageStyle').value,
+        mood: document.getElementById('imageMood').value,
+        gender: document.querySelector('input[name="imageGender"]:checked')?.value || '',
+        age: document.getElementById('imageAge').value,
+        ethnicity: document.getElementById('imageEthnicity').value,
+        pose: document.getElementById('imagePose').value,
+        clothing: document.getElementById('imageClothing').value,
+        location: document.getElementById('imageLocation').value,
+        time: document.getElementById('imageTime').value,
+        atmosphere: document.getElementById('imageAtmosphere').value,
+        cameraAngle: document.getElementById('imageCameraAngle').value,
+        lens: document.getElementById('imageLens').value,
+        aperture: document.getElementById('imageAperture').value,
+        iso: document.getElementById('imageISO').value,
+        resolution: document.getElementById('imageResolution').value,
+        aspectRatio: document.getElementById('imageAspectRatio').value,
+        additionalDetails: document.getElementById('imageAdditionalDetails').value
+    };
+    
+    // Check if at least theme is provided
+    if (!formData.theme) {
+        alert('กรุณาระบุหัวเรื่อง/ธีมของภาพ');
+        return;
+    }
+    
+    // Build prompt message
+    let promptMessage = `สร้าง image prompt แบบละเอียดสำหรับ: ${formData.theme}`;
+    
+    // Add character details if provided
+    if (formData.gender || formData.age || formData.ethnicity || formData.pose || formData.clothing) {
+        promptMessage += '\n\nตัวละคร:';
+        if (formData.gender) promptMessage += `\n- เพศ: ${formData.gender === 'male' ? 'ชาย' : formData.gender === 'female' ? 'หญิง' : 'ไม่ระบุ'}`;
+        if (formData.age) promptMessage += `\n- อายุ: ${formData.age} ปี`;
+        if (formData.ethnicity) promptMessage += `\n- เชื้อชาติ: ${formData.ethnicity}`;
+        if (formData.pose) promptMessage += `\n- ท่าทาง: ${formData.pose}`;
+        if (formData.clothing) promptMessage += `\n- เครื่องแต่งกาย: ${formData.clothing}`;
+    }
+    
+    // Add background details
+    if (formData.location || formData.time || formData.atmosphere) {
+        promptMessage += '\n\nฉากหลัง:';
+        if (formData.location) promptMessage += `\n- สถานที่: ${formData.location}`;
+        if (formData.time) promptMessage += `\n- เวลา: ${formData.time}`;
+        if (formData.atmosphere) promptMessage += `\n- บรรยากาศ: ${formData.atmosphere}`;
+    }
+    
+    // Add camera settings
+    if (formData.cameraAngle || formData.lens || formData.aperture || formData.iso) {
+        promptMessage += '\n\nการตั้งค่ากล้อง:';
+        if (formData.cameraAngle) promptMessage += `\n- มุมกล้อง: ${formData.cameraAngle}`;
+        if (formData.lens) promptMessage += `\n- เลนส์: ${formData.lens}`;
+        if (formData.aperture) promptMessage += `\n- Aperture: ${formData.aperture}`;
+        if (formData.iso) promptMessage += `\n- ISO: ${formData.iso}`;
+    }
+    
+    // Add quality settings
+    if (formData.resolution || formData.aspectRatio) {
+        promptMessage += '\n\nคุณภาพ:';
+        if (formData.resolution) promptMessage += `\n- ความละเอียด: ${formData.resolution}`;
+        if (formData.aspectRatio) promptMessage += `\n- อัตราส่วน: ${formData.aspectRatio}`;
+    }
+    
+    // Add additional details
+    if (formData.additionalDetails) {
+        promptMessage += `\n\nรายละเอียดเพิ่มเติม: ${formData.additionalDetails}`;
+    }
+    
+    // Add style and mood
+    if (formData.style) promptMessage += `\n\nสไตล์ภาพ: ${formData.style}`;
+    if (formData.mood) promptMessage += `\nอารมณ์: ${formData.mood}`;
+    
+    // Request to create professional prompt
+    promptMessage += '\n\nกรุณาสร้าง prompt ภาษาอังกฤษแบบละเอียดและมืออาชีพ พร้อม negative prompt ด้วย';
+    
+    // Set message and send
+    const messageInput = document.getElementById('messageInput');
+    messageInput.value = promptMessage;
+    
+    // Trigger send
+    await sendMessage();
+}
+
+// ========== END IMAGE PROMPT FORM FUNCTIONS ==========
