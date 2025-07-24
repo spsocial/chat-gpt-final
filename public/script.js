@@ -45,6 +45,11 @@ function ensureUserId() {
             if (!userId) {
                 userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('userId', userId);
+                
+                // Save as original userId for tracking free credits
+                if (!localStorage.getItem('originalUserId')) {
+                    localStorage.setItem('originalUserId', userId);
+                }
             }
         }
     }
@@ -617,6 +622,18 @@ window.addEventListener('scroll', () => {
 });
 
 // ========== CREDIT SYSTEM FUNCTIONS ==========
+// Track free credits usage
+function trackFreeCreditsUsage(amount) {
+    const originalUserId = localStorage.getItem('originalUserId') || userId;
+    const usedFreeCredits = parseFloat(localStorage.getItem(`usedFreeCredits_${originalUserId}`) || '0');
+    const newUsedAmount = usedFreeCredits + amount;
+    
+    // Store the used amount
+    localStorage.setItem(`usedFreeCredits_${originalUserId}`, newUsedAmount.toString());
+    
+    console.log('Free credits used:', newUsedAmount, 'of 5');
+}
+
 async function loadUserCredits() {
     try {
         console.log('🔍 Loading credits for user:', userId);
@@ -625,6 +642,14 @@ async function loadUserCredits() {
         
         console.log('💰 Credits data:', data);
         userCredits = data.currentCredits || 0;
+        
+        // Track free credit usage if not logged in
+        const linkedAccount = localStorage.getItem('linkedAccount');
+        if (!linkedAccount && data.previousCredits && data.currentCredits < data.previousCredits) {
+            const used = data.previousCredits - data.currentCredits;
+            trackFreeCreditsUsage(used);
+        }
+        
         updateCreditDisplay();
     } catch (error) {
         console.error('Error loading credits:', error);
@@ -903,11 +928,10 @@ async function processGoogleSignIn(response) {
                 localStorage.setItem('userId', userId);
                 
                 // Reload chat histories with new userId
-                ChatStorage.init();
-                MasterChatHistory.init();
-                MultiCharChatHistory.init();
-                AIChatHistory.init();
-                CharacterChatHistory.init();
+                if (typeof MasterChatHistory !== 'undefined') MasterChatHistory.init();
+                if (typeof MultiCharChatHistory !== 'undefined') MultiCharChatHistory.init();
+                if (typeof AIChatHistory !== 'undefined') AIChatHistory.init();
+                if (typeof CharacterChatHistory !== 'undefined') CharacterChatHistory.init();
             }
             
             // Update UI
@@ -943,11 +967,10 @@ function signOut() {
     localStorage.setItem('totalCredits', '5');
     
     // Reload chat histories
-    ChatStorage.init();
-    MasterChatHistory.init();
-    MultiCharChatHistory.init();
-    AIChatHistory.init();
-    CharacterChatHistory.init();
+    if (typeof MasterChatHistory !== 'undefined') MasterChatHistory.init();
+    if (typeof MultiCharChatHistory !== 'undefined') MultiCharChatHistory.init();
+    if (typeof AIChatHistory !== 'undefined') AIChatHistory.init();
+    if (typeof CharacterChatHistory !== 'undefined') CharacterChatHistory.init();
     
     // Clear character library if exists
     characterLibrary = [];
@@ -9170,31 +9193,33 @@ function doLogout() {
     // Get current userId before logout
     const currentUserId = localStorage.getItem('userId');
     
+    // Save the original userId (before any login) to restore it
+    let originalUserId = localStorage.getItem('originalUserId');
+    if (!originalUserId) {
+        // If no original saved, use current as original
+        originalUserId = currentUserId;
+        localStorage.setItem('originalUserId', originalUserId);
+    }
+    
     // Clear linked account
     localStorage.removeItem('linkedAccount');
     
-    // Generate new guest userId
-    const newUserId = 'user_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('userId', newUserId);
+    // Restore to original guest userId (NOT generate new one)
+    localStorage.setItem('userId', originalUserId);
+    userId = originalUserId;
     
-    // Clear user-specific data
-    localStorage.removeItem('totalCredits');
-    localStorage.removeItem('creditsData');
+    // Clear purchased credits but keep track of used free credits
+    const usedFreeCredits = parseFloat(localStorage.getItem(`usedFreeCredits_${originalUserId}`) || '0');
+    const remainingFreeCredits = Math.max(0, 5 - usedFreeCredits);
+    
+    // Set credits to remaining free credits
+    localStorage.setItem('totalCredits', remainingFreeCredits.toString());
+    
+    // Clear user-specific purchased credits data
     localStorage.removeItem(`userData_${currentUserId}`);
-    
-    // Reset to default free credits
-    localStorage.setItem('totalCredits', '5');
     
     // Clear character library
     characterLibrary = [];
-    
-    // Reinitialize chat histories with new userId
-    userId = newUserId;
-    ChatStorage.init();
-    MasterChatHistory.init();
-    MultiCharChatHistory.init();
-    AIChatHistory.init();
-    CharacterChatHistory.init();
     
     // Update UI
     updateCreditsDisplay();
