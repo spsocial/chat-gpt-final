@@ -661,6 +661,13 @@ async function loadUserCredits() {
         }
         
         updateCreditDisplay();
+        
+        // อัพเดทยอดเครดิตคงเหลือในมือถือ
+        const totalCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+        const mobileCreditsBalance = document.getElementById('mobileCreditsBalance');
+        if (mobileCreditsBalance) {
+            mobileCreditsBalance.textContent = totalCredits.toFixed(2);
+        }
     } catch (error) {
         console.error('Error loading credits:', error);
     }
@@ -3271,6 +3278,13 @@ async function updateUsageDisplay() {
             const usageBar = document.querySelector('.usage-bar');
             if (usageBar) {
                 usageBar.title = `เครดิตฟรีคงเหลือ: ${remaining.toFixed(2)} บาท จาก ${limit} บาท`;
+            }
+            
+            // อัพเดทยอดเครดิตคงเหลือในมือถือ
+            const totalCredits = parseFloat(localStorage.getItem('totalCredits') || '0');
+            const mobileCreditsBalance = document.getElementById('mobileCreditsBalance');
+            if (mobileCreditsBalance) {
+                mobileCreditsBalance.textContent = totalCredits.toFixed(2);
             }
         }
     } catch (error) {

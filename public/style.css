@@ -398,19 +398,31 @@
         /* Mobile Total Credits Display */
         .mobile-total-credits {
             display: none;
-            margin-top: 4px;
-            font-size: 11px;
-            color: #888;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            color: #3b82f6;
             align-items: center;
-            gap: 4px;
+            justify-content: center;
+            gap: 6px;
+            font-weight: 500;
         }
         
         .mobile-total-credits .credit-icon {
-            font-size: 12px;
+            font-size: 14px;
         }
         
         .mobile-total-credits .credit-text {
-            font-weight: 300;
+            font-weight: 500;
+        }
+        
+        #mobileCreditsBalance {
+            font-weight: 600;
+            color: #3b82f6;
+            font-size: 14px;
         }
 
         /* Main Content */
