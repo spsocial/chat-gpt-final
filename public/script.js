@@ -9163,15 +9163,19 @@ async function doLogin() {
         const hashedPassword = await simpleHash(password);
         let passwordValid = false;
         
-        // For cloud-based login, we already have the password hash
+        // Check password from multiple sources
+        // 1. Check if accountData has hashedPassword (from token login)
         if (accountData.hashedPassword) {
             if (hashedPassword === accountData.hashedPassword) {
                 passwordValid = true;
             }
-        } else if (userData && userData.linkedAccount) {
-            // Fallback to local data
+        } 
+        // 2. Check from userData linkedAccount
+        else if (userData && userData.linkedAccount && userData.linkedAccount.hashedPassword) {
             if (hashedPassword === userData.linkedAccount.hashedPassword) {
                 passwordValid = true;
+                // Set hashedPassword for consistency
+                accountData.hashedPassword = userData.linkedAccount.hashedPassword;
             }
         }
         
@@ -9227,11 +9231,15 @@ function doLogout() {
     // Get current userId before logout
     const currentUserId = localStorage.getItem('userId');
     
-    // Save the original userId (before any login) to restore it
+    // Get the original userId (before any login) to restore it
     let originalUserId = localStorage.getItem('originalUserId');
+    
+    // Important: If no originalUserId saved, we cannot properly logout
+    // This means user logged in before we implemented originalUserId tracking
     if (!originalUserId) {
-        // If no original saved, use current as original
-        originalUserId = currentUserId;
+        console.warn('No originalUserId found - generating new guest user');
+        // Generate new guest user as fallback
+        originalUserId = 'user_' + Math.random().toString(36).substr(2, 9);
         localStorage.setItem('originalUserId', originalUserId);
     }
     
@@ -11108,5 +11116,79 @@ async function generateImagePromptFromForm() {
     // Trigger send
     await sendMessage();
 }
+
+// ========== DEBUG AND RECOVERY FUNCTIONS ==========
+
+// Debug login function - helps diagnose login issues
+window.debugLogin = function(username) {
+    console.log('=== DEBUG LOGIN ===');
+    console.log('Username:', username);
+    
+    // Check local accounts
+    const localAccounts = JSON.parse(localStorage.getItem('localAccounts') || '{}');
+    console.log('Local accounts:', localAccounts);
+    
+    if (localAccounts[username]) {
+        const userId = localAccounts[username].userId;
+        console.log('Found user ID:', userId);
+        
+        // Check user data
+        const userData = localStorage.getItem(`userData_${userId}`);
+        if (userData) {
+            const parsed = JSON.parse(userData);
+            console.log('User data found:', parsed);
+            
+            if (parsed.linkedAccount) {
+                console.log('Linked account info:', {
+                    username: parsed.linkedAccount.username,
+                    hasPassword: !!parsed.linkedAccount.hashedPassword,
+                    createdAt: parsed.linkedAccount.createdAt
+                });
+            }
+        } else {
+            console.log('No user data found for ID:', userId);
+        }
+    } else {
+        console.log('Username not found in local accounts');
+    }
+    
+    console.log('=== END DEBUG ===');
+};
+
+// Recovery function - helps recover account access
+window.recoverAccount = function(username) {
+    const localAccounts = JSON.parse(localStorage.getItem('localAccounts') || '{}');
+    
+    if (!localAccounts[username]) {
+        console.error('Username not found');
+        return;
+    }
+    
+    const userId = localAccounts[username].userId;
+    const userData = localStorage.getItem(`userData_${userId}`);
+    
+    if (!userData) {
+        console.error('No user data found');
+        return;
+    }
+    
+    const parsed = JSON.parse(userData);
+    if (parsed.linkedAccount) {
+        // Generate recovery token
+        const recoveryToken = btoa(JSON.stringify({
+            username: parsed.linkedAccount.username,
+            hashedPassword: parsed.linkedAccount.hashedPassword,
+            userId: parsed.linkedAccount.userId,
+            createdAt: parsed.linkedAccount.createdAt
+        }));
+        
+        console.log('=== RECOVERY TOKEN ===');
+        console.log(recoveryToken);
+        console.log('Use this token to login');
+        return recoveryToken;
+    }
+    
+    console.error('No linked account data found');
+};
 
 // ========== END IMAGE PROMPT FORM FUNCTIONS ==========
