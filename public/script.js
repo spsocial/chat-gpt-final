@@ -3741,7 +3741,34 @@ function formatVeoPrompt(response) {
                 🎬 ต่อฉาก
             </button>
         </div>
-        <!-- Rating section ถูกลบออกเพื่อประหยัดพื้นที่ -->
+        <!-- Rating ย้ายมาอยู่ข้างใน veo3-prompt -->
+        <div class="rating-section" id="rating-${promptId}">
+            <div class="rating-header">⭐ ให้คะแนน Prompt นี้:</div>
+            <div class="star-rating" onmouseleave="resetStarPreview('${promptId}')">
+                ${[1,2,3,4,5].map(star => `
+                    <span class="star" data-rating="${star}" 
+                          onclick="ratePrompt('${promptId}', ${star})"
+                          onmouseover="previewStars('${promptId}', ${star})"
+                          title="${star} ดาว">
+                        ☆
+                    </span>
+                `).join('')}
+            </div>
+            <div class="rating-labels">
+                <span>แย่มาก</span>
+                <span>แย่</span>
+                <span>พอใช้</span>
+                <span>ดี</span>
+                <span>ดีมาก</span>
+            </div>
+            <textarea 
+                id="feedback-${promptId}"
+                class="rating-feedback"
+                placeholder="ข้อเสนอแนะเพิ่มเติม (ไม่บังคับ)"
+                rows="2"
+                style="display: none;"
+            ></textarea>
+        </div>
     </div>  <!-- ปิด veo3-prompt -->
 `;
 }
@@ -4243,8 +4270,6 @@ async function saveCharacter() {
 }
 
 // ========== RATING FUNCTIONS ==========
-// Rating functions - commented out as rating section was removed
-/*
 async function ratePrompt(promptId, rating) {
     if (!lastPromptData || lastPromptData.promptId !== promptId) {
         console.error('Prompt data not found');
@@ -4284,9 +4309,7 @@ async function ratePrompt(promptId, rating) {
         feedbackBox.after(submitBtn);
     }
 }
-*/
 
-/*
 function previewStars(promptId, rating) {
     const ratingSection = document.getElementById(`rating-${promptId}`);
     const stars = ratingSection.querySelectorAll('.star');
@@ -4301,9 +4324,7 @@ function previewStars(promptId, rating) {
         }
     });
 }
-*/
 
-/*
 function resetStarPreview(promptId) {
     const ratingSection = document.getElementById(`rating-${promptId}`);
     const stars = ratingSection.querySelectorAll('.star');
@@ -4316,9 +4337,7 @@ function resetStarPreview(promptId) {
         });
     }
 }
-*/
 
-/*
 async function submitRating(promptId, rating) {
     const feedback = document.getElementById(`feedback-${promptId}`).value;
     
@@ -4356,10 +4375,10 @@ async function submitRating(promptId, rating) {
         console.error('Error submitting rating:', error);
     }
 }
-*/
 
 // Voice Recognition Variables
-// (recognition variables are already declared globally at the top)
+let recognition = null;
+let isListening = false;
 let voiceTimeout = null;
 let finalTranscript = '';
 
