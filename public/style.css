@@ -7996,3 +7996,9 @@ body.mode-character #characterTemplateButtonSection {
         font-size: 9px \!important;
     }
 }
+
+/* ========== HIDE RATING SECTION ========== */
+.rating-section {
+    display: none !important;
+}
+/* ========== END HIDE RATING SECTION ========== */
