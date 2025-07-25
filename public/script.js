@@ -56,6 +56,7 @@ function ensureUserId() {
     return userId;
 }
 let userCredits = 0;
+let userFreeCreditsRemaining = 0;
 let lastPromptData = null;
 
 
@@ -652,6 +653,9 @@ async function loadUserCredits() {
         
         console.log('💰 Credits data:', data);
         userCredits = data.currentCredits || 0;
+        
+        // Update localStorage to keep in sync
+        localStorage.setItem('totalCredits', userCredits.toString());
         
         // Track free credit usage if not logged in
         const linkedAccount = localStorage.getItem('linkedAccount');
@@ -3250,6 +3254,9 @@ async function updateUsageDisplay() {
             const used = parseFloat(data.today.used) || 0;
             const limit = parseFloat(data.today.limit) || 5;
             const remaining = Math.max(0, limit - used); // เครดิตฟรีที่เหลือ (ไม่ติดลบ)
+            
+            // Store remaining free credits globally
+            userFreeCreditsRemaining = remaining;
             
             // คำนวณ percentage (100% = เหลือเต็ม, 0% = หมด)
             const percentage = (remaining / limit) * 100;
@@ -8880,9 +8887,15 @@ function showLoggedInView(account) {
     document.getElementById('loggedInUsername').textContent = account.username;
     document.getElementById('loggedInUserId').textContent = account.userId;
     
-    // Get credits from localStorage
-    const credits = parseFloat(localStorage.getItem('totalCredits') || '0');
-    document.getElementById('loggedInCredits').textContent = credits.toFixed(2);
+    // Use the actual values from API
+    const paidCredits = userCredits || 0; // This is the paid credits from API
+    const freeCredits = userFreeCreditsRemaining || 0; // This is the remaining free credits from usage API
+    const totalCredits = paidCredits + freeCredits; // Total is paid + free
+    
+    // Update all credit displays
+    document.getElementById('loggedInCredits').textContent = totalCredits.toFixed(2);
+    document.getElementById('loggedInFreeCredits').textContent = freeCredits.toFixed(2);
+    document.getElementById('loggedInPaidCredits').textContent = paidCredits.toFixed(2);
 }
 
 // Simple hash function (for demo - should use proper hashing in production)

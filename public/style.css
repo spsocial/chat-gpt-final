@@ -3350,26 +3350,26 @@ line-clamp: 3;
 
 /* Desktop Login Button */
 .desktop-login-btn {
-    background: #404040;
+    background: #3b82f6;
     color: white;
     border: none;
-    padding: 8px 16px;
-    border-radius: 20px;
+    padding: 8px 14px;
+    border-radius: 10px;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
-    font-size: 14px;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
     transition: all 0.3s ease;
-    margin-left: 10px;
     font-family: 'Kanit', sans-serif;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
 }
 
 .desktop-login-btn:hover {
-    background: #505050;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
 /* Hide desktop login button on mobile */
