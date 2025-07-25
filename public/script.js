@@ -31,6 +31,9 @@ let currentCharacterProfile = null;
 let userId = '';
 let googleUser = null;
 
+// Firebase configuration
+window.FIREBASE_DATABASE_URL = 'https://prompt-d-generator-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 // Function to ensure userId is ready
 function ensureUserId() {
     if (!userId) {
@@ -683,7 +686,10 @@ async function loadTotalPurchasedCredits() {
         
         if (data.success) {
             const totalPurchased = data.totalPurchased || 0;
-            document.getElementById('totalPurchasedCredits').textContent = totalPurchased;
+            const element = document.getElementById('totalPurchasedCredits');
+            if (element) {
+                element.textContent = totalPurchased;
+            }
         }
     } catch (error) {
         console.error('Error loading total purchased credits:', error);
@@ -4654,7 +4660,7 @@ function backToChat() {
     library.style.cssText = '';
     chatPanel.style.display = '';
     
-    switchMode('general');
+    switchMode('promptmaster');
 }
 
 // ========== IMAGE GENERATION FUNCTION ==========
@@ -6500,7 +6506,7 @@ window.backToChat = function() {
             library.classList.remove('active');
             library.style.cssText = '';
         }
-        switchMode('general');
+        switchMode('promptmaster');
     }
 };
 
@@ -7380,7 +7386,7 @@ const PromptStorage = {
     
     // โหลดประวัติ
     load: function(mode) {
-        if (mode !== 'general' && mode !== 'multichar') return [];
+        if (mode !== 'promptmaster' && mode !== 'multichar') return [];
         
         try {
             const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
@@ -7402,7 +7408,7 @@ const PromptStorage = {
     
     // แสดงประวัติใน UI
     display: function(mode) {
-        if (mode !== 'general' && mode !== 'multichar') return;
+        if (mode !== 'promptmaster' && mode !== 'multichar') return;
         
         const messages = this.load(mode);
         
@@ -7460,7 +7466,7 @@ const PromptStorage = {
     
     // ลบประวัติ
     clear: function(mode) {
-        if (mode !== 'general' && mode !== 'multichar') return;
+        if (mode !== 'promptmaster' && mode !== 'multichar') return;
         
         // ใช้ userId โดยตรงเหมือน ChatStorage
         try {
