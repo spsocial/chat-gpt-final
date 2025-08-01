@@ -9047,9 +9047,10 @@ async function linkAccount() {
             createdAt: new Date().toISOString()
         };
         
-        // Save account mapping locally
+        // Save account mapping locally with password
         existingAccounts[username] = {
             userId: userId,
+            hashedPassword: hashedPassword,
             createdAt: account.createdAt
         };
         localStorage.setItem('localAccounts', JSON.stringify(existingAccounts));
@@ -11350,6 +11351,113 @@ window.recoverAccount = function(username) {
     }
     
     console.error('No linked account data found');
-};
+}
+
+// Function to recover user ID and characters
+function recoverUserData() {
+    console.log('=== RECOVER USER DATA ===');
+    
+    // 1. Check current userId
+    const currentUserId = localStorage.getItem('userId');
+    console.log('Current userId:', currentUserId);
+    
+    // 2. Check originalUserId (before login)
+    const originalUserId = localStorage.getItem('originalUserId');
+    console.log('Original userId:', originalUserId);
+    
+    // 3. Check all localStorage keys for user data
+    console.log('\n--- All User Data in localStorage ---');
+    const userDataKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('userData_user_')) {
+            userDataKeys.push(key);
+            const userData = localStorage.getItem(key);
+            const userId = key.replace('userData_', '');
+            console.log(`\nUser ID: ${userId}`);
+            try {
+                const parsed = JSON.parse(userData);
+                if (parsed.linkedAccount) {
+                    console.log(`- Username: ${parsed.linkedAccount.username}`);
+                    console.log(`- Has password: ${!!parsed.linkedAccount.hashedPassword}`);
+                    console.log(`- Created: ${parsed.linkedAccount.createdAt || 'N/A'}`);
+                }
+                console.log(`- Credits: ${parsed.credits || 0}`);
+            } catch (e) {
+                console.log('- Invalid data');
+            }
+        }
+    }
+    
+    // 4. Check for character data
+    console.log('\n--- Character Data in localStorage ---');
+    const characterKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('character_data_')) {
+            characterKeys.push(key);
+            console.log(`Found character: ${key}`);
+        }
+    }
+    
+    // 5. Check localAccounts
+    console.log('\n--- Local Accounts ---');
+    const localAccounts = JSON.parse(localStorage.getItem('localAccounts') || '{}');
+    Object.entries(localAccounts).forEach(([username, data]) => {
+        console.log(`Username: ${username}`);
+        console.log(`- User ID: ${data.userId}`);
+        console.log(`- Has password: ${!!data.hashedPassword}`);
+    });
+    
+    console.log('\n=== RECOVERY INSTRUCTIONS ===');
+    console.log('1. If you see your username above, use that userId');
+    console.log('2. To switch to a different userId, run: switchToUserId("user_xxxxx")');
+    console.log('3. To generate recovery token for an account, run: generateRecoveryToken("user_xxxxx")');
+    
+    return {
+        currentUserId,
+        originalUserId,
+        userDataKeys,
+        characterKeys,
+        localAccounts
+    };
+}
+
+// Function to switch to a specific userId
+function switchToUserId(targetUserId) {
+    if (!targetUserId || !targetUserId.startsWith('user_')) {
+        console.error('Invalid userId format. Must start with "user_"');
+        return;
+    }
+    
+    // Check if userData exists for this ID
+    const userData = localStorage.getItem(`userData_${targetUserId}`);
+    if (!userData) {
+        console.warn(`No user data found for ${targetUserId}. Switching anyway...`);
+    }
+    
+    // Save current userId as original if not already saved
+    const currentUserId = localStorage.getItem('userId');
+    if (!localStorage.getItem('originalUserId') && currentUserId !== targetUserId) {
+        localStorage.setItem('originalUserId', currentUserId);
+    }
+    
+    // Switch to target userId
+    localStorage.setItem('userId', targetUserId);
+    userId = targetUserId;
+    
+    console.log(`✅ Switched to userId: ${targetUserId}`);
+    console.log('Refreshing page to apply changes...');
+    
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
+}
+
+// Export recovery functions
+window.recoverUserData = recoverUserData;
+window.switchToUserId = switchToUserId;
+window.generateRecoveryToken = generateRecoveryToken;
+window.debugUserAccount = debugUserAccount;
 
 // ========== END IMAGE PROMPT FORM FUNCTIONS ==========
