@@ -11454,10 +11454,64 @@ function switchToUserId(targetUserId) {
     }, 1000);
 }
 
+// Function to manually add account (emergency recovery)
+function addAccountManually(username, password, userId) {
+    if (!username || !password) {
+        console.error('Username and password are required');
+        return;
+    }
+    
+    // If no userId provided, try to find from userData
+    if (!userId) {
+        console.log('No userId provided, searching in userData...');
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('userData_user_')) {
+                const userData = localStorage.getItem(key);
+                try {
+                    const parsed = JSON.parse(userData);
+                    if (parsed.linkedAccount && parsed.linkedAccount.username === username) {
+                        userId = key.replace('userData_', '');
+                        console.log(`Found userId from userData: ${userId}`);
+                        break;
+                    }
+                } catch (e) {}
+            }
+        }
+    }
+    
+    if (!userId) {
+        console.error('Cannot find userId. Please provide it manually.');
+        return;
+    }
+    
+    // Hash the password
+    simpleHash(password).then(hashedPassword => {
+        // Get or create localAccounts
+        const localAccounts = JSON.parse(localStorage.getItem('localAccounts') || '{}');
+        
+        // Add account
+        localAccounts[username] = {
+            userId: userId,
+            hashedPassword: hashedPassword,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Save
+        localStorage.setItem('localAccounts', JSON.stringify(localAccounts));
+        
+        console.log(`✅ Account added successfully!`);
+        console.log(`Username: ${username}`);
+        console.log(`User ID: ${userId}`);
+        console.log('You can now login with username/password');
+    });
+}
+
 // Export recovery functions
 window.recoverUserData = recoverUserData;
 window.switchToUserId = switchToUserId;
 window.generateRecoveryToken = generateRecoveryToken;
 window.debugUserAccount = debugUserAccount;
+window.addAccountManually = addAccountManually;
 
 // ========== END IMAGE PROMPT FORM FUNCTIONS ==========
