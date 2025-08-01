@@ -1985,13 +1985,45 @@ function editCharacter(index, event) {
     // Store character data for editing
     window.editingCharacter = {
         id: character.id,
-        name: character.name,
+        name: character.name, // This is the folder name, not character name
         profile: profileText,
-        index: index
+        index: index,
+        structuredData: character.structuredData || null
     };
     
-    // Parse profile to extract 8 sections
-    const profileData = parseCharacterProfile(profileText);
+    // Parse profile to extract sections
+    let profileData = {};
+    
+    // Check if we have structuredData (new format)
+    if (character.structuredData && Object.keys(character.structuredData).length > 0) {
+        console.log('Using structuredData from server:', character.structuredData);
+        // Use structuredData directly
+        profileData = { ...character.structuredData };
+    } else {
+        // Try to get from localStorage
+        const characterKey = `character_data_${character.id}`;
+        const localData = localStorage.getItem(characterKey);
+        
+        if (localData) {
+            try {
+                profileData = JSON.parse(localData);
+                console.log('Using structuredData from localStorage:', profileData);
+            } catch (e) {
+                console.error('Error parsing local data:', e);
+                // Fall back to parsing
+                profileData = parseCharacterProfile(profileText);
+            }
+        } else {
+            console.log('No structuredData, parsing from profile text');
+            // Parse from profile text for old characters
+            profileData = parseCharacterProfile(profileText);
+        }
+    }
+    
+    // Debug: Log what data we're sending to edit modal
+    console.log('Profile data being sent to edit modal:', profileData);
+    console.log('Character ID:', character.id);
+    console.log('Character folder name:', character.name);
     
     // Open character template modal with existing data
     showEditCharacterModal(profileData);
@@ -2001,65 +2033,12 @@ function editCharacter(index, event) {
 function parseCharacterProfile(profile) {
     if (!profile) return {};
     
-    console.log('Parsing profile:', profile);
+    console.log('Parsing profile for character');
     
-    const parsed = {
-        // Character type fields
-        type: 'human',
-        species: '',
-        // Original 8 fields for backward compatibility
-        nickname: '',
-        role: '',
-        gender: '',
-        age: '',
-        ethnicity: '',
-        body: '',
-        skin: '',
-        posture: '',
-        hair: '',
-        face: '',
-        glasses: '',
-        accessories: '',
-        shirt: '',
-        jacket: '',
-        pants: '',
-        shoes: '',
-        voiceTone: '',
-        speechStyle: '',
-        confidence: '',
-        cameraPresence: '',
-        storyRole: '',
-        // New 14 fields
-        name: '',
-        heightWeight: '',
-        faceShape: '',
-        faceFeatures: '',
-        eyes: '',
-        eyebrows: '',
-        lips: '',
-        hairStyle: '',
-        hairColor: '',
-        hairDetails: '',
-        bottoms: '',
-        outerwear: '',
-        fabric: '',
-        headAccessories: '',
-        jewelry: '',
-        otherAccessories: '',
-        personalityTraits: '',
-        initialPose: '',
-        bodyLanguage: '',
-        voicePitch: '',
-        speakingStyle: '',
-        accent: '',
-        voiceCharacteristics: '',
-        speech: '',
-        theme: '',
-        // Additional fields for 14-field format
-        uniqueTraits: '',
-        specialEffects: '',
-        realismType: ''
-    };
+    // Create a completely new object each time
+    const parsed = Object.create(null);
+    // Only set default for type
+    parsed.type = 'human';
     
     // Extract data from each section
     const lines = profile.split('\n');
@@ -2228,12 +2207,11 @@ function parseCharacterProfile(profile) {
         // Parse 14-field format
         // Section 1: ชื่อ / บทบาท
         if (collectedData[1]) {
+            // Be more strict about matching name field
             const nameData = collectedData[1].find(d => 
-                d.key.toLowerCase().includes('name') || 
-                d.key.includes('ชื่อ') || 
-                d.key.includes('Name') ||
-                d.key === 'ชื่อ' ||
-                (d.key === '' && d.value && !d.value.includes(':'))
+                (d.key === 'ชื่อ' || d.key.toLowerCase() === 'name') && 
+                !d.key.includes('เรียก') && 
+                !d.key.includes('nickname')
             );
             const nicknameData = collectedData[1].find(d => 
                 d.key.toLowerCase().includes('nickname') || d.key.includes('ชื่อเรียก')
@@ -2241,9 +2219,9 @@ function parseCharacterProfile(profile) {
             const roleData = collectedData[1].find(d => 
                 d.key.toLowerCase().includes('role') || d.key.includes('บทบาท')
             );
-            parsed.name = nameData ? nameData.value : '';
-            parsed.nickname = nicknameData ? nicknameData.value : '';
-            parsed.role = roleData ? roleData.value : '';
+            if (nameData && nameData.value.trim()) parsed.name = nameData.value;
+            if (nicknameData && nicknameData.value.trim()) parsed.nickname = nicknameData.value;
+            if (roleData && roleData.value.trim()) parsed.role = roleData.value;
         }
         
         // Section 2: เพศ / อายุ / เชื้อชาติ or Type / Species
@@ -2282,9 +2260,9 @@ function parseCharacterProfile(profile) {
             const ethnicityData = collectedData[2].find(d => 
                 d.key.toLowerCase().includes('ethnicity') || d.key.includes('เชื้อชาติ')
             );
-            parsed.gender = genderData ? genderData.value : '';
-            parsed.age = ageData ? ageData.value : '';
-            parsed.ethnicity = ethnicityData ? ethnicityData.value : '';
+            if (genderData && genderData.value.trim()) parsed.gender = genderData.value;
+            if (ageData && ageData.value.trim()) parsed.age = ageData.value;
+            if (ethnicityData && ethnicityData.value.trim()) parsed.ethnicity = ethnicityData.value;
         }
         
         // Section 3: รูปร่าง / ผิว
@@ -2298,9 +2276,9 @@ function parseCharacterProfile(profile) {
             const skinData = collectedData[3].find(d => 
                 d.key.toLowerCase().includes('skin') || d.key.includes('สีผิว') || d.key.includes('ผิว')
             );
-            parsed.body = bodyData ? bodyData.value : '';
-            parsed.heightWeight = heightWeightData ? heightWeightData.value : '';
-            parsed.skin = skinData ? skinData.value : '';
+            if (bodyData && bodyData.value.trim()) parsed.body = bodyData.value;
+            if (heightWeightData && heightWeightData.value.trim()) parsed.heightWeight = heightWeightData.value;
+            if (skinData && skinData.value.trim()) parsed.skin = skinData.value;
         }
         
         // Section 4: ใบหน้า
@@ -2526,9 +2504,9 @@ function parseCharacterProfile(profile) {
             const ethnicityData = collectedData[2].find(d => 
                 d.key.toLowerCase().includes('ethnicity') || d.key.includes('เชื้อชาติ')
             );
-            parsed.gender = genderData ? genderData.value : '';
-            parsed.age = ageData ? ageData.value : '';
-            parsed.ethnicity = ethnicityData ? ethnicityData.value : '';
+            if (genderData && genderData.value.trim()) parsed.gender = genderData.value;
+            if (ageData && ageData.value.trim()) parsed.age = ageData.value;
+            if (ethnicityData && ethnicityData.value.trim()) parsed.ethnicity = ethnicityData.value;
         }
         
         // Section 3: รูปร่าง / ผิว / ท่าทาง / Body / Skin / Posture
@@ -2665,10 +2643,24 @@ function showEditCharacterModal(profileData) {
     const modalTitle = modal.querySelector('h2');
     modalTitle.textContent = '✏️ แก้ไขข้อมูลตัวละคร';
     
-    // Clear all fields first
-    document.querySelectorAll('.character-template-section input, .character-template-section textarea').forEach(input => {
+    // Clear all fields first - more thorough clearing
+    const allInputs = document.querySelectorAll('.character-template-section input, .character-template-section textarea');
+    allInputs.forEach(input => {
         input.value = '';
+        // Force clear by setting to empty string
+        input.setAttribute('value', '');
+        // Also remove any cached values
+        input.defaultValue = '';
     });
+    
+    // Also clear all select elements
+    const allSelects = document.querySelectorAll('.character-template-section select');
+    allSelects.forEach(select => {
+        select.selectedIndex = 0;
+    });
+    
+    // Clear the global template data
+    characterTemplateData = {};
     
     console.log('Filling form with data:', profileData);
     console.log('Profile data keys:', Object.keys(profileData));
@@ -2684,97 +2676,128 @@ function showEditCharacterModal(profileData) {
     console.log('Section 14 - realismType:', profileData.realismType);
     
     // Character Type
-    if (profileData.type) {
+    if (profileData.type && profileData.type.trim()) {
         document.getElementById('charType').value = profileData.type;
         updateCharacterFormFields(); // Update form fields based on type
     }
-    if (profileData.species) document.getElementById('charSpecies').value = profileData.species;
+    if (profileData.species && profileData.species.trim()) document.getElementById('charSpecies').value = profileData.species;
     
     // Section 1: ชื่อ / บทบาท
-    if (profileData.name) document.getElementById('charName').value = profileData.name;
-    if (profileData.nickname) document.getElementById('charNickname').value = profileData.nickname;
-    if (profileData.role) document.getElementById('charRole').value = profileData.role;
+    // Fix: Clear the field first to prevent old data
+    const charNameField = document.getElementById('charName');
+    if (charNameField) {
+        charNameField.value = '';
+        charNameField.setAttribute('value', '');
+    }
+    
+    // Only set if we have valid data for THIS character
+    if (profileData.name && profileData.name.trim() && profileData.name !== 'undefined') {
+        document.getElementById('charName').value = profileData.name;
+    }
+    if (profileData.nickname && profileData.nickname.trim()) document.getElementById('charNickname').value = profileData.nickname;
+    if (profileData.role && profileData.role.trim()) document.getElementById('charRole').value = profileData.role;
     
     // Section 2: เพศ / อายุ / เชื้อชาติ
-    if (profileData.gender) document.getElementById('charGender').value = profileData.gender;
-    if (profileData.age) document.getElementById('charAge').value = profileData.age;
-    if (profileData.ethnicity) document.getElementById('charEthnicity').value = profileData.ethnicity;
+    if (profileData.gender && profileData.gender.trim()) document.getElementById('charGender').value = profileData.gender;
+    if (profileData.age && profileData.age.trim()) document.getElementById('charAge').value = profileData.age;
+    if (profileData.ethnicity && profileData.ethnicity.trim()) document.getElementById('charEthnicity').value = profileData.ethnicity;
     
     // Section 3: รูปร่าง / ผิว
-    if (profileData.body) document.getElementById('charBody').value = profileData.body;
-    if (profileData.heightWeight) document.getElementById('charHeightWeight').value = profileData.heightWeight;
-    if (profileData.skin) document.getElementById('charSkin').value = profileData.skin;
+    if (profileData.body && profileData.body.trim()) document.getElementById('charBody').value = profileData.body;
+    if (profileData.heightWeight && profileData.heightWeight.trim()) document.getElementById('charHeightWeight').value = profileData.heightWeight;
+    if (profileData.skin && profileData.skin.trim()) document.getElementById('charSkin').value = profileData.skin;
     
     // Section 4: ใบหน้า
-    if (profileData.faceShape) document.getElementById('charFaceShape').value = profileData.faceShape;
-    if (profileData.faceFeatures) document.getElementById('charFaceFeatures').value = profileData.faceFeatures;
+    // Clear face fields first
+    const faceShapeField = document.getElementById('charFaceShape');
+    const faceFeaturesField = document.getElementById('charFaceFeatures');
+    
+    if (faceShapeField) {
+        faceShapeField.value = '';
+        console.log('Clearing faceShape field');
+    }
+    if (faceFeaturesField) {
+        faceFeaturesField.value = '';
+        console.log('Clearing faceFeatures field');
+    }
+    
+    // Only fill if we have data for THIS character
+    if (profileData.faceShape && profileData.faceShape.trim()) {
+        console.log('Setting faceShape to:', profileData.faceShape);
+        document.getElementById('charFaceShape').value = profileData.faceShape;
+    }
+    if (profileData.faceFeatures && profileData.faceFeatures.trim()) {
+        console.log('Setting faceFeatures to:', profileData.faceFeatures);
+        document.getElementById('charFaceFeatures').value = profileData.faceFeatures;
+    }
     // For backward compatibility, if old face field exists
-    if (!profileData.faceShape && !profileData.faceFeatures && profileData.face) {
+    if (!profileData.faceShape && !profileData.faceFeatures && profileData.face && profileData.face.trim()) {
+        console.log('Using old face field:', profileData.face);
         document.getElementById('charFaceShape').value = profileData.face;
     }
     
     // Section 5: ดวงตา / คิ้ว
-    if (profileData.eyes) document.getElementById('charEyes').value = profileData.eyes;
-    if (profileData.eyebrows) document.getElementById('charEyebrows').value = profileData.eyebrows;
+    if (profileData.eyes && profileData.eyes.trim()) document.getElementById('charEyes').value = profileData.eyes;
+    if (profileData.eyebrows && profileData.eyebrows.trim()) document.getElementById('charEyebrows').value = profileData.eyebrows;
     
     // Section 6: ริมฝีปาก
-    if (profileData.lips) document.getElementById('charLips').value = profileData.lips;
+    if (profileData.lips && profileData.lips.trim()) document.getElementById('charLips').value = profileData.lips;
     
     // Section 7: ผม
-    if (profileData.hairStyle) document.getElementById('charHairStyle').value = profileData.hairStyle;
-    if (profileData.hairColor) document.getElementById('charHairColor').value = profileData.hairColor;
-    if (profileData.hairDetails) document.getElementById('charHairDetails').value = profileData.hairDetails;
+    if (profileData.hairStyle && profileData.hairStyle.trim()) document.getElementById('charHairStyle').value = profileData.hairStyle;
+    if (profileData.hairColor && profileData.hairColor.trim()) document.getElementById('charHairColor').value = profileData.hairColor;
+    if (profileData.hairDetails && profileData.hairDetails.trim()) document.getElementById('charHairDetails').value = profileData.hairDetails;
     // For backward compatibility, if old hair field exists
-    if (!profileData.hairStyle && !profileData.hairColor && !profileData.hairDetails && profileData.hair) {
+    if (!profileData.hairStyle && !profileData.hairColor && !profileData.hairDetails && profileData.hair && profileData.hair.trim()) {
         document.getElementById('charHairStyle').value = profileData.hair;
     }
     
     // Section 8: เครื่องแต่งกาย
-    if (profileData.shirt) document.getElementById('charShirt').value = profileData.shirt;
-    if (profileData.bottoms) document.getElementById('charBottoms').value = profileData.bottoms;
-    if (profileData.pants && !profileData.bottoms) document.getElementById('charBottoms').value = profileData.pants; // Backward compatibility
-    if (profileData.outerwear) document.getElementById('charOuterwear').value = profileData.outerwear;
-    if (profileData.jacket && !profileData.outerwear) document.getElementById('charOuterwear').value = profileData.jacket; // Backward compatibility
-    if (profileData.shoes) document.getElementById('charShoes').value = profileData.shoes;
-    if (profileData.fabric) document.getElementById('charFabric').value = profileData.fabric;
+    if (profileData.shirt && profileData.shirt.trim()) document.getElementById('charShirt').value = profileData.shirt;
+    if (profileData.bottoms && profileData.bottoms.trim()) document.getElementById('charBottoms').value = profileData.bottoms;
+    if (profileData.pants && profileData.pants.trim() && !profileData.bottoms) document.getElementById('charBottoms').value = profileData.pants; // Backward compatibility
+    if (profileData.outerwear && profileData.outerwear.trim()) document.getElementById('charOuterwear').value = profileData.outerwear;
+    if (profileData.jacket && profileData.jacket.trim() && !profileData.outerwear) document.getElementById('charOuterwear').value = profileData.jacket; // Backward compatibility
+    if (profileData.shoes && profileData.shoes.trim()) document.getElementById('charShoes').value = profileData.shoes;
+    if (profileData.fabric && profileData.fabric.trim()) document.getElementById('charFabric').value = profileData.fabric;
     
     // Section 9: เครื่องประดับ
-    if (profileData.headAccessories) document.getElementById('charHeadAccessories').value = profileData.headAccessories;
-    if (profileData.jewelry) document.getElementById('charJewelry').value = profileData.jewelry;
-    if (profileData.otherAccessories) document.getElementById('charOtherAccessories').value = profileData.otherAccessories;
+    if (profileData.headAccessories && profileData.headAccessories.trim()) document.getElementById('charHeadAccessories').value = profileData.headAccessories;
+    if (profileData.jewelry && profileData.jewelry.trim()) document.getElementById('charJewelry').value = profileData.jewelry;
+    if (profileData.otherAccessories && profileData.otherAccessories.trim()) document.getElementById('charOtherAccessories').value = profileData.otherAccessories;
     // For backward compatibility with old accessories field
-    if (!profileData.headAccessories && !profileData.jewelry && !profileData.otherAccessories && profileData.accessories) {
+    if (!profileData.headAccessories && !profileData.jewelry && !profileData.otherAccessories && profileData.accessories && profileData.accessories.trim()) {
         document.getElementById('charJewelry').value = profileData.accessories;
     }
     // Handle glasses from old format
-    if (profileData.glasses) document.getElementById('charOtherAccessories').value = profileData.glasses;
+    if (profileData.glasses && profileData.glasses.trim()) document.getElementById('charOtherAccessories').value = profileData.glasses;
     
     // Section 10: บุคลิกภาพ
-    if (profileData.personalityTraits) document.getElementById('charPersonalityTraits').value = profileData.personalityTraits;
-    if (profileData.confidence) document.getElementById('charConfidence').value = profileData.confidence;
-    if (profileData.cameraPresence) document.getElementById('charCameraPresence').value = profileData.cameraPresence;
+    if (profileData.personalityTraits && profileData.personalityTraits.trim()) document.getElementById('charPersonalityTraits').value = profileData.personalityTraits;
+    if (profileData.confidence && profileData.confidence.trim()) document.getElementById('charConfidence').value = profileData.confidence;
+    if (profileData.cameraPresence && profileData.cameraPresence.trim()) document.getElementById('charCameraPresence').value = profileData.cameraPresence;
     
     // Section 11: ท่าทางเริ่มต้น
-    if (profileData.initialPose) document.getElementById('charInitialPose').value = profileData.initialPose;
-    if (profileData.bodyLanguage) document.getElementById('charBodyLanguage').value = profileData.bodyLanguage;
+    if (profileData.initialPose && profileData.initialPose.trim()) document.getElementById('charInitialPose').value = profileData.initialPose;
+    if (profileData.bodyLanguage && profileData.bodyLanguage.trim()) document.getElementById('charBodyLanguage').value = profileData.bodyLanguage;
     // For backward compatibility with posture
-    if (!profileData.initialPose && profileData.posture) document.getElementById('charInitialPose').value = profileData.posture;
+    if (!profileData.initialPose && profileData.posture && profileData.posture.trim()) document.getElementById('charInitialPose').value = profileData.posture;
     
     // Section 12: โทนเสียง
-    if (profileData.voicePitch) document.getElementById('charVoicePitch').value = profileData.voicePitch;
-    if (profileData.speakingStyle) document.getElementById('charSpeakingStyle').value = profileData.speakingStyle;
-    if (profileData.accent) document.getElementById('charAccent').value = profileData.accent;
-    if (profileData.voiceCharacteristics) document.getElementById('charVoiceCharacteristics').value = profileData.voiceCharacteristics;
+    if (profileData.voicePitch && profileData.voicePitch.trim()) document.getElementById('charVoicePitch').value = profileData.voicePitch;
+    if (profileData.speakingStyle && profileData.speakingStyle.trim()) document.getElementById('charSpeakingStyle').value = profileData.speakingStyle;
+    if (profileData.accent && profileData.accent.trim()) document.getElementById('charAccent').value = profileData.accent;
+    if (profileData.voiceCharacteristics && profileData.voiceCharacteristics.trim()) document.getElementById('charVoiceCharacteristics').value = profileData.voiceCharacteristics;
     // For backward compatibility with old voice fields
-    if (!profileData.voicePitch && profileData.voiceTone) document.getElementById('charVoicePitch').value = profileData.voiceTone;
-    if (!profileData.speakingStyle && profileData.speechStyle) document.getElementById('charSpeakingStyle').value = profileData.speechStyle;
+    if (!profileData.voicePitch && profileData.voiceTone && profileData.voiceTone.trim()) document.getElementById('charVoicePitch').value = profileData.voiceTone;
+    if (!profileData.speakingStyle && profileData.speechStyle && profileData.speechStyle.trim()) document.getElementById('charSpeakingStyle').value = profileData.speechStyle;
     
     // Section 13: ลักษณะพิเศษ
-    if (profileData.uniqueTraits) document.getElementById('charUniqueTraits').value = profileData.uniqueTraits;
-    if (profileData.specialEffects) document.getElementById('charSpecialEffects').value = profileData.specialEffects;
+    if (profileData.uniqueTraits && profileData.uniqueTraits.trim()) document.getElementById('charUniqueTraits').value = profileData.uniqueTraits;
+    if (profileData.specialEffects && profileData.specialEffects.trim()) document.getElementById('charSpecialEffects').value = profileData.specialEffects;
     
     // Section 14: ภาพความสมจริง
-    if (profileData.realismType) document.getElementById('charRealismType').value = profileData.realismType;
+    if (profileData.realismType && profileData.realismType.trim()) document.getElementById('charRealismType').value = profileData.realismType;
     // For backward compatibility with storyRole/theme
     if (!profileData.realismType && (profileData.storyRole || profileData.theme)) {
         // Try to map old values to new realism types
@@ -2816,6 +2839,7 @@ function saveEditedCharacter() {
     const species = document.getElementById('charSpecies')?.value.trim() || '';
     
     // Section 1: ชื่อ / บทบาท
+    // Fix: Use the actual character name from form, not the saved folder name
     const name = document.getElementById('charName')?.value.trim() || '';
     const nickname = document.getElementById('charNickname')?.value.trim() || '';
     const role = document.getElementById('charRole')?.value.trim() || '';
@@ -3041,6 +3065,49 @@ function saveEditedCharacter() {
     const characterId = window.editingCharacter.id;
     const characterName = window.editingCharacter.name;
     
+    // Create structured data from current form values
+    const structuredData = {
+        type: charType,
+        species: species,
+        name: name,
+        nickname: nickname,
+        role: role,
+        gender: gender,
+        age: age,
+        ethnicity: ethnicity,
+        body: body,
+        heightWeight: heightWeight,
+        skin: skin,
+        faceShape: faceShape,
+        faceFeatures: faceFeatures,
+        eyes: eyes,
+        eyebrows: eyebrows,
+        lips: lips,
+        hairStyle: hairStyle,
+        hairColor: hairColor,
+        hairDetails: hairDetails,
+        shirt: shirt,
+        bottoms: bottoms,
+        outerwear: outerwear,
+        shoes: shoes,
+        fabric: fabric,
+        headAccessories: headAccessories,
+        jewelry: jewelry,
+        otherAccessories: otherAccessories,
+        personalityTraits: personalityTraits,
+        confidence: confidence,
+        cameraPresence: cameraPresence,
+        initialPose: initialPose,
+        bodyLanguage: bodyLanguage,
+        voicePitch: voicePitch,
+        speakingStyle: speakingStyle,
+        accent: accent,
+        voiceCharacteristics: voiceCharacteristics,
+        uniqueTraits: uniqueTraits,
+        specialEffects: specialEffects,
+        realismType: realismType
+    };
+    
     fetch(`${API_URL}/characters/${characterId}`, {
         method: 'PUT',
         headers: {
@@ -3050,12 +3117,18 @@ function saveEditedCharacter() {
         body: JSON.stringify({
             name: characterName,
             profile: updatedProfile,
-            preview: updatedProfile.substring(0, 500)
+            preview: updatedProfile.substring(0, 500),
+            structuredData: structuredData
         })
     })
     .then(response => {
         console.log('Response status:', response.status);
         if (response.ok) {
+            // Store structuredData locally to ensure it persists
+            const characterKey = `character_data_${characterId}`;
+            localStorage.setItem(characterKey, JSON.stringify(structuredData));
+            console.log('Saved structuredData to localStorage:', characterKey);
+            
             // ปิด modal
             closeCharacterTemplate();
             
@@ -4241,6 +4314,15 @@ async function saveCharacter() {
         });
         
         if (response.ok) {
+            const savedCharacter = await response.json();
+            
+            // Save structuredData to localStorage if available
+            if (structuredData && savedCharacter.id) {
+                const characterKey = `character_data_${savedCharacter.id}`;
+                localStorage.setItem(characterKey, JSON.stringify(structuredData));
+                console.log('Saved new character structuredData to localStorage:', characterKey);
+            }
+            
             closeSaveDialog();
             loadCharacterLibrary();
             
@@ -9483,6 +9565,9 @@ function updateCharacterTemplateButton() {
 function showCharacterTemplate() {
     document.getElementById('characterTemplateModal').style.display = 'flex';
     
+    // Clear the global characterTemplateData to prevent data leaking between characters
+    characterTemplateData = {};
+    
     // Clear all fields - updated for 14 sections
     const fields = [
         // 1. Name/Role
@@ -9517,14 +9602,35 @@ function showCharacterTemplate() {
     
     fields.forEach(id => {
         const elem = document.getElementById(id);
-        if (elem) elem.value = '';
+        if (elem) {
+            elem.value = '';
+            // Force clear by also setting the attribute
+            elem.setAttribute('value', '');
+        }
     });
+    
+    // Also reset character type to default
+    const charTypeElem = document.getElementById('charType');
+    if (charTypeElem) {
+        charTypeElem.value = 'human';
+        updateCharacterFormFields(); // Update form fields based on type
+    }
+    
+    // Clear species field
+    const speciesElem = document.getElementById('charSpecies');
+    if (speciesElem) {
+        speciesElem.value = '';
+        speciesElem.setAttribute('value', '');
+    }
 }
 
 // Close Character Template Modal
 function closeCharacterTemplate() {
     const modal = document.getElementById('characterTemplateModal');
     modal.style.display = 'none';
+    
+    // Clear the global characterTemplateData when closing
+    characterTemplateData = {};
     
     // Reset body overflow
     document.body.style.overflow = '';
