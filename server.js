@@ -101,6 +101,9 @@ const COST_PER_1K_TOKENS = 0.02; // ประมาณ 0.02 บาท/1K tokens
 // Store user threads (in production, use Redis or database)
 const userThreads = new Map();
 
+// Store flags for forcing new thread creation after errors
+const forceNewThreadFlags = new Map();
+
 // Simple memory cache for API responses (15 seconds TTL)
 const apiCache = new Map();
 const CACHE_TTL = 15000; // 15 seconds
@@ -577,7 +580,17 @@ app.post('/api/chat', async (req, res) => {
         }
 
         // ========== CREATE THREAD AND RUN ==========
-        const threadKey = `${userId}_${mode}_${assistantType}`;
+        // Use assistant ID in thread key to ensure uniqueness
+        const threadKey = `${userId}_${mode}_${assistantId}`;
+        
+        // Check if we need to force create a new thread
+        const forceNewThread = forceNewThreadFlags.get(threadKey);
+        if (forceNewThread) {
+            userThreads.delete(threadKey);
+            forceNewThreadFlags.delete(threadKey);
+            console.log(`🔄 Forcing new thread creation for ${threadKey} after previous error`);
+        }
+        
         let threadId = userThreads.get(threadKey);
         
         // Thread management with retry logic
@@ -677,13 +690,25 @@ res.json({
     } catch (error) {
         console.error('❌ Chat error:', error);
         
-        // Clear thread if it's an image-related error
+        // Clear thread and set flag for new thread creation if it's an image-related error
         if (error.message && (error.message.includes('รูปภาพ') || 
             error.message.includes('invalid_image') ||
             error.message.includes('image_url'))) {
-            const threadKey = `${userId}_${mode}`;
-            userThreads.delete(threadKey);
-            console.log('🔄 Cleared thread after image error');
+            // Clear ALL threads for this user to ensure clean state
+            const keysToDelete = [];
+            for (const [key, value] of userThreads) {
+                if (key.startsWith(`${userId}_`)) {
+                    keysToDelete.push(key);
+                }
+            }
+            
+            keysToDelete.forEach(key => {
+                userThreads.delete(key);
+                forceNewThreadFlags.set(key, true);
+                console.log(`🔄 Cleared thread ${key} after image error`);
+            });
+            
+            console.log(`🔄 Cleared ${keysToDelete.length} threads for user ${userId} after image error`);
         }
         
         // Prepare user-friendly error messages
