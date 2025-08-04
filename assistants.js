@@ -37,23 +37,43 @@ async function addMessage(threadId, content, images = [], openaiClient = null) {
             for (const img of images) {
                 if (img.url) {
                     // Validate image format
-                    const supportedFormats = ['png', 'jpeg', 'jpg', 'gif', 'webp'];
-                    const urlLower = img.url.toLowerCase();
-                    const hasValidFormat = supportedFormats.some(format => 
-                        urlLower.includes(`.${format}`) || 
-                        urlLower.includes(`/${format}`) ||
-                        urlLower.includes(`format=${format}`)
-                    );
+                    // Get the actual URL from the image object
+                    const imageUrl = typeof img === 'string' ? img : (img.url || img);
                     
-                    if (!hasValidFormat) {
-                        console.warn('⚠️ Unsupported image format, skipping:', img.url);
+                    // Validate URL format
+                    if (!imageUrl) {
+                        console.warn('⚠️ Empty image URL, skipping');
                         continue;
+                    }
+                    
+                    // Check if it's base64 or URL
+                    const isBase64 = imageUrl.startsWith('data:image/');
+                    const isValidUrl = imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+                    
+                    if (!isBase64 && !isValidUrl) {
+                        console.warn('⚠️ Invalid image URL format, skipping:', imageUrl.substring(0, 50));
+                        continue;
+                    }
+                    
+                    // Additional validation for URL images
+                    if (isValidUrl) {
+                        const supportedFormats = ['png', 'jpeg', 'jpg', 'gif', 'webp'];
+                        const urlLower = imageUrl.toLowerCase();
+                        const hasValidFormat = supportedFormats.some(format => 
+                            urlLower.includes(`.${format}`) || 
+                            urlLower.includes(`/${format}`) ||
+                            urlLower.includes(`format=${format}`)
+                        );
+                        
+                        if (!hasValidFormat) {
+                            console.warn('⚠️ Unsupported image format, attempting anyway:', imageUrl);
+                        }
                     }
                     
                     messageContent.push({
                         type: "image_url",
                         image_url: { 
-                            url: img.url  // ใช้ URL จริง
+                            url: imageUrl
                         }
                     });
                 }
@@ -122,6 +142,17 @@ async function runAssistant(threadId, assistantId, openaiClient = null, retryCou
             // Handle specific error codes
             if (run.last_error && run.last_error.code === 'invalid_image_format') {
                 throw new Error('รูปภาพที่อัพโหลดไม่รองรับ กรุณาใช้ไฟล์ PNG, JPG, GIF หรือ WebP');
+            }
+            
+            // Handle invalid_image_url error
+            if (run.last_error && run.last_error.code === 'invalid_image_url') {
+                console.error('Invalid image URL:', run.last_error.message);
+                if (retryCount < maxRetries) {
+                    console.log(`Retrying due to invalid_image_url... (attempt ${retryCount + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+                    return runAssistant(threadId, assistantId, openaiClient, retryCount + 1);
+                }
+                throw new Error('ไม่สามารถดาวน์โหลดรูปภาพจาก URL ที่ให้มาได้ กรุณาตรวจสอบ URL หรือลองใช้รูปภาพอื่น');
             }
             
             // Retry for server_error
