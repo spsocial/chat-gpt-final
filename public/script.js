@@ -3631,8 +3631,29 @@ loadUserCredits();
         }, 2000);
         
     } else {
-        // Other errors
-        addMessage(`❌ Error: ${data.error || 'Something went wrong'}`, 'assistant');
+        // Other errors - แสดงข้อความที่ละเอียดขึ้น
+        let errorMessage = '❌ เกิดข้อผิดพลาด';
+        
+        if (data.userMessage) {
+            errorMessage = data.userMessage;
+        } else if (data.error) {
+            errorMessage = `❌ Error: ${data.error}`;
+        }
+        
+        // แสดงข้อความ error พร้อม suggestions ถ้ามี
+        if (data.suggestions && data.suggestions.length > 0) {
+            errorMessage += '\n\n💡 คำแนะนำ:\n' + data.suggestions.join('\n');
+        }
+        
+        addMessage(errorMessage, 'assistant');
+        
+        // ถ้าเป็น image error ให้ clear thread
+        if (data.error === 'invalid_image' || data.error === 'invalid_image_url' || 
+            data.error === 'invalid_image_format') {
+            const threadKey = `${userId}_${mode}`;
+            userThreads.delete(threadKey);
+            console.log('🔄 Clearing thread after image error');
+        }
         
         // Re-enable input for other errors
         isProcessing = false;
@@ -5064,9 +5085,23 @@ async function sendChatMessage(message) {
                 addMessage(`❌ ${data.message || 'Daily limit exceeded'}`, 'assistant');
             }
         } else {
-            // Error อื่นๆ - แสดง userMessage ถ้ามี
-            const errorMsg = data.userMessage || `❌ เกิดข้อผิดพลาด: ${data.error || 'Failed to send message'}`;
+            // Error อื่นๆ - แสดง userMessage และ suggestions ถ้ามี
+            let errorMsg = data.userMessage || `❌ เกิดข้อผิดพลาด: ${data.error || 'Failed to send message'}`;
+            
+            // แสดง suggestions ถ้ามี
+            if (data.suggestions && data.suggestions.length > 0) {
+                errorMsg += '\n\n💡 คำแนะนำ:\n' + data.suggestions.join('\n');
+            }
+            
             addMessage(errorMsg, 'assistant');
+            
+            // Clear thread ถ้าเป็น image error
+            if (data.error === 'invalid_image' || data.error === 'invalid_image_url' || 
+                data.error === 'invalid_image_format') {
+                const threadKey = `${userId}_chat`;
+                userThreads.delete(threadKey);
+                console.log('🔄 Clearing chat thread after image error');
+            }
         }
         
     } catch (error) {

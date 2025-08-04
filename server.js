@@ -677,6 +677,15 @@ res.json({
     } catch (error) {
         console.error('❌ Chat error:', error);
         
+        // Clear thread if it's an image-related error
+        if (error.message && (error.message.includes('รูปภาพ') || 
+            error.message.includes('invalid_image') ||
+            error.message.includes('image_url'))) {
+            const threadKey = `${userId}_${mode}`;
+            userThreads.delete(threadKey);
+            console.log('🔄 Cleared thread after image error');
+        }
+        
         // Prepare user-friendly error messages
         let userMessage = '';
         let errorType = 'unknown_error';
