@@ -3403,10 +3403,13 @@ function displayImagePreview() {
     preview.innerHTML = '';
     
     window.imageUrls.forEach((img, index) => {
+        const imgUrl = typeof img === 'string' ? img : (img.url || img);
+        const imgName = typeof img === 'object' ? img.name : 'image.jpg';
+        
         const div = document.createElement('div');
         div.className = 'image-preview-item';
         div.innerHTML = `
-            <img src="${img.url}" alt="${img.name}" 
+            <img src="${imgUrl}" alt="${imgName}" 
                  onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23666%22>Error</text></svg>'">
             <button class="remove-btn" onclick="removeImage(${index})">×</button>
         `;
@@ -3647,12 +3650,17 @@ loadUserCredits();
         
         addMessage(errorMessage, 'assistant');
         
-        // ถ้าเป็น image error ให้ clear thread
+        // ถ้าเป็น image error ให้ clear thread และรูปภาพ
         if (data.error === 'invalid_image' || data.error === 'invalid_image_url' || 
             data.error === 'invalid_image_format') {
             const threadKey = `${userId}_${mode}`;
             userThreads.delete(threadKey);
             console.log('🔄 Clearing thread after image error');
+            
+            // Clear รูปภาพที่ค้างอยู่
+            window.imageUrls = [];
+            displayImagePreview();
+            console.log('🖼️ Cleared problematic images');
         }
         
         // Re-enable input for other errors
@@ -5095,12 +5103,17 @@ async function sendChatMessage(message) {
             
             addMessage(errorMsg, 'assistant');
             
-            // Clear thread ถ้าเป็น image error
+            // Clear thread และรูปภาพถ้าเป็น image error
             if (data.error === 'invalid_image' || data.error === 'invalid_image_url' || 
                 data.error === 'invalid_image_format') {
                 const threadKey = `${userId}_chat`;
                 userThreads.delete(threadKey);
                 console.log('🔄 Clearing chat thread after image error');
+                
+                // Clear รูปภาพที่ค้างอยู่
+                window.imageUrls = [];
+                displayImagePreview();
+                console.log('🖼️ Cleared problematic images from chat mode');
             }
         }
         

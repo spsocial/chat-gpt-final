@@ -35,7 +35,7 @@ async function addMessage(threadId, content, images = [], openaiClient = null) {
             
             // Add each image URL with validation
             for (const img of images) {
-                if (img.url) {
+                if (img) {
                     // Validate image format
                     // Get the actual URL from the image object
                     const imageUrl = typeof img === 'string' ? img : (img.url || img);
