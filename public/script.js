@@ -5703,6 +5703,8 @@ function showSceneBuilder() {
                 <div class="form-section">
                     <h3>👥 2. มีกี่คนในฉาก?</h3>
                     <div class="character-count-buttons">
+                        <button onclick="setCharacterCount(0)" class="count-btn">ไม่มีตัวละคร</button>
+                        <button onclick="setCharacterCount(1)" class="count-btn">1 คน</button>
                         <button onclick="setCharacterCount(2)" class="count-btn active">2 คน</button>
                         <button onclick="setCharacterCount(3)" class="count-btn">3 คน</button>
                         <button onclick="setCharacterCount(4)" class="count-btn">4 คน</button>
@@ -5799,12 +5801,37 @@ function setCharacterCount(count) {
         btn.classList.remove('active');
     });
     // ใช้ currentTarget แทน event.target เพื่อหลีกเลี่ยงปัญหา
-    const clickedBtn = document.querySelector(`.count-btn:nth-child(${count-1})`);
+    const clickedBtn = document.querySelector(`.count-btn:nth-child(${count+1})`);
     if (clickedBtn) clickedBtn.classList.add('active');
     
     // Update character inputs
     const container = document.getElementById('characterInputs');
-    if (!container) return;
+    const characterSection = document.getElementById('charactersSection');
+    if (!container || !characterSection) return;
+    
+    // Hide/show character section based on count
+    if (count === 0) {
+        characterSection.style.display = 'none';
+    } else {
+        characterSection.style.display = 'block';
+    }
+    
+    // Update dialogue section label based on character count
+    const dialogueTextarea = document.getElementById('sceneDialogue');
+    if (dialogueTextarea) {
+        const dialogueLabel = dialogueTextarea.parentElement.querySelector('h3');
+        
+        if (count === 0) {
+            if (dialogueLabel) dialogueLabel.innerHTML = '🎙️ 4. บรรยายบรรยากาศ/เสียง (ถ้ามี)';
+            dialogueTextarea.placeholder = 'ตัวอย่าง:\nเสียงลมพัดผ่านใบไม้\nเสียงน้ำไหล\nบรรยากาศเงียบสงบในป่า';
+        } else if (count === 1) {
+            if (dialogueLabel) dialogueLabel.innerHTML = '💬 4. พูดอะไร/คิดอะไร? (ถ้ามี)';
+            dialogueTextarea.placeholder = 'ตัวอย่าง:\nคนขาย: (คิดในใจ) วันนี้ลูกค้าน้อยจัง\nคนขาย: ของสดใหม่ทุกวันครับ มาดูก่อนได้เลย';
+        } else {
+            if (dialogueLabel) dialogueLabel.innerHTML = '💬 4. พูดอะไรกัน? (ถ้ามี)';
+            dialogueTextarea.placeholder = 'ตัวอย่าง:\nนักข่าว: สวัสดีค่ะ ลุงขายของมานานแค่ไหนแล้วคะ?\nลุง: โอ้ย นานแล้วละ สัก 20 ปีได้มั้ง\nนักข่าว: ว้าว นานมากเลยนะคะ';
+        }
+    }
     
     container.innerHTML = '';
     sceneData.characters = new Array(count).fill('');
@@ -5873,39 +5900,79 @@ if (!sceneData.location && !sceneData.situation) {
 }
     
     // Build message
-    let message = `สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n`;
+    let message;
+    if (sceneData.characterCount === 0) {
+        message = `สร้าง Scene แบบไม่มีตัวละคร (Environmental/Mood Scene) แบบละเอียดมาก:\n\n`;
+    } else if (sceneData.characterCount === 1) {
+        message = `สร้าง Single-Character Scene แบบละเอียดมาก:\n\n`;
+    } else {
+        message = `สร้าง Multi-Character Scene แบบละเอียดมาก:\n\n`;
+    }
+    
     message += `📍 สถานที่: ${sceneData.location}\n`;
     // เพิ่มส่วนนี้
 if (sceneData.situation) {
     message += `🎭 สถานการณ์: ${sceneData.situation}\n`;
 }
-    message += `👥 จำนวนตัวละคร: ${sceneData.characterCount} คน\n\n`;
     
-    message += `รายละเอียดตัวละคร:\n`;
-    sceneData.characters.forEach((char, i) => {
-        if (char) {
-            message += `${i+1}. ${char}\n`;
-        } else {
-            message += `${i+1}. (ไม่ได้ระบุ - ให้ AI สร้างให้เหมาะกับฉาก)\n`;
-        }
-    });
-    
-    if (sceneData.dialogue) {
-        message += `\n💬 บทพูด:\n${sceneData.dialogue}\n`;
+    if (sceneData.characterCount === 0) {
+        message += `👥 จำนวนตัวละคร: ไม่มีตัวละคร (Environmental Scene)\n\n`;
     } else {
-        message += `\n💬 ไม่มีบทพูด หรือให้ AI สร้างบทสนทนาสั้นๆ ให้เหมาะกับฉาก\n`;
+        message += `👥 จำนวนตัวละคร: ${sceneData.characterCount} คน\n\n`;
+    }
+    
+    if (sceneData.characterCount > 0) {
+        message += `รายละเอียดตัวละคร:\n`;
+        sceneData.characters.forEach((char, i) => {
+            if (char) {
+                message += `${i+1}. ${char}\n`;
+            } else {
+                message += `${i+1}. (ไม่ได้ระบุ - ให้ AI สร้างให้เหมาะกับฉาก)\n`;
+            }
+        });
+    }
+    
+    if (sceneData.characterCount > 0) {
+        if (sceneData.dialogue) {
+            message += `\n💬 บทพูด:\n${sceneData.dialogue}\n`;
+        } else {
+            message += `\n💬 ไม่มีบทพูด หรือให้ AI สร้างบทสนทนาสั้นๆ ให้เหมาะกับฉาก\n`;
+        }
+    } else {
+        // For scenes without characters, dialogue becomes narration or ambient sounds
+        if (sceneData.dialogue) {
+            message += `\n🎙️ Narration/Sound description:\n${sceneData.dialogue}\n`;
+        } else {
+            message += `\n🎙️ ให้ AI สร้าง ambient sounds และ mood ให้เหมาะกับฉาก\n`;
+        }
     }
     
     message += `\n🎭 อารมณ์: ${getMoodText(sceneData.mood)}`;
     message += `\n⏱️ ความยาว: ${sceneData.duration === 'short' ? '5-6 วินาที' : '7-8 วินาที'}`;
     
-    message += `\n\n⚠️ สำคัญ:
-- ต้องมี scene setting ละเอียดมาก (props, background, lighting)
-- ตัวละครแต่ละคนต้องมีรายละเอียดครบ (หน้าตา, เสื้อผ้า, ท่าทาง)
-- ถ้ามีบทพูด ให้ใส่ timing ที่ชัดเจน
-- Camera angles และ movements
-- Audio layers (dialogue, ambient, effects)
-- เอาท์พุตเป็นภาษาอังกฤษทั้งหมด ยกเว้นบทพูดภาษาไทย`;
+    message += `\n\n⚠️ สำคัญ:\n`;
+    
+    if (sceneData.characterCount === 0) {
+        message += `- ต้องมี scene setting ละเอียดมาก (props, background, lighting)\n`;
+        message += `- เน้น atmosphere, mood, และ environmental storytelling\n`;
+        message += `- รายละเอียด sound design และ ambient sounds\n`;
+        message += `- Camera angles และ movements แบบ cinematic\n`;
+        message += `- Visual effects และ lighting ที่สร้างอารมณ์\n`;
+    } else if (sceneData.characterCount === 1) {
+        message += `- ต้องมี scene setting ละเอียดมาก (props, background, lighting)\n`;
+        message += `- ตัวละครต้องมีรายละเอียดครบ (หน้าตา, เสื้อผ้า, ท่าทาง, อารมณ์)\n`;
+        message += `- ถ้ามีบทพูด ให้ใส่ timing และ inner thoughts\n`;
+        message += `- Camera angles ที่เน้นอารมณ์ตัวละคร\n`;
+        message += `- Audio layers (monologue/thoughts, ambient, effects)\n`;
+    } else {
+        message += `- ต้องมี scene setting ละเอียดมาก (props, background, lighting)\n`;
+        message += `- ตัวละครแต่ละคนต้องมีรายละเอียดครบ (หน้าตา, เสื้อผ้า, ท่าทาง)\n`;
+        message += `- ถ้ามีบทพูด ให้ใส่ timing ที่ชัดเจน\n`;
+        message += `- Camera angles และ movements\n`;
+        message += `- Audio layers (dialogue, ambient, effects)\n`;
+    }
+    
+    message += `- เอาท์พุตเป็นภาษาอังกฤษทั้งหมด ยกเว้นบทพูดภาษาไทย`;
     
     // Close modal
     closeSceneBuilder();
