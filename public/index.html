@@ -59,6 +59,12 @@
                         <span>Sync</span>
                     </button>
                     
+                    <!-- Course Registration Button for Desktop -->
+                    <button class="desktop-course-btn" onclick="window.location.href='/portfolio.html'" title="สมัครเรียน AI Video">
+                        <span>🎓</span>
+                        <span class="desktop-only-text">สมัครเรียน</span>
+                    </button>
+                    
                     <!-- Tutorial Button for Desktop (ย้ายมาด้านหน้า) -->
                     <button class="desktop-tutorial-btn" onclick="showTutorialModal()" title="คู่มือการใช้งาน">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -87,9 +93,12 @@
                             <span class="credit-icon">💰</span>
                             <span class="credit-text">คงเหลือ: <span id="mobileCreditsBalance">0</span> เครดิต</span>
                         </div>
-                        <div class="mobile-login-container" style="display: flex; justify-content: center; margin-top: 8px;">
+                        <div class="mobile-login-container" style="display: flex; justify-content: center; gap: 10px; margin-top: 8px;">
                             <button class="mobile-login-btn" onclick="showLoginModal()" title="Sync ข้อมูลข้ามอุปกรณ์">
                                 <span>🔄</span>
+                            </button>
+                            <button class="mobile-course-btn" onclick="window.location.href='/portfolio.html'" title="สมัครเรียน AI Video">
+                                <span>🎓</span>
                             </button>
                         </div>
                     </div>
@@ -251,7 +260,7 @@
         </div>
         <div class="tip-card">
             <h4>✨ สร้างฉากหลายตัวละคร</h4>
-            <p>AI จะช่วยจัดการฉากที่มี 2-5 ตัวละคร พร้อมบทพูดและการเคลื่อนไหว</p>
+            <p>AI จะช่วยจัดการฉากที่มี 1-5 ตัวละคร พร้อมบทพูดและการเคลื่อนไหว</p>
         </div>
         <div class="tip-card">
             <h4>🎯 วิธีใช้ง่ายๆ</h4>

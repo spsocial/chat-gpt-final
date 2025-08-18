@@ -3372,10 +3372,86 @@ line-clamp: 3;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
 }
 
+/* Desktop Course Button */
+.desktop-course-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    font-family: 'Kanit', sans-serif;
+}
+
+.desktop-course-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+
 /* Hide desktop login button on mobile */
 @media (max-width: 768px) {
     .desktop-login-btn {
         display: none;
+    }
+    
+    /* Hide desktop course button completely on mobile */
+    .desktop-course-btn {
+        display: none !important;
+    }
+}
+
+/* Show full text on desktop */
+@media (min-width: 769px) {
+    .desktop-course-btn .desktop-only-text {
+        display: inline;
+    }
+}
+
+/* Mobile Course Button */
+.mobile-course-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+.mobile-course-btn:hover {
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46a2 100%);
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+}
+
+.mobile-course-btn:active {
+    transform: scale(0.95);
+}
+
+/* Hide mobile course button on desktop */
+@media (min-width: 769px) {
+    .mobile-course-btn {
+        display: none !important;
+    }
+}
+
+/* Show mobile course button on mobile */
+@media (max-width: 768px) {
+    .mobile-course-btn {
+        display: inline-flex !important;
     }
 }
 
