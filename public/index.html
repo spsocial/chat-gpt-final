@@ -1054,6 +1054,11 @@
             <span class="course-icon">🎓</span>
             <h2>คอร์สเรียน สร้างคลิปด้วย Ai</h2>
             <div class="course-tagline">มี 3 แบบให้เลือกเรียน เนื้อหาเดียวกันและอัพเดตตลอด</div>
+            <div style="margin-top: 15px;">
+                <a href="/portfolio.html" target="_blank" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 10px 25px; border-radius: 20px; text-decoration: none; font-weight: bold; transition: all 0.3s ease;">
+                    🎬 ดูตัวอย่างผลงานทั้ง 3 แนวการเรียน
+                </a>
+            </div>
         </div>
         
         <div class="course-body">
@@ -2848,7 +2853,7 @@ window.generateFromTemplate = function() {
             <span class="plus-icon">+</span>
             <span class="close-icon">×</span>
         </span>
-        <span class="fab-badge">4</span>
+        <span class="fab-badge">5</span>
     </button>
     
     <!-- FAB Menu Items -->
@@ -2859,6 +2864,10 @@ window.generateFromTemplate = function() {
         
         <button class="fab-item" onclick="showCourse(); closeFabMenu();" data-label="คอร์สเรียน">
             <span class="fab-icon">🎓</span>
+        </button>
+        
+        <button class="fab-item" onclick="window.open('/portfolio.html', '_blank'); closeFabMenu();" data-label="ดูผลงาน">
+            <span class="fab-icon">🎬</span>
         </button>
         
         <button class="fab-item" onclick="toggleToolsMenu(); closeFabMenu();" data-label="เครื่องมือ">

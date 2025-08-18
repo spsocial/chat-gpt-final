@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เลือกแนวทางการเรียน AI Video Creation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .course-notice {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeIn 1s ease;
+        }
+
+        .course-notice h3 {
+            color: #5a67d8;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .pricing-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .price-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .price-card .price {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .price-card .desc {
+            font-size: 0.9rem;
+            opacity: 0.95;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+
+        .category-title {
+            flex: 1;
+        }
+
+        .category-title h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .category-title .badge {
+            display: inline-block;
+            background: #48bb78;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .tools-section {
+            margin-bottom: 20px;
+        }
+
+        .tools-section h3 {
+            color: #5a67d8;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tools-section h3::before {
+            content: '🛠️';
+            margin-right: 8px;
+        }
+
+        .tool-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .tool-list li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: #f7fafc;
+            border-left: 3px solid #667eea;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .tool-list li:hover {
+            background: #edf2f7;
+            padding-left: 15px;
+        }
+
+        .tool-name {
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .tool-desc {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 3px;
+        }
+
+        .samples-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #e2e8f0;
+        }
+
+        .samples-section h3 {
+            color: #5a67d8;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .samples-section h3::before {
+            content: '🎬';
+            margin-right: 8px;
+        }
+
+        .sample-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .sample-item {
+            background: #f7fafc;
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #4a5568;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .sample-item:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .cta-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            animation: fadeIn 1.2s ease;
+        }
+
+        .cta-section h2 {
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-size: 2rem;
+        }
+
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .note-section {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .note-section p {
+            color: #7d4f0c;
+            margin: 5px 0;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .view-samples-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .view-samples-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-info {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .cta-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 เลือกแนวทางการเรียน AI Video Creation</h1>
+            <p>สร้างคอนเทนต์คุณภาพด้วย AI แบบมืออาชีพ</p>
+        </div>
+
+        <div class="course-notice">
+            <h3>📚 ระบบการเรียนของเรา</h3>
+            <div class="pricing-info">
+                <div class="price-card">
+                    <div class="price">💰 399 บาท</div>
+                    <div class="desc">คอร์สกลุ่มปิด - เรียนครบทุกแนว</div>
+                </div>
+                <div class="price-card">
+                    <div class="price">💰 1,999 บาท</div>
+                    <div class="desc">คอร์ส 1-1 ออนไลน์ - เลือกเรียน 2 แนว</div>
+                </div>
+                <div class="price-card">
+                    <div class="price">💰 2,999 บาท</div>
+                    <div class="desc">คอร์สนอกสถานที่ - เลือกเรียน 2 แนว</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="categories-grid">
+            <!-- แนว MV เพลง + Podcast + ล้อเลียน -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon">🎵</div>
+                    <div class="category-title">
+                        <h2>MV เพลง / Podcast / ล้อเลียน</h2>
+                        <span class="badge">3 รูปแบบในแนวเดียว</span>
+                    </div>
+                </div>
+
+                <div class="tools-section">
+                    <h3>เครื่องมือสำหรับ MV เพลง & Podcast</h3>
+                    <ul class="tool-list">
+                        <li>
+                            <div class="tool-name">ChatGPT</div>
+                            <div class="tool-desc">วางแผนงาน คิด Prompt สร้างภาพ</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">Midjourney</div>
+                            <div class="tool-desc">สร้างภาพและวิดีโอประกอบคุณภาพสูง</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">Suno</div>
+                            <div class="tool-desc">สร้างเพลงด้วย AI (สำหรับ MV)</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">HeyGen</div>
+                            <div class="tool-desc">ทำ Podcast และคลิปพูดยาวๆ</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">ElevenLabs</div>
+                            <div class="tool-desc">สร้างและโคลนเสียงพากย์</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">CapCut</div>
+                            <div class="tool-desc">ตัดต่อรวมคลิปเข้าด้วยกัน</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tools-section">
+                    <h3>เครื่องมือสำหรับคลิปล้อเลียน</h3>
+                    <ul class="tool-list">
+                        <li>
+                            <div class="tool-name">Midjourney / Veo3 / ChatGPT</div>
+                            <div class="tool-desc">นำภาพมาทำให้ขยับ (แนะนำ Midjourney)</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">ElevenLabs / AI Studio Google</div>
+                            <div class="tool-desc">สร้างเสียงพากย์ตัวละคร</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="samples-section">
+                    <h3>ตัวอย่างผลงาน</h3>
+                    <div class="sample-grid">
+                        <div class="sample-item">🎵 MV เพลงโลกทั้งใบมีแค่เธอ</div>
+                        <div class="sample-item">🎙️ Podcast พระจอห์น</div>
+                        <div class="sample-item">😄 วุ้นเส้น 3D ล้อเลียน</div>
+                        <div class="sample-item">🎬 Boss Farm</div>
+                        <div class="sample-item">🎵 Thunder Express 4K</div>
+                        <div class="sample-item">🎭 พระชัย เทศน์ ep.1</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="https://drive.google.com/drive/folders/1SCq5bee0S8Y1fCgTz9mbhg8qxtXOtXFk?usp=sharing" target="_blank" class="view-samples-button">
+                            🎥 ดูคลิปตัวอย่างทั้งหมด
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- แนว VEO3 คอนเทนต์ -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon">🎬</div>
+                    <div class="category-title">
+                        <h2>VEO3 Content Creation</h2>
+                        <span class="badge">เทคโนโลยีใหม่ล่าสุด</span>
+                    </div>
+                </div>
+
+                <div class="tools-section">
+                    <h3>เครื่องมือหลัก</h3>
+                    <ul class="tool-list">
+                        <li>
+                            <div class="tool-name">Prompt D</div>
+                            <div class="tool-desc">สร้าง Prompt และต่อฉาก เซฟตัวละครใช้ต่อได้</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">Lab Google Flow</div>
+                            <div class="tool-desc">สร้างคลิป Veo3 คุณภาพสูง</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">Gemini</div>
+                            <div class="tool-desc">สร้างคลิป Veo3 ทางเลือกที่สอง</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">Midjourney (Optional)</div>
+                            <div class="tool-desc">สร้างภาพตัวละครก่อนนำมาทำ Veo3</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="samples-section">
+                    <h3>ตัวอย่างผลงาน</h3>
+                    <div class="sample-grid">
+                        <div class="sample-item">🎬 คลิปยาว MV เพลง</div>
+                        <div class="sample-item">🎣 คลิปตกปลา</div>
+                        <div class="sample-item">☕ โฆษณากาแฟ</div>
+                        <div class="sample-item">🎓 เรื่องนักศึกษา</div>
+                        <div class="sample-item">🔮 แม่หมอส้มโอ</div>
+                        <div class="sample-item">💼 โปรโมทคอร์สเรียน</div>
+                        <div class="sample-item">🌊 นั่งห่วงยางท่องโลก</div>
+                        <div class="sample-item">🥋 ยอดวรยุทธ</div>
+                        <div class="sample-item">🏝️ ตามหาคุณตาติดเกาะ</div>
+                        <div class="sample-item">🌸 โปรโมทน้ำหอม</div>
+                        <div class="sample-item">📸 รูป to วิดีโอ</div>
+                        <div class="sample-item">🎭 Multi-character scenes</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="https://drive.google.com/drive/folders/1syXHcxIoI8ZslosLgOjNLXe3Efepr-Yz?usp=drive_link" target="_blank" class="view-samples-button">
+                            🎥 ดูคลิปตัวอย่างทั้งหมด
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- แนวขายของจากสินค้าจริง -->
+            <div class="category-card">
+                <div class="category-header">
+                    <div class="category-icon">🛍️</div>
+                    <div class="category-title">
+                        <h2>โฆษณาสินค้าจากภาพจริง</h2>
+                        <span class="badge">เหมาะสำหรับธุรกิจ</span>
+                    </div>
+                </div>
+
+                <div class="tools-section">
+                    <h3>เครื่องมือหลัก</h3>
+                    <ul class="tool-list">
+                        <li>
+                            <div class="tool-name">ChatGPT</div>
+                            <div class="tool-desc">สร้าง Prompt สำหรับโฆษณา</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">Midjourney</div>
+                            <div class="tool-desc">สร้างนายแบบ/นางแบบและฉาก ทำวิดีโอได้ทันที</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">ComfyUI</div>
+                            <div class="tool-desc">รวมภาพสินค้าเข้ากับ AI แบบสมจริง (ให้ Workflow)</div>
+                        </li>
+                        <li>
+                            <div class="tool-name">VEO3 (Optional)</div>
+                            <div class="tool-desc">ทำคลิปแทน/ร่วมกับ Midjourney</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="samples-section">
+                    <h3>ตัวอย่างผลงาน</h3>
+                    <div class="sample-grid">
+                        <div class="sample-item">📦 ลังพลาสติกสีแดง</div>
+                        <div class="sample-item">🥤 น้ำผลไม้</div>
+                        <div class="sample-item">👗 นางแบบถือสินค้า</div>
+                        <div class="sample-item">🎬 Ads Prompt D</div>
+                        <div class="sample-item">🛒 โฆษณาชุดสินค้า</div>
+                        <div class="sample-item">📱 Ultra-realistic shots</div>
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="https://drive.google.com/drive/folders/1QXHSx1_7_AcoerOcCa52pVcBMJP9vd-9?usp=drive_link" target="_blank" class="view-samples-button">
+                            🛒 ดูคลิปตัวอย่างทั้งหมด
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="note-section">
+            <p><strong>📌 หมายเหตุสำคัญ:</strong></p>
+            <p>• คอร์สกลุ่มปิด (399 บาท) - เรียนครบทุกแนว มีวิดีโอย้อนหลังดูได้ตลอดชีพ</p>
+            <p>• คอร์ส 1-1 (1,999 / 2,999 บาท) - เลือกเรียน 2 แนวที่สนใจ สอนแบบเข้มข้น</p>
+            <p>• ทุกคอร์สมีการอัพเดตเนื้อหาใหม่ตลอด</p>
+            <p>• Add Line โค้ชสอบถามได้ตลอดหลังเรียนจบ</p>
+        </div>
+
+        <div class="cta-section">
+            <h2>🚀 พร้อมเริ่มต้นสร้างคอนเทนต์ด้วย AI แล้วหรือยัง?</h2>
+            <div class="cta-buttons">
+                <a href="https://m.me/719837687869400" target="_blank" class="cta-button">
+                    💬 สมัครเรียนทันที
+                </a>
+                <a href="https://lin.ee/KWn4Otg" target="_blank" class="cta-button">
+                    📱 สอบถามเพิ่มเติม Line: @social24
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
