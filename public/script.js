@@ -386,7 +386,7 @@ const THREE_HOURS = 3 * 60 * 60 * 1000; // 3 hours in milliseconds
 const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Current announcement version (change this when you have new announcements)
-const CURRENT_ANNOUNCEMENT_VERSION = '5.1.0';
+const CURRENT_ANNOUNCEMENT_VERSION = '6.0.0';
 
 function shouldShowAnnouncement() {
     const now = new Date().getTime();
@@ -4910,10 +4910,10 @@ function displayGeneratedImage(imageUrl, prompt, model, cost) {
                      onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22><rect fill=%22%23333%22 width=%22400%22 height=%22300%22/><text x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 fill=%22%23999%22>Image Load Error</text></svg>';">
             </div>
             <div class="image-actions">
-                <button class="download-btn" onclick="downloadImage('${imageUrl.replace(/'/g, "\\'")}', '${prompt.substring(0, 50).replace(/'/g, "\\'")}')">
+                <button class="download-btn" data-url="${imageUrl}" data-prompt="${prompt.substring(0, 50)}" onclick="downloadImage(this.dataset.url, this.dataset.prompt)">
     💾 Download
 </button>
-                <button class="retry-btn" onclick="retryGeneration('${escapedPrompt}')">
+                <button class="retry-btn" data-prompt="${escapedPrompt}" onclick="retryGeneration(this.dataset.prompt)">
                     🔄 สร้างใหม่
                 </button>
             </div>
