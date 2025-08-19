@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>เลือกแนวทางการเรียน AI Video Creation</title>
+    <title>Prompt D Academy - เลือกแนวทางการเรียน</title>
     <style>
         * {
             margin: 0;
@@ -13,48 +13,148 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(102, 126, 234, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .back-button:hover {
+            background: white;
+            transform: translateX(-5px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         }
 
         .header {
             text-align: center;
             color: white;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
+            padding-top: 50px;
             animation: fadeInDown 0.8s ease;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 3rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #a78bfa 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(102, 126, 234, 0.3);
         }
 
         .header p {
+            font-size: 1.3rem;
+            color: #cbd5e1;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .intro-section {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+            animation: fadeIn 1s ease;
+        }
+
+        .intro-section h2 {
+            color: #f1f5f9;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .intro-badges {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .intro-badge {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
             font-size: 1.2rem;
-            opacity: 0.95;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .intro-badge:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
         }
 
         .course-notice {
             background: rgba(255,255,255,0.95);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 30px;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 40px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             animation: fadeIn 1s ease;
         }
 
         .course-notice h3 {
-            color: #5a67d8;
-            margin-bottom: 15px;
-            font-size: 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
         }
 
         .pricing-info {
@@ -62,48 +162,74 @@
             justify-content: center;
             gap: 30px;
             flex-wrap: wrap;
-            margin-top: 20px;
+            margin-top: 25px;
         }
 
         .price-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+        }
+
+        .price-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .price-card:hover::before {
+            animation: shine 0.5s ease;
+        }
+
+        @keyframes shine {
+            0% { transform: rotate(45deg) translateY(-100%); }
+            100% { transform: rotate(45deg) translateY(100%); }
         }
 
         .price-card .price {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: bold;
+            margin-bottom: 5px;
         }
 
         .price-card .desc {
-            font-size: 0.9rem;
+            font-size: 1rem;
             opacity: 0.95;
         }
 
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 35px;
             margin-bottom: 40px;
         }
 
         .category-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
             animation: fadeInUp 0.8s ease;
             position: relative;
             overflow: hidden;
-        }
-
-        .category-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
         }
 
         .category-card::before {
@@ -113,55 +239,68 @@
             left: 0;
             width: 100%;
             height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #667eea, #764ba2, #ec4899);
+            animation: gradient 3s ease infinite;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .category-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
         }
 
         .category-header {
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .category-icon {
-            font-size: 2.5rem;
-            margin-right: 15px;
-        }
-
-        .category-title {
-            flex: 1;
+            font-size: 3rem;
+            margin-right: 20px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
         }
 
         .category-title h2 {
-            color: #2d3748;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
+            color: #1e293b;
+            font-size: 1.6rem;
+            margin-bottom: 8px;
         }
 
         .category-title .badge {
             display: inline-block;
-            background: #48bb78;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.75rem;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
             font-weight: bold;
+            box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
         }
 
         .tools-section {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .tools-section h3 {
-            color: #5a67d8;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
         }
 
         .tools-section h3::before {
             content: '🛠️';
-            margin-right: 8px;
+            margin-right: 10px;
+            font-size: 1.3rem;
         }
 
         .tool-list {
@@ -170,124 +309,177 @@
         }
 
         .tool-list li {
-            padding: 10px;
-            margin-bottom: 8px;
-            background: #f7fafc;
-            border-left: 3px solid #667eea;
-            border-radius: 5px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid;
+            border-image: linear-gradient(135deg, #667eea, #764ba2) 1;
+            border-radius: 8px;
             transition: all 0.3s ease;
         }
 
         .tool-list li:hover {
-            background: #edf2f7;
-            padding-left: 15px;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            padding-left: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
         .tool-name {
             font-weight: bold;
-            color: #2d3748;
+            color: #1e293b;
+            font-size: 1.05rem;
         }
 
         .tool-desc {
-            color: #718096;
-            font-size: 0.9rem;
-            margin-top: 3px;
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-top: 5px;
         }
 
         .samples-section {
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 30px;
+            padding-top: 25px;
             border-top: 2px dashed #e2e8f0;
-        }
-
-        .samples-section h3 {
-            color: #5a67d8;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .samples-section h3::before {
-            content: '🎬';
-            margin-right: 8px;
-        }
-
-        .sample-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-        }
-
-        .sample-item {
-            background: #f7fafc;
-            padding: 8px;
-            border-radius: 8px;
             text-align: center;
-            font-size: 0.85rem;
-            color: #4a5568;
-            transition: all 0.3s ease;
-            cursor: pointer;
         }
 
-        .sample-item:hover {
-            background: #667eea;
+        .view-samples-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            transform: scale(1.05);
+            padding: 15px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-samples-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .view-samples-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
+        }
+
+        .view-samples-button:hover::before {
+            left: 100%;
         }
 
         .cta-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.95) 100%);
+            border-radius: 25px;
+            padding: 40px;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
             animation: fadeIn 1.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23667eea" fill-opacity="0.05" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,144C960,149,1056,139,1152,122.7C1248,107,1344,85,1392,74.7L1440,64L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path></svg>') no-repeat;
+            background-size: cover;
+            opacity: 0.3;
+            pointer-events: none;
         }
 
         .cta-section h2 {
-            color: #2d3748;
-            margin-bottom: 20px;
-            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            position: relative;
+            z-index: 1;
         }
 
         .cta-buttons {
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: 25px;
             flex-wrap: wrap;
+            position: relative;
+            z-index: 1;
         }
 
         .cta-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 40px;
+            padding: 18px 50px;
             border: none;
             border-radius: 50px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
         }
 
         .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .cta-button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .note-section {
-            background: #fef5e7;
-            border-left: 4px solid #f39c12;
-            padding: 15px;
-            margin-top: 20px;
-            border-radius: 5px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            margin-top: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(245, 158, 11, 0.2);
         }
 
         .note-section p {
-            color: #7d4f0c;
-            margin: 5px 0;
+            color: #92400e;
+            margin: 8px 0;
+            font-size: 1.05rem;
+        }
+
+        .note-section p strong {
+            color: #78350f;
+            font-size: 1.1rem;
         }
 
         @keyframes fadeInDown {
@@ -321,26 +513,9 @@
             }
         }
 
-        .view-samples-button {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .view-samples-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
-        }
-
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
             }
 
             .categories-grid {
@@ -359,14 +534,43 @@
             .cta-button {
                 width: 100%;
             }
+
+            .back-button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+
+            .intro-badges {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .intro-badge {
+                width: 80%;
+            }
         }
     </style>
 </head>
 <body>
+    <a href="/" class="back-button">
+        <span>←</span>
+        <span>กลับหน้าหลัก Prompt D</span>
+    </a>
+
     <div class="container">
         <div class="header">
-            <h1>🎯 เลือกแนวทางการเรียน AI Video Creation</h1>
-            <p>สร้างคอนเทนต์คุณภาพด้วย AI แบบมืออาชีพ</p>
+            <h1>🎓 Prompt D Academy</h1>
+            <p>เลือกแนวทางการเรียนคอร์ส AI Video Creation</p>
+            <p class="subtitle">สร้างคอนเทนต์คุณภาพระดับมืออาชีพด้วย AI</p>
+        </div>
+
+        <div class="intro-section">
+            <h2>✨ มีทั้งหมด 3 แนวหลักให้เลือกเรียน ✨</h2>
+            <div class="intro-badges">
+                <div class="intro-badge">🎬 แนวที่ 1: MV & Podcast</div>
+                <div class="intro-badge">🚀 แนวที่ 2: VEO3 Content</div>
+                <div class="intro-badge">🛍️ แนวที่ 3: Product Ads</div>
+            </div>
         </div>
 
         <div class="course-notice">
@@ -443,20 +647,9 @@
                 </div>
 
                 <div class="samples-section">
-                    <h3>ตัวอย่างผลงาน</h3>
-                    <div class="sample-grid">
-                        <div class="sample-item">🎵 MV เพลงโลกทั้งใบมีแค่เธอ</div>
-                        <div class="sample-item">🎙️ Podcast พระจอห์น</div>
-                        <div class="sample-item">😄 วุ้นเส้น 3D ล้อเลียน</div>
-                        <div class="sample-item">🎬 Boss Farm</div>
-                        <div class="sample-item">🎵 Thunder Express 4K</div>
-                        <div class="sample-item">🎭 พระชัย เทศน์ ep.1</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="https://drive.google.com/drive/folders/1SCq5bee0S8Y1fCgTz9mbhg8qxtXOtXFk?usp=sharing" target="_blank" class="view-samples-button">
-                            🎥 ดูคลิปตัวอย่างทั้งหมด
-                        </a>
-                    </div>
+                    <a href="https://drive.google.com/drive/folders/1SCq5bee0S8Y1fCgTz9mbhg8qxtXOtXFk?usp=sharing" target="_blank" class="view-samples-button">
+                        🎥 ดูคลิปผลงานตัวอย่างที่นี่
+                    </a>
                 </div>
             </div>
 
@@ -486,33 +679,16 @@
                             <div class="tool-desc">สร้างคลิป Veo3 ทางเลือกที่สอง</div>
                         </li>
                         <li>
-                            <div class="tool-name">Midjourney (Optional)</div>
+                            <div class="tool-name">Midjourney (ไม่จำเป็น)</div>
                             <div class="tool-desc">สร้างภาพตัวละครก่อนนำมาทำ Veo3</div>
                         </li>
                     </ul>
                 </div>
 
                 <div class="samples-section">
-                    <h3>ตัวอย่างผลงาน</h3>
-                    <div class="sample-grid">
-                        <div class="sample-item">🎬 คลิปยาว MV เพลง</div>
-                        <div class="sample-item">🎣 คลิปตกปลา</div>
-                        <div class="sample-item">☕ โฆษณากาแฟ</div>
-                        <div class="sample-item">🎓 เรื่องนักศึกษา</div>
-                        <div class="sample-item">🔮 แม่หมอส้มโอ</div>
-                        <div class="sample-item">💼 โปรโมทคอร์สเรียน</div>
-                        <div class="sample-item">🌊 นั่งห่วงยางท่องโลก</div>
-                        <div class="sample-item">🥋 ยอดวรยุทธ</div>
-                        <div class="sample-item">🏝️ ตามหาคุณตาติดเกาะ</div>
-                        <div class="sample-item">🌸 โปรโมทน้ำหอม</div>
-                        <div class="sample-item">📸 รูป to วิดีโอ</div>
-                        <div class="sample-item">🎭 Multi-character scenes</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="https://drive.google.com/drive/folders/1syXHcxIoI8ZslosLgOjNLXe3Efepr-Yz?usp=drive_link" target="_blank" class="view-samples-button">
-                            🎥 ดูคลิปตัวอย่างทั้งหมด
-                        </a>
-                    </div>
+                    <a href="https://drive.google.com/drive/folders/1syXHcxIoI8ZslosLgOjNLXe3Efepr-Yz?usp=drive_link" target="_blank" class="view-samples-button">
+                        🎥 ดูคลิปผลงานตัวอย่างที่นี่
+                    </a>
                 </div>
             </div>
 
@@ -542,27 +718,16 @@
                             <div class="tool-desc">รวมภาพสินค้าเข้ากับ AI แบบสมจริง (ให้ Workflow)</div>
                         </li>
                         <li>
-                            <div class="tool-name">VEO3 (Optional)</div>
+                            <div class="tool-name">VEO3 (ไม่จำเป็น)</div>
                             <div class="tool-desc">ทำคลิปแทน/ร่วมกับ Midjourney</div>
                         </li>
                     </ul>
                 </div>
 
                 <div class="samples-section">
-                    <h3>ตัวอย่างผลงาน</h3>
-                    <div class="sample-grid">
-                        <div class="sample-item">📦 ลังพลาสติกสีแดง</div>
-                        <div class="sample-item">🥤 น้ำผลไม้</div>
-                        <div class="sample-item">👗 นางแบบถือสินค้า</div>
-                        <div class="sample-item">🎬 Ads Prompt D</div>
-                        <div class="sample-item">🛒 โฆษณาชุดสินค้า</div>
-                        <div class="sample-item">📱 Ultra-realistic shots</div>
-                    </div>
-                    <div style="text-align: center; margin-top: 20px;">
-                        <a href="https://drive.google.com/drive/folders/1QXHSx1_7_AcoerOcCa52pVcBMJP9vd-9?usp=drive_link" target="_blank" class="view-samples-button">
-                            🛒 ดูคลิปตัวอย่างทั้งหมด
-                        </a>
-                    </div>
+                    <a href="https://drive.google.com/drive/folders/1QXHSx1_7_AcoerOcCa52pVcBMJP9vd-9?usp=drive_link" target="_blank" class="view-samples-button">
+                        🎥 ดูคลิปผลงานตัวอย่างที่นี่
+                    </a>
                 </div>
             </div>
         </div>
@@ -570,7 +735,7 @@
         <div class="note-section">
             <p><strong>📌 หมายเหตุสำคัญ:</strong></p>
             <p>• คอร์สกลุ่มปิด (399 บาท) - เรียนครบทุกแนว มีวิดีโอย้อนหลังดูได้ตลอดชีพ</p>
-            <p>• คอร์ส 1-1 (1,999 / 2,999 บาท) - เลือกเรียน 2 แนวที่สนใจ สอนแบบเข้มข้น</p>
+            <p>• คอร์ส 1-1 (1,999 / 2,999 บาท) - เลือกเรียน 2 แนวที่สนใจ สอนแบบเข้มข้น 1-1 ปล.เมื่อทำ 2 แนวที่สอนจนคล่องแล้วไปต่อยอดดูคลิปสอนแนวอื่นๆเพิ่มเติมได้ในกลุ่มลับฟรีตลอดชีพ</p>
             <p>• ทุกคอร์สมีการอัพเดตเนื้อหาใหม่ตลอด</p>
             <p>• Add Line โค้ชสอบถามได้ตลอดหลังเรียนจบ</p>
         </div>
