@@ -4936,27 +4936,49 @@ function displayGeneratedImage(imageUrl, prompt, model, cost) {
 
 // Helper functions
 // แทนที่ function downloadImage เดิม
-function downloadImage(url, filename) {
-    // Clean filename - ลบอักขระพิเศษ
-    const cleanFilename = filename
-        .replace(/[^a-z0-9\u0E00-\u0E7F]/gi, '-') // รวมภาษาไทยด้วย
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '') // ลบ - หน้าหลัง
-        .toLowerCase()
-        .substring(0, 50); // จำกัดความยาว
-    
-    // สร้าง link element
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `veo-${cleanFilename || 'image'}.png`;
-    a.target = '_blank';
-    
-    // เพิ่ม link ชั่วคราวและคลิก
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    showNotification('💾 กำลังดาวน์โหลด...', 'success');
+async function downloadImage(url, filename) {
+    try {
+        showNotification('💾 กำลังดาวน์โหลดรูปภาพ...', 'info');
+        
+        // Clean filename - ลบอักขระพิเศษ
+        const cleanFilename = filename
+            .replace(/[^a-z0-9\u0E00-\u0E7F]/gi, '-') // รวมภาษาไทยด้วย
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '') // ลบ - หน้าหลัง
+            .toLowerCase()
+            .substring(0, 50); // จำกัดความยาว
+        
+        // ดาวน์โหลดรูปผ่าน fetch
+        const response = await fetch(url);
+        const blob = await response.blob();
+        
+        // สร้าง blob URL
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        // สร้าง link element
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `veo-${cleanFilename || 'image'}.png`;
+        a.style.display = 'none';
+        
+        // เพิ่ม link และ trigger download
+        document.body.appendChild(a);
+        a.click();
+        
+        // cleanup
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+        }, 100);
+        
+        showNotification('✅ ดาวน์โหลดสำเร็จ!', 'success');
+    } catch (error) {
+        console.error('Download error:', error);
+        
+        // ถ้า fetch ไม่ได้ ให้เปิด URL ในแท็บใหม่
+        window.open(url, '_blank');
+        showNotification('📂 เปิดรูปภาพในแท็บใหม่ - คลิกขวาเพื่อบันทึก', 'info');
+    }
 }
 
 // เพิ่ม function นี้ถ้ายังไม่มี (ใส่ต่อจาก downloadImage)
