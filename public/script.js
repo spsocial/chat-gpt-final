@@ -448,6 +448,28 @@ function showAnnouncement() {
     }
 }
 
+function toggleCardExpand(button) {
+    const card = button.closest('.announcement-card');
+    const preview = card.querySelector('.announcement-card-preview');
+    const fullContent = card.querySelector('.announcement-card-content');
+    
+    if (!fullContent) return;
+    
+    if (fullContent.style.display === 'none' || !fullContent.style.display) {
+        // Expand
+        preview.style.display = 'none';
+        fullContent.style.display = 'block';
+        button.textContent = 'ย่อเนื้อหา ▲';
+        card.classList.add('expanded');
+    } else {
+        // Collapse
+        preview.style.display = 'block';
+        fullContent.style.display = 'none';
+        button.textContent = 'อ่านเพิ่มเติม ▼';
+        card.classList.remove('expanded');
+    }
+}
+
 function closeAnnouncement(updateVersion = false) {
     const popup = document.getElementById('announcementPopup');
     const dontShowCheckbox = document.getElementById('dontShowFor3Hours');

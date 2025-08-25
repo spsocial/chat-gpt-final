@@ -3615,6 +3615,128 @@ line-clamp: 3;
         transform: translateX(0);
     }
 }
+/* Announcement Cards */
+.announcement-card {
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 16px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.announcement-card:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    background: rgba(139, 92, 246, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+}
+
+.announcement-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.announcement-badge {
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.announcement-badge.new {
+    background: linear-gradient(135deg, #10b981, #3b82f6);
+}
+
+.announcement-badge.hot {
+    background: linear-gradient(135deg, #f59e0b, #ef4444);
+}
+
+.announcement-card-header h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
+    flex: 1;
+}
+
+.announcement-card-preview {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+}
+
+.announcement-card-preview p {
+    margin: 0;
+}
+
+.announcement-card-content {
+    display: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.8;
+    margin-bottom: 12px;
+    animation: expandContent 0.3s ease;
+}
+
+@keyframes expandContent {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}
+
+.announcement-card-content h4 {
+    color: var(--primary);
+    font-size: 16px;
+    margin: 16px 0 8px 0;
+}
+
+.announcement-card-content ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.announcement-card-content li {
+    margin: 4px 0;
+}
+
+.read-more-btn {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    color: var(--primary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    font-family: 'Kanit', sans-serif;
+}
+
+.read-more-btn:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+.announcement-card.expanded {
+    background: rgba(139, 92, 246, 0.08);
+    border-color: rgba(139, 92, 246, 0.3);
+}
+
 /* Floating Action Button */
 .fab-announcement {
     position: fixed;
