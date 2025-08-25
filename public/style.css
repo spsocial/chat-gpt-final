@@ -4696,8 +4696,8 @@ line-clamp: 3;
     box-shadow: 0 0 30px rgba(255, 71, 87, 0.5);
 }
 
-.mode-btn.new-feature::after {
-    content: 'สร้างภาพด้วย AI!';
+/* Tooltip for all mode buttons */
+.mode-btn::after {
     position: absolute;
     top: 100%;
     margin-top: 8px;
@@ -4715,8 +4715,37 @@ line-clamp: 3;
     z-index: 1000;
 }
 
-.mode-btn.new-feature:hover::after {
+.mode-btn:hover::after {
     opacity: 1;
+}
+
+/* Specific tooltips for each mode */
+.mode-btn[data-mode="promptmaster"]::after {
+    content: 'สร้าง Prompt วิดีโอด้วย AI';
+}
+
+.mode-btn[data-mode="scenepro"]::after {
+    content: 'สร้าง Prompt โฆษณาด้วย AI';
+}
+
+.mode-btn[data-mode="image"]::after {
+    content: 'สร้าง Prompt รูปภาพด้วย AI';
+}
+
+.mode-btn[data-mode="imagegen"]::after {
+    content: 'สร้างภาพด้วย AI!';
+}
+
+.mode-btn[data-mode="chat"]::after {
+    content: 'คุยกับ AI Assistant';
+}
+
+.mode-btn[data-mode="character"]::after {
+    content: 'สร้างตัวละครด้วย AI';
+}
+
+.mode-btn[data-mode="library"]::after {
+    content: 'คลังตัวละครของคุณ';
 }
 
 /* FAB Tools - อยู่เหนือคอร์ส */
