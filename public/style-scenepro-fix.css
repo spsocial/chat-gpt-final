@@ -22,30 +22,55 @@
     }
 }
 
-/* Mobile Layout Fix */
+/* Mobile Layout Fix - Match exactly with Image Prompt mode */
 @media (max-width: 768px) {
-    /* Stack layout for mobile */
-    body.mode-scenepro .main-content {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 16px !important;
-    }
-    
-    /* Hide all info panels on mobile */
-    body.mode-scenepro .info-panel {
-        display: none !important;
-    }
-    
-    /* Specifically hide Scene Pro info panel */
+    /* Hide Scene Pro info panel on mobile like other modes */
     body.mode-scenepro #sceneproInfo {
         display: none !important;
     }
     
-    /* Ensure chat panel takes full width and height */
+    /* Main content stacks vertically */
+    body.mode-scenepro .main-content {
+        grid-template-columns: 1fr !important;
+        height: auto !important;
+        gap: 16px !important;
+    }
+    
+    /* Chat panel takes full width */
     body.mode-scenepro .chat-panel {
         width: 100% !important;
         height: calc(100vh - 250px) !important;
-        display: block !important;
+    }
+    
+    /* Chat messages area */
+    body.mode-scenepro .chat-messages {
+        padding: 16px !important;
+    }
+    
+    /* Chat input area with proper padding */
+    body.mode-scenepro .chat-input-area {
+        padding: 16px !important;
+    }
+    
+    /* Message input matches other modes */
+    body.mode-scenepro .message-input {
+        font-size: 14px !important;
+        padding: 10px 16px !important;
+        height: 80px !important;
+        max-height: 150px !important;
+        min-height: 60px !important;
+    }
+    
+    /* Send button matches other modes */
+    body.mode-scenepro .send-btn {
+        padding: 10px 20px !important;
+        font-size: 14px !important;
+    }
+    
+    /* Status bar */
+    body.mode-scenepro .status-bar {
+        font-size: 12px !important;
+        padding: 10px 16px !important;
     }
     
     /* Show mobile info toggle */
@@ -130,8 +155,16 @@
     margin: 0;
 }
 
-/* Very small screens */
+/* Very small screens - Match with other modes */
 @media (max-width: 480px) {
+    body.mode-scenepro .message-input {
+        height: 50px !important;
+        max-height: 100px !important;
+        min-height: 45px !important;
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+    
     body.mode-scenepro .chat-panel {
         height: calc(100vh - 200px) !important;
     }
