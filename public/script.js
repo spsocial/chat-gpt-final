@@ -9512,11 +9512,21 @@ async function doLogin() {
             const storedUserData = localStorage.getItem(`userData_${localAccounts[username].userId}`);
             let hashedPasswordFromStorage = null;
             
+            console.log('Debug: Found account for username:', username);
+            console.log('Debug: User ID:', localAccounts[username].userId);
+            
             if (storedUserData) {
                 const parsedUserData = JSON.parse(storedUserData);
+                console.log('Debug: User data found:', parsedUserData);
+                
                 if (parsedUserData.linkedAccount && parsedUserData.linkedAccount.hashedPassword) {
                     hashedPasswordFromStorage = parsedUserData.linkedAccount.hashedPassword;
+                    console.log('Debug: Found hashed password in linkedAccount');
+                } else {
+                    console.log('Debug: No hashed password in linkedAccount');
                 }
+            } else {
+                console.log('Debug: No userData found for this userId');
             }
             
             accountData = {
@@ -9524,6 +9534,8 @@ async function doLogin() {
                 hashedPassword: hashedPasswordFromStorage,
                 username: username
             };
+            
+            console.log('Debug: AccountData prepared:', accountData);
         }
         
         // ตรวจสอบว่าเป็น token login หรือไม่
@@ -9585,33 +9597,35 @@ async function doLogin() {
             userData = JSON.parse(localUserData);
         }
         
-        // Verify password
-        const hashedPassword = await simpleHash(password);
-        let passwordValid = false;
-        
-        // Check password from multiple sources
-        // 1. Check if accountData has hashedPassword (from token login)
-        if (accountData.hashedPassword) {
-            if (hashedPassword === accountData.hashedPassword) {
-                passwordValid = true;
+        // Verify password only if not a token login
+        if (!isToken) {
+            const hashedPassword = await simpleHash(password);
+            let passwordValid = false;
+            
+            // Check password from multiple sources
+            // 1. Check if accountData has hashedPassword (from initial retrieval)
+            if (accountData.hashedPassword) {
+                if (hashedPassword === accountData.hashedPassword) {
+                    passwordValid = true;
+                }
+            } 
+            // 2. Check from userData linkedAccount
+            else if (userData && userData.linkedAccount && userData.linkedAccount.hashedPassword) {
+                if (hashedPassword === userData.linkedAccount.hashedPassword) {
+                    passwordValid = true;
+                    // Set hashedPassword for consistency
+                    accountData.hashedPassword = userData.linkedAccount.hashedPassword;
+                }
             }
-        } 
-        // 2. Check from userData linkedAccount
-        else if (userData && userData.linkedAccount && userData.linkedAccount.hashedPassword) {
-            if (hashedPassword === userData.linkedAccount.hashedPassword) {
-                passwordValid = true;
-                // Set hashedPassword for consistency
-                accountData.hashedPassword = userData.linkedAccount.hashedPassword;
+            
+            if (!passwordValid) {
+                if (!accountData.hashedPassword && (!userData || !userData.linkedAccount || !userData.linkedAccount.hashedPassword)) {
+                    showLoginError('❌ ข้อมูลบัญชีไม่ถูกต้อง - กรุณาสร้างบัญชีใหม่');
+                } else {
+                    showLoginError('❌ รหัสผ่านไม่ถูกต้อง');
+                }
+                return;
             }
-        }
-        
-        if (!passwordValid) {
-            if (!accountData.hashedPassword && (!userData || !userData.linkedAccount)) {
-                showLoginError('❌ ข้อมูลบัญชีไม่ถูกต้อง');
-            } else {
-                showLoginError('❌ รหัสผ่านไม่ถูกต้อง');
-            }
-            return;
         }
         
         // Login successful - save original userId before switching
