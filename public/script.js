@@ -9508,9 +9508,21 @@ async function doLogin() {
         let accountData = null;
         
         if (!isToken && localAccounts[username]) {
+            // Get userData to retrieve hashedPassword
+            const storedUserData = localStorage.getItem(`userData_${localAccounts[username].userId}`);
+            let hashedPasswordFromStorage = null;
+            
+            if (storedUserData) {
+                const parsedUserData = JSON.parse(storedUserData);
+                if (parsedUserData.linkedAccount && parsedUserData.linkedAccount.hashedPassword) {
+                    hashedPasswordFromStorage = parsedUserData.linkedAccount.hashedPassword;
+                }
+            }
+            
             accountData = {
                 userId: localAccounts[username].userId,
-                hashedPassword: null // Will get from userData
+                hashedPassword: hashedPasswordFromStorage,
+                username: username
             };
         }
         
