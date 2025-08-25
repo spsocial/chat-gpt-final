@@ -451,9 +451,13 @@ function showAnnouncement() {
 function toggleCardExpand(button) {
     const card = button.closest('.announcement-card');
     const preview = card.querySelector('.announcement-card-preview');
-    const fullContent = card.querySelector('.announcement-card-content');
+    // Check for both possible class names (some cards use .announcement-card-full)
+    const fullContent = card.querySelector('.announcement-card-content') || card.querySelector('.announcement-card-full');
     
-    if (!fullContent) return;
+    if (!fullContent) {
+        console.error('No full content found in card');
+        return;
+    }
     
     if (fullContent.style.display === 'none' || !fullContent.style.display) {
         // Expand
