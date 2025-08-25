@@ -1469,7 +1469,7 @@ case 'scenepro':
     loadChatHistory('scenepro');
     
     // เพิ่มข้อความต้อนรับสำหรับ Scene Pro
-    if (!localStorage.getItem('sceneProWelcomeShown')) {
+    if (!localStorage.getItem('sceneProWelcomeShownV2')) {
         setTimeout(() => {
             addMessage('🎬 ยินดีต้อนรับสู่ Scene Pro!\n\n' +
                       '✨ โหมดพิเศษสำหรับสร้างฉากโฆษณาสินค้าแบบมืออาชีพ\n\n' +
@@ -1484,7 +1484,7 @@ case 'scenepro':
                       '• Fashion & Lifestyle\n' +
                       '• เหมาะสำหรับโฆษณาที่ต้องการจบในฉากเดียว\n\n' +
                       'ลองเริ่มด้วยการแนบรูปสินค้าและเขียนบทพูดสั้นๆ ดูสิ!', 'assistant');
-            localStorage.setItem('sceneProWelcomeShown', 'true');
+            localStorage.setItem('sceneProWelcomeShownV2', 'true');
         }, 500);
     }
     break;
@@ -1724,6 +1724,7 @@ function addWelcomeMessage(mode) {
                       💡 <strong>บอกผมได้เป็นภาษาไทย:</strong> คุณอยากได้ตัวละครแบบไหน? แต่ผมจะตอบเป็นภาษาอังกฤษนะครับ`;
             break;
             
+        case 'promptmaster':
         case 'multichar':
             message = `สวัสดีครับ! ผมคือ Prompt D Master 🎭<br><br>
                       โหมดสร้าง Prompt ระดับสูง สำหรับฉากที่ซับซ้อน<br>
@@ -1750,6 +1751,26 @@ function addWelcomeMessage(mode) {
                       เรียกใช้ Bot D ได้เสมอครับ แล้วถามอะไรก็ได้ครับ<br>
                       📎 แนบรูปได้ | 🎤 พูดได้<br><br>
                       💡 <strong>ลองถาม:</strong> "ช่วยอธิบายprompt รุปภาพที่แนบไป หน่อย" หรือ "ขอสูตรแกงเขียวหวาน..."`;
+            break;
+            
+        case 'scenepro':
+            // ลบ localStorage เพื่อให้แสดงข้อความต้อนรับใหม่
+            localStorage.removeItem('sceneProWelcomeShownV2');
+            message = `🎬 ยินดีต้อนรับสู่ Scene Pro!<br><br>
+                      ✨ โหมดพิเศษสำหรับสร้างฉากโฆษณาสินค้าแบบมืออาชีพ<br><br>
+                      📸 วิธีใช้ง่ายๆ:<br>
+                      1. แนบรูปสินค้าที่มีนายแบบนางแบบยืนพูด (ถ้ามี) หรือ แค่รูปสินค้า<br>
+                      2. เขียนบทพูดหรือข้อความโฆษณา (โดยไม่ต้องระบุว่าคือบทพูด AI จะรับรู้ได้เอง)<br>
+                      3. AI จะสร้าง Prompt ฉากโฆษณาระดับ Professional ให้ทันที!<br><br>
+                      🛍️ เหมาะกับ:<br>
+                      • Product Showcase<br>
+                      • Beauty Shot<br>
+                      • Food Commercial<br>
+                      • Fashion & Lifestyle<br>
+                      • เหมาะสำหรับโฆษณาที่ต้องการจบในฉากเดียว<br><br>
+                      ลองเริ่มด้วยการแนบรูปสินค้าและเขียนบทพูดสั้นๆ ดูสิ!`;
+            // ตั้งค่า localStorage ใหม่เพื่อไม่ให้แสดงซ้ำเมื่อเปลี่ยนโหมด
+            localStorage.setItem('sceneProWelcomeShownV2', 'true');
             break;
     }
     
@@ -4099,13 +4120,21 @@ function copyPrompt(button) {
     
     let finalPrompt = '';
     
-    // Check if this is Scene Pro mode with "/imagine prompt for VEO3:" format
-    if (currentMode === 'scenepro' && fullText.includes('/imagine prompt for VEO3:')) {
-        // Remove the "/imagine prompt for VEO3:" prefix
-        const startIndex = fullText.indexOf('/imagine prompt for VEO3:');
-        if (startIndex !== -1) {
-            finalPrompt = fullText.substring(startIndex + 26).trim(); // 26 is length of "/imagine prompt for VEO3:"
+    // Check if this is Scene Pro mode
+    if (currentMode === 'scenepro') {
+        // Look for the pattern starting with "From" and ending with "AUDIO ONLY"
+        const fromIndex = fullText.indexOf('**From');
+        const audioOnlyIndex = fullText.lastIndexOf('All dialogue is AUDIO ONLY');
+        
+        if (fromIndex !== -1 && audioOnlyIndex !== -1) {
+            // Extract from "From" to end of "AUDIO ONLY"
+            finalPrompt = fullText.substring(fromIndex, audioOnlyIndex + 26).trim(); // 26 is length of "All dialogue is AUDIO ONLY"
+        } else if (fullText.includes('/imagine prompt for VEO3:')) {
+            // Fallback: remove the prefix if present
+            const startIndex = fullText.indexOf('/imagine prompt for VEO3:');
+            finalPrompt = fullText.substring(startIndex + 26).trim();
         } else {
+            // Use full text if patterns not found
             finalPrompt = fullText;
         }
     } else if (currentMode === 'image' && fullText && !fullText.includes('VEO3 MULTI-CHARACTER SCENE')) {
