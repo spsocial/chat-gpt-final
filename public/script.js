@@ -9389,6 +9389,15 @@ async function linkAccount() {
             
             tokenModal.innerHTML = `
                 <h3 style="color: var(--primary); margin: 0 0 15px 0;">🔑 Login Token สำเร็จ!</h3>
+                <div style="background: rgba(255, 59, 59, 0.1); border: 2px solid #ff3838; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                    <p style="margin: 0 0 8px 0; color: #ff3838; font-size: 14px; font-weight: bold;">⚠️ คำเตือนสำคัญ:</p>
+                    <ul style="margin: 0; padding-left: 20px; color: #ff6b6b; font-size: 13px; line-height: 1.8;">
+                        <li><strong>กรุณาบันทึก Token นี้ทันที!</strong></li>
+                        <li>Token เป็นวิธีเดียวในการ Login หากลืม Password</li>
+                        <li>ถ้าไม่เก็บ Token และลืม Password จะไม่สามารถเข้าบัญชีได้อีก</li>
+                        <li>ระบบไม่สามารถกู้คืน Password ได้</li>
+                    </ul>
+                </div>
                 <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
                     <p style="margin: 0 0 8px 0; color: #3b82f6; font-size: 13px; font-weight: bold;">✨ Token นี้ช่วยให้คุณ:</p>
                     <ul style="margin: 0; padding-left: 20px; color: #aaa; font-size: 12px; line-height: 1.5;">
@@ -9620,7 +9629,12 @@ async function doLogin() {
             
             if (!passwordValid) {
                 if (!accountData.hashedPassword && (!userData || !userData.linkedAccount || !userData.linkedAccount.hashedPassword)) {
-                    showLoginError('❌ ข้อมูลบัญชีไม่ถูกต้อง - กรุณาสร้างบัญชีใหม่');
+                    showLoginError(`
+                        ❌ ไม่สามารถเข้าสู่ระบบได้<br>
+                        <small style="color: #ef4444;">บัญชีนี้อาจสร้างก่อนระบบ Login ใหม่<br>
+                        กรุณาใช้ Token หรือสร้างบัญชีใหม่<br>
+                        หากไม่มี Token กรุณาติดต่อผู้ดูแลระบบ</small>
+                    `);
                 } else {
                     showLoginError('❌ รหัสผ่านไม่ถูกต้อง');
                 }
