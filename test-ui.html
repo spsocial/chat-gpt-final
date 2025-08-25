@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Test Modern UI - Prompt D Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="public/style-modern.css">
+    <style>
+        /* Additional test styles */
+        .test-notice {
+            background: linear-gradient(135deg, #f59e0b, #dc2626);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 500;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-notice">
+        🚀 ทดสอบธีมใหม่ - Modern Blue Theme
+    </div>
+    
+    <div class="container" style="margin-top: 50px;">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div class="logo">
+                    <div class="logo-icon">🎬</div>
+                    <div class="logo-text">
+                        <h1>Prompt D - Generator <span style="font-size: 14px; color: var(--text-secondary); font-weight: normal;">v6.0 Modern</span></h1>
+                        <p>เครื่องมือสร้าง Prompt อัจฉริยะ - ธีมใหม่</p>
+                    </div>
+                </div>
+                <div class="usage-display">
+                    <div class="user-info">
+                        <div class="user-id">user_modern_test</div>
+                        <div class="usage-info">
+                            <div class="usage-bar">
+                                <div class="usage-progress" style="width: 60%;"></div>
+                            </div>
+                            <div class="usage-text">฿3.00/5.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mode Selector -->
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="promptmaster">
+                    <span class="mode-icon">🎥</span>
+                    <span class="mode-text">Prompt Master</span>
+                </button>
+                <button class="mode-btn new-feature" data-mode="scenepro">
+                    <span class="mode-icon">🎬</span>
+                    <span class="mode-text">Scene Pro</span>
+                    <span class="new-badge">NEW!</span>
+                </button>
+                <button class="mode-btn" data-mode="image">
+                    <span class="mode-icon">🖼️</span>
+                    <span class="mode-text">Image Prompt</span>
+                </button>
+                <button class="mode-btn" data-mode="imagegen">
+                    <span class="mode-icon">🎨</span>
+                    <span class="mode-text">Image Gen</span>
+                </button>
+                <button class="mode-btn" data-mode="chat">
+                    <span class="mode-icon">💬</span>
+                    <span class="mode-text">AI Chat</span>
+                </button>
+                <button class="mode-btn" data-mode="character">
+                    <span class="mode-icon">🧙</span>
+                    <span class="mode-text">Character Creator</span>
+                </button>
+                <button class="mode-btn" data-mode="library">
+                    <span class="mode-icon">🗂️</span>
+                    <span class="mode-text">My Characters</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Dropdown -->
+        <select class="mobile-mode-dropdown" id="mobileModeDrop" style="margin-top: 16px;">
+            <option value="promptmaster">🎥 Prompt Master</option>
+            <option value="scenepro">🎬 Scene Pro ✨NEW!</option>
+            <option value="image">🖼️ Image Prompt</option>
+            <option value="imagegen">🎨 Image Gen ✨NEW!</option>
+            <option value="chat">💬 AI Chat ✨NEW!</option>
+            <option value="character">🧙 Character Creator</option>
+            <option value="library">🗂️ My Characters</option>
+        </select>
+        
+        <!-- Mobile Info Toggle -->
+        <button class="mobile-info-toggle" onclick="toggleMobileInfo()">
+            ℹ️ ดูข้อมูล/วิธีใช้ ▼
+        </button>
+        <div class="mobile-info-content" id="mobileInfoContent">
+            <h4>🎬 Scene Pro - โหมดใหม่!</h4>
+            <p>สร้างฉากเดียวแบบเจ๋งๆ เน้นคุณภาพสูง ไม่ต้องต่อฉาก</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Info Panel -->
+            <div class="info-panel">
+                <div class="info-section">
+                    <h3>🎬 Scene Pro - สร้างฉากเดียวแบบเจ๋งๆ</h3>
+                    <div class="tip-card">
+                        <h4>✨ เน้นฉากเดี่ยวคุณภาพสูง</h4>
+                        <p>AI จะช่วยสร้าง Prompt สำหรับฉากเดียวที่มีรายละเอียดสูง พร้อมเทคนิคการถ่ายระดับ Professional</p>
+                    </div>
+                    <div class="tip-card">
+                        <h4>🎯 ไม่ต้องต่อฉาก</h4>
+                        <p>เหมาะสำหรับการสร้างคลิปสั้นๆ ฉากเดียวที่สมบูรณ์ในตัว ไม่ต้องกังวลเรื่องความต่อเนื่อง</p>
+                    </div>
+                    <div class="tip-card">
+                        <h4>🎨 เน้นความสวยงาม</h4>
+                        <p>มุ่งเน้นการสร้างภาพที่สวยงาม มีอารมณ์ และดึงดูดสายตา พร้อมมุมกล้องที่น่าประทับใจ</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chat Panel -->
+            <div class="chat-panel">
+                <div class="chat-messages">
+                    <div class="message user">
+                        <div class="message-avatar">👤</div>
+                        <div class="message-content">
+                            <p>ฉากพระอาทิตย์ตกที่ชายหาด คนเดินผ่าน</p>
+                        </div>
+                    </div>
+                    <div class="message assistant">
+                        <div class="message-avatar">🤖</div>
+                        <div class="message-content">
+                            <p><strong>🎬 Scene Pro Prompt:</strong></p>
+                            <p>Golden hour beach scene with silhouetted figure walking along the shoreline, warm orange and pink sky reflecting on wet sand, gentle waves lapping, cinematic wide shot with anamorphic lens flares, shallow depth of field focusing on the lone walker, footprints trailing behind in the sand, seagulls flying in the distance, soft ambient lighting, dreamy atmosphere, 4K resolution, professional color grading with warm tones, slow motion capture at 60fps</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-area">
+                    <div class="input-wrapper">
+                        <textarea class="message-input" placeholder="บรรยายฉากเดียวที่ต้องการสร้าง..." rows="1"></textarea>
+                        <button class="send-btn">
+                            สร้าง Scene Pro ✨
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Test interactions
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        function toggleMobileInfo() {
+            const content = document.getElementById('mobileInfoContent');
+            content.classList.toggle('show');
+        }
+        
+        // Auto resize textarea
+        const textarea = document.querySelector('.message-input');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = this.scrollHeight + 'px';
+            });
+        }
+    </script>
+</body>
+</html>

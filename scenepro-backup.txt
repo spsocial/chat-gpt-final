@@ -1,0 +1,137 @@
+# Scene Pro Backup Code
+
+## 1. SERVER.JS Changes:
+
+### Assistant Configuration (line 24):
+```javascript
+scenepro: 'asst_plZxkTa5US7YnlGgUSy8sNy9'  // Scene Pro Assistant ID
+```
+
+### Cost Calculation (lines 500-505):
+```javascript
+// Scene Pro mode ใช้ GPT-4o ราคาแพงกว่า (คิดกำไร 10%)
+if (mode === 'scenepro') {
+    // GPT-4o cost ~$5/1M input, $15/1M output
+    // เฉลี่ยประมาณ 0.50 บาท/1K tokens + กำไร 10%
+    costPerThousand = 0.055;  // 0.05 + 10% = 0.055 บาท/1K tokens
+}
+```
+
+## 2. HTML Changes:
+
+### Mode Button (around line 147):
+```html
+<button class="mode-btn new-feature" data-mode="scenepro" onclick="switchMode('scenepro')">
+    <span class="mode-icon">🎬</span>
+    <span class="mode-text">Scene Pro</span>
+    <span class="new-badge">NEW!</span>
+</button>
+```
+
+### Info Panel:
+```html
+<div id="sceneproInfo" class="info-section" style="display: none;">
+    <!-- Scene Pro info content -->
+</div>
+```
+
+## 3. SCRIPT.JS Changes:
+
+### Global Variables:
+```javascript
+const ASSISTANT_IDS = {
+    scenepro: 'asst_plZxkTa5US7YnlGgUSy8sNy9'
+};
+```
+
+### Chat History:
+```javascript
+const chatHistory = {
+    // ... other modes
+    scenepro: ''
+};
+```
+
+### Switch Mode Case (lines 1480-1511):
+```javascript
+case 'scenepro':
+    document.getElementById('sceneproInfo').style.display = 'block';
+    messageInput.placeholder = "แนบรูปสินค้า + เขียนบทพูด หรือบรรยายฉากโฆษณาที่ต้องการ...";
+    sendButton.innerHTML = 'สร้าง Scene Pro ✨';
+    modeNotice.classList.remove('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnScenePro = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnScenePro) uploadBtnScenePro.style.display = '';
+    
+    // ซ่อนปุ่ม Template Form ใน Scene Pro mode
+    const templateBtnScenePro = document.getElementById('templateButtonSection');
+    if (templateBtnScenePro) templateBtnScenePro.style.display = 'none';
+    
+    // เพิ่ม class เพื่อใช้ CSS จัดการ
+    document.body.classList.add('mode-scenepro');
+    
+    const enhanceSectionScenePro = document.getElementById('enhanceSection');
+    if (enhanceSectionScenePro) enhanceSectionScenePro.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'block';
+    document.getElementById('chatInfo').style.display = 'none';
+    
+    loadChatHistory('scenepro');
+    
+    // เพิ่มข้อความต้อนรับสำหรับ Scene Pro
+    if (!localStorage.getItem('sceneProWelcomeShown')) {
+        setTimeout(() => {
+            addMessage('🎬 ยินดีต้อนรับสู่ Scene Pro!\n\n✨ โหมดพิเศษสำหรับสร้างฉากโฆษณาสินค้าแบบมืออาชีพ\n\n📸 วิธีใช้ง่ายๆ:\n1. แนบรูปสินค้าหรือโลโก้ (ถ้ามี)\n2. เขียนบทพูดหรือข้อความโฆษณา\n3. AI จะสร้าง Prompt ฉากโฆษณาระดับ Professional ให้ทันที!\n\n🛍️ เหมาะกับ:\n• Product Showcase\n• Beauty Shot\n• Food Commercial\n• Fashion & Lifestyle\n\nลองเริ่มด้วยการแนบรูปสินค้าและเขียนบทพูดสั้นๆ ดูสิ!', 'assistant');
+            localStorage.setItem('sceneProWelcomeShown', 'true');
+        }, 500);
+    }
+    break;
+```
+
+### Save/Load History Updates:
+```javascript
+// In saveChatHistory function:
+if (mode === 'promptmaster' || mode === 'character' || mode === 'multichar' || mode === 'image' || mode === 'scenepro') {
+    chatHistory[mode] = chatMessages.innerHTML;
+}
+
+// In Save current chat history before switching:
+if (currentMode === 'promptmaster' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image' || currentMode === 'scenepro') {
+    saveChatHistory(currentMode);
+}
+```
+
+### Send Message Updates (lines 3617-3619):
+```javascript
+if (currentMode === 'scenepro') {
+    requestBody.assistantId = ASSISTANT_IDS.scenepro;
+}
+```
+
+### Info Panel Content (lines 6911-6923):
+```javascript
+case 'scenepro':
+    infoHTML = quickActionsHTML + `
+        <h4>🎬 Scene Pro - โฆษณาสินค้า</h4>
+        <p style="font-size: 13px; color: #a1a1aa;">
+            📸 <strong>แนบภาพ + เขียนบท = ฉากเทพ!</strong><br>
+            • Product Showcase หรูหรา<br>
+            • Beauty Shot สินค้า<br>
+            • Food Commercial น่ากิน<br>
+            • Fashion & Lifestyle<br>
+            • ฉากเดียวจบ 5-10 วินาที<br>
+        </p>
+    `;
+    break;
+```
+
+## 4. CSS for hiding template button in Scene Pro:
+```css
+.mode-scenepro .template-form-btn-orange {
+    display: none !important;
+}
+
+.mode-scenepro .template-button-inline {
+    display: none !important;
+}
+```

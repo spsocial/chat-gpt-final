@@ -1,0 +1,166 @@
+/* ===== Scene Pro Mode Layout Fixes ===== */
+
+/* Desktop Layout Fix - Ensure proper grid layout */
+@media (min-width: 769px) {
+    /* Fix grid layout for Scene Pro mode */
+    body.mode-scenepro .main-content {
+        display: grid !important;
+        grid-template-columns: 380px 1fr !important;
+        gap: 24px !important;
+    }
+    
+    /* Ensure info panel shows properly */
+    body.mode-scenepro #sceneproInfo {
+        display: block !important;
+        width: 100% !important;
+    }
+    
+    /* Ensure chat panel takes remaining space */
+    body.mode-scenepro .chat-panel {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+}
+
+/* Mobile Layout Fix */
+@media (max-width: 768px) {
+    /* Stack layout for mobile */
+    body.mode-scenepro .main-content {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+    
+    /* Hide all info panels on mobile */
+    body.mode-scenepro .info-panel {
+        display: none !important;
+    }
+    
+    /* Specifically hide Scene Pro info panel */
+    body.mode-scenepro #sceneproInfo {
+        display: none !important;
+    }
+    
+    /* Ensure chat panel takes full width and height */
+    body.mode-scenepro .chat-panel {
+        width: 100% !important;
+        height: calc(100vh - 250px) !important;
+        display: block !important;
+    }
+    
+    /* Show mobile info toggle */
+    body.mode-scenepro .mobile-info-toggle {
+        display: block !important;
+    }
+    
+    /* Mobile info content */
+    body.mode-scenepro .mobile-info-content {
+        display: none;
+    }
+    
+    body.mode-scenepro .mobile-info-content.show {
+        display: block !important;
+    }
+}
+
+/* Hide template button in Scene Pro mode */
+.mode-scenepro .template-form-btn-orange {
+    display: none !important;
+}
+
+.mode-scenepro .template-button-inline {
+    display: none !important;
+}
+
+.mode-scenepro #templateButtonSection {
+    display: none !important;
+}
+
+/* Ensure Scene Pro info panel styling matches other modes */
+#sceneproInfo {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+#sceneproInfo .info-section {
+    margin-bottom: 24px;
+}
+
+#sceneproInfo .info-section:last-child {
+    margin-bottom: 0;
+}
+
+#sceneproInfo h3 {
+    color: #8b5cf6;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Match tip-card styling exactly with other modes */
+#sceneproInfo .tip-card {
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.1);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+
+#sceneproInfo .tip-card:last-child {
+    margin-bottom: 0;
+}
+
+#sceneproInfo .tip-card h4 {
+    color: #d4d4d8;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+#sceneproInfo .tip-card p {
+    color: #a1a1aa;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+    body.mode-scenepro .chat-panel {
+        height: calc(100vh - 200px) !important;
+    }
+}
+
+/* Hide duplicate standalone FAB buttons on mobile - keep only FAB menu */
+@media (max-width: 768px) {
+    .fab-announcement,
+    .fab-course,
+    .fab-tools,
+    .fab-tools-menu,
+    .fab-music,
+    .fab-video-analyzer {
+        display: none !important;
+    }
+    
+    /* Ensure FAB menu container is visible */
+    .fab-menu-container {
+        display: block !important;
+    }
+}
+
+/* Scene Pro inherits container styles from main style.css - no override needed */
+
+/* Fix for any layout issues on desktop */
+@media (min-width: 769px) {
+    /* Ensure info panel is visible on desktop */
+    body.mode-scenepro #sceneproInfo {
+        display: block !important;
+        min-height: 400px;
+    }
+}

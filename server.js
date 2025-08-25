@@ -20,7 +20,8 @@ const ASSISTANT_CONFIGS = {
         image: process.env.IMAGE_PROMPT_ASSISTANT_ID || 'asst_fTpI5G9WTb9hUS165JsyDP94',
         character: process.env.CHARACTER_ASSISTANT_ID,
         multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID,
-        chat: process.env.CHAT_ASSISTANT_ID
+        chat: process.env.CHAT_ASSISTANT_ID,
+        scenepro: process.env.SCENEPRO_ASSISTANT_ID || 'asst_K7Jay6fMFkHG92ipYIEwBjIG'  // Scene Pro Assistant ID
     }
 };
 
@@ -496,10 +497,15 @@ function calculateCost(usage, mode = 'promptmaster') {
     const totalTokens = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
     let costPerThousand = COST_PER_1K_TOKENS;
     
-    // Prompt Master mode ใช้ GPT-4o ราคาแพงกว่า
-    if (mode === 'multichar' || mode === 'promptmaster') {
+    // Scene Pro mode ใช้ GPT-4o ราคาแพงกว่า (คิดกำไร 10%)
+    if (mode === 'scenepro') {
         // GPT-4o cost ~$5/1M input, $15/1M output
         // เฉลี่ยประมาณ 0.50 บาท/1K tokens + กำไร 10%
+        costPerThousand = 0.055;  // 0.05 + 10% = 0.055 บาท/1K tokens
+    }
+    // Prompt Master และ MultiChar mode ใช้ GPT-4o-mini
+    else if (mode === 'multichar' || mode === 'promptmaster') {
+        // GPT-4o-mini เฉลี่ย 0.02 บาท/1K tokens
         costPerThousand = 0.02;
     }
     

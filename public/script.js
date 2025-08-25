@@ -31,6 +31,11 @@ let currentCharacterProfile = null;
 let userId = '';
 let googleUser = null;
 
+// Assistant IDs for different modes
+const ASSISTANT_IDS = {
+    scenepro: 'asst_plZxkTa5US7YnlGgUSy8sNy9'
+};
+
 // Firebase configuration
 window.FIREBASE_DATABASE_URL = 'https://prompt-d-generator-default-rtdb.asia-southeast1.firebasedatabase.app';
 
@@ -561,7 +566,8 @@ const chatHistory = {
     character: '',
     multichar: '',   
     image: '',
-    chat: ''  // เพิ่มบรรทัดนี้
+    chat: '',  // เพิ่มบรรทัดนี้
+    scenepro: ''  // เพิ่ม Scene Pro history
 };
 
 // Initialize image URLs array globally
@@ -1388,7 +1394,7 @@ function switchMode(mode) {
     document.body.classList.add(`mode-${mode}`);
     
     // Save current chat history before switching
-    if (currentMode === 'promptmaster' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image') {
+    if (currentMode === 'promptmaster' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image' || currentMode === 'scenepro') {
         saveChatHistory(currentMode);
     }
     
@@ -1407,6 +1413,7 @@ function switchMode(mode) {
     document.getElementById('imageInfo').style.display = 'none';
     document.getElementById('imageGenInfo').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
+    document.getElementById('sceneproInfo').style.display = 'none';
     document.getElementById('characterLibrary').classList.remove('active');
     
     // Update UI based on mode
@@ -1435,6 +1442,39 @@ case 'promptmaster':
     document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('multichar');
+    break;
+    
+case 'scenepro':
+    document.getElementById('sceneproInfo').style.display = 'block';
+    messageInput.placeholder = "แนบรูปสินค้า + เขียนบทพูด หรือบรรยายฉากโฆษณาที่ต้องการ...";
+    sendButton.innerHTML = 'สร้าง Scene Pro ✨';
+    modeNotice.classList.remove('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnScenePro = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnScenePro) uploadBtnScenePro.style.display = '';
+    
+    // ซ่อนปุ่ม Template Form ใน Scene Pro mode
+    const templateBtnScenePro = document.getElementById('templateButtonSection');
+    if (templateBtnScenePro) templateBtnScenePro.style.display = 'none';
+    
+    // Class already added by the main switchMode function
+    // document.body.classList.add('mode-scenepro'); - removed duplicate
+    
+    const enhanceSectionScenePro = document.getElementById('enhanceSection');
+    if (enhanceSectionScenePro) enhanceSectionScenePro.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'block';
+    document.getElementById('chatInfo').style.display = 'none';
+    
+    loadChatHistory('scenepro');
+    
+    // เพิ่มข้อความต้อนรับสำหรับ Scene Pro
+    if (!localStorage.getItem('sceneProWelcomeShown')) {
+        setTimeout(() => {
+            addMessage('🎬 ยินดีต้อนรับสู่ Scene Pro!\n\n✨ โหมดพิเศษสำหรับสร้างฉากโฆษณาสินค้าแบบมืออาชีพ\n\n📸 วิธีใช้ง่ายๆ:\n1. แนบรูปสินค้าหรือโลโก้ (ถ้ามี)\n2. เขียนบทพูดหรือข้อความโฆษณา\n3. AI จะสร้าง Prompt ฉากโฆษณาระดับ Professional ให้ทันที!\n\n🛍️ เหมาะกับ:\n• Product Showcase\n• Beauty Shot\n• Food Commercial\n• Fashion & Lifestyle\n\nลองเริ่มด้วยการแนบรูปสินค้าและเขียนบทพูดสั้นๆ ดูสิ!', 'assistant');
+            localStorage.setItem('sceneProWelcomeShown', 'true');
+        }, 500);
+    }
     break;
     
 case 'character':
@@ -1600,7 +1640,7 @@ case 'imagegen':
 // ========== CHAT HISTORY MANAGEMENT ==========
 function saveChatHistory(mode) {
     const chatMessages = document.getElementById('chatMessages');
-    if (mode === 'promptmaster' || mode === 'character' || mode === 'multichar' || mode === 'image') {
+    if (mode === 'promptmaster' || mode === 'character' || mode === 'multichar' || mode === 'image' || mode === 'scenepro') {
         chatHistory[mode] = chatMessages.innerHTML;
     }
 }
@@ -1609,8 +1649,8 @@ function loadChatHistory(mode) {
     console.log(`📘 loadChatHistory called for ${mode} mode`);
     const chatMessages = document.getElementById('chatMessages');
     
-    // ใช้ PromptStorage สำหรับ promptmaster และ multichar
-    if (mode === 'promptmaster' || mode === 'multichar') {
+    // ใช้ PromptStorage สำหรับ promptmaster, multichar และ scenepro
+    if (mode === 'promptmaster' || mode === 'multichar' || mode === 'scenepro') {
         console.log(`📘 Using PromptStorage for ${mode}`);
         PromptStorage.display(mode);
         return;
@@ -1647,7 +1687,7 @@ function clearChat() {
 }
 
 function clearModeChat(mode) {
-    if (mode === 'promptmaster' || mode === 'character') {
+    if (mode === 'promptmaster' || mode === 'character' || mode === 'scenepro') {
         chatHistory[mode] = '';
         if (currentMode === mode) {
             clearChat();
@@ -3533,15 +3573,22 @@ window.sendMessage = async function() {
         // Map promptmaster to multichar for backend
         const apiMode = currentMode === 'promptmaster' ? 'multichar' : currentMode;
         
+        // Add assistant ID for Scene Pro mode
+        const requestBody = {
+            message,
+            userId,
+            images: window.imageUrls,
+            mode: apiMode
+        };
+        
+        if (currentMode === 'scenepro') {
+            requestBody.assistantId = ASSISTANT_IDS.scenepro;
+        }
+        
         const response = await fetch(`${API_URL}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message,
-                userId,
-                images: window.imageUrls,
-                mode: apiMode
-            })
+            body: JSON.stringify(requestBody)
         });
         
         const data = await response.json();
@@ -3748,6 +3795,10 @@ function addMessage(content, type, isVeoPrompt = false, isCharacterProfile = fal
     if (currentMode === 'promptmaster' || currentMode === 'multichar') {
         setTimeout(() => {
             PromptStorage.save('multichar');
+        }, 100);
+    } else if (currentMode === 'scenepro') {
+        setTimeout(() => {
+            PromptStorage.save('scenepro');
         }, 100);
     } else if (currentMode === 'image') {
         setTimeout(() => {
@@ -4036,8 +4087,16 @@ function copyPrompt(button) {
     
     let finalPrompt = '';
     
-    // If we already have the full text for image mode, use it
-    if (currentMode === 'image' && fullText && !fullText.includes('VEO3 MULTI-CHARACTER SCENE')) {
+    // Check if this is Scene Pro mode with "/imagine prompt for VEO3:" format
+    if (currentMode === 'scenepro' && fullText.includes('/imagine prompt for VEO3:')) {
+        // Remove the "/imagine prompt for VEO3:" prefix
+        const startIndex = fullText.indexOf('/imagine prompt for VEO3:');
+        if (startIndex !== -1) {
+            finalPrompt = fullText.substring(startIndex + 26).trim(); // 26 is length of "/imagine prompt for VEO3:"
+        } else {
+            finalPrompt = fullText;
+        }
+    } else if (currentMode === 'image' && fullText && !fullText.includes('VEO3 MULTI-CHARACTER SCENE')) {
         finalPrompt = fullText;
     } else if (fullText.includes('```json')) {
         // ถ้าเป็น JSON format ให้ใช้ fullText ที่ extract มาแล้ว
@@ -6812,6 +6871,20 @@ function loadMobileInfo(mode) {
             `;
             break;
             
+        case 'scenepro':
+            infoHTML = quickActionsHTML + `
+                <h4>🎬 Scene Pro - โฆษณาสินค้า</h4>
+                <p style="font-size: 13px; color: #a1a1aa;">
+                    📸 <strong>แนบภาพ + เขียนบท = ฉากเทพ!</strong><br>
+                    • Product Showcase หรูหรา<br>
+                    • Beauty Shot สินค้า<br>
+                    • Food Commercial น่ากิน<br>
+                    • Fashion & Lifestyle<br>
+                    • ฉากเดียวจบ 5-10 วินาที<br>
+                </p>
+            `;
+            break;
+            
         case 'promptmaster':
         case 'multichar':
             infoHTML = quickActionsHTML + `
@@ -7484,6 +7557,8 @@ window.switchMode = function(mode) {
 setInterval(() => {
     if (currentMode === 'chat') {
         ChatStorage.save();
+    } else if (currentMode === 'scenepro') {
+        PromptStorage.save('scenepro');
     }
 }, 30000);
 
@@ -7491,6 +7566,8 @@ setInterval(() => {
 window.addEventListener('beforeunload', () => {
     if (currentMode === 'chat') {
         ChatStorage.save();
+    } else if (currentMode === 'scenepro') {
+        PromptStorage.save('scenepro');
     }
 });
 
@@ -7517,12 +7594,13 @@ const PromptStorage = {
     MAX_MESSAGES: 50,  // เก็บสูงสุด 50 ข้อความต่อโหมด
     STORAGE_KEYS: {
         promptmaster: 'veo_promptmaster_history',
-        multichar: 'veo_multichar_history'
+        multichar: 'veo_multichar_history',
+        scenepro: 'veo_scenepro_history'
     },
     
     // บันทึกประวัติ
     save: function(mode) {
-        if (mode !== 'promptmaster' && mode !== 'multichar') return;
+        if (mode !== 'promptmaster' && mode !== 'multichar' && mode !== 'scenepro') return;
         
         // ใช้ userId โดยตรงเหมือน ChatStorage
         console.log(`🔵 PromptStorage.save called for ${mode} mode, userId: ${userId}`);
@@ -7605,7 +7683,7 @@ const PromptStorage = {
     
     // โหลดประวัติ
     load: function(mode) {
-        if (mode !== 'promptmaster' && mode !== 'multichar') return [];
+        if (mode !== 'promptmaster' && mode !== 'multichar' && mode !== 'scenepro') return [];
         
         try {
             const key = `${this.STORAGE_KEYS[mode]}_${userId}`;
@@ -7627,7 +7705,7 @@ const PromptStorage = {
     
     // แสดงประวัติใน UI
     display: function(mode) {
-        if (mode !== 'promptmaster' && mode !== 'multichar') return;
+        if (mode !== 'promptmaster' && mode !== 'multichar' && mode !== 'scenepro') return;
         
         const messages = this.load(mode);
         
@@ -7685,7 +7763,7 @@ const PromptStorage = {
     
     // ลบประวัติ
     clear: function(mode) {
-        if (mode !== 'promptmaster' && mode !== 'multichar') return;
+        if (mode !== 'promptmaster' && mode !== 'multichar' && mode !== 'scenepro') return;
         
         // ใช้ userId โดยตรงเหมือน ChatStorage
         try {
@@ -7745,8 +7823,8 @@ window.saveChatHistory = function(mode) {
     if (mode === 'chat') {
         // ใช้ ChatStorage สำหรับ chat mode
         originalSaveChatHistory(mode);
-    } else if (mode === 'promptmaster' || mode === 'multichar') {
-        // ใช้ PromptStorage สำหรับ promptmaster และ multichar
+    } else if (mode === 'promptmaster' || mode === 'multichar' || mode === 'scenepro') {
+        // ใช้ PromptStorage สำหรับ promptmaster, multichar และ scenepro
         PromptStorage.save(mode);
     } else if (mode === 'image') {
         // ใช้ ImagePromptStorage สำหรับ image mode
@@ -7795,6 +7873,8 @@ setInterval(() => {
         PromptStorage.save('multichar');
     } else if (currentMode === 'image') {
         ImagePromptStorage.save();
+    } else if (currentMode === 'scenepro') {
+        PromptStorage.save('scenepro');
     }
 }, 30000);
 
@@ -7804,6 +7884,8 @@ window.addEventListener('beforeunload', () => {
         PromptStorage.save('multichar');
     } else if (currentMode === 'image') {
         ImagePromptStorage.save();
+    } else if (currentMode === 'scenepro') {
+        PromptStorage.save('scenepro');
     }
 });
 
@@ -7981,12 +8063,17 @@ window.checkPromptStorage = function() {
 
 // Function to clear current mode history
 window.clearCurrentModeHistory = function() {
-    if (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'image') {
+    if (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'image' || currentMode === 'scenepro') {
         const modeName = currentMode === 'promptmaster' ? 'Prompt Master' : 
                         currentMode === 'multichar' ? 'Prompt Master' :
-                        'Image Prompt';
+                        currentMode === 'image' ? 'Image Prompt' :
+                        'Scene Pro';
         if (confirm(`ต้องการล้างประวัติ ${modeName} ทั้งหมดหรือไม่?\n\nประวัติการสนทนาจะถูกลบถาวร`)) {
-            PromptStorage.clear(currentMode);
+            if (currentMode === 'scenepro') {
+                PromptStorage.clear('scenepro');
+            } else {
+                PromptStorage.clear(currentMode);
+            }
             chatHistory[currentMode] = '';
             clearChat();
             addWelcomeMessage(currentMode);

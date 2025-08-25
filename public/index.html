@@ -28,6 +28,7 @@
     
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-scenepro-fix.css">
     <!-- Google Sign-In -->
     <script src="https://accounts.google.com/gsi/client" async defer onload="console.log('Google Identity Services loaded')"></script>
     
@@ -139,6 +140,11 @@
     <button class="mode-btn active" data-mode="promptmaster" onclick="switchMode('promptmaster')">
         <span class="mode-icon">🎥</span>
         <span class="mode-text">Prompt Master</span>
+    </button>
+    <button class="mode-btn new-feature" data-mode="scenepro" onclick="switchMode('scenepro')">
+        <span class="mode-icon">🎬</span>
+        <span class="mode-text">Scene Pro</span>
+        <span class="new-badge">NEW!</span>
     </button>
     <button class="mode-btn" data-mode="image" onclick="switchMode('image')">
         <span class="mode-icon">🖼️</span>
@@ -279,6 +285,31 @@
     <button class="scene-builder-btn" onclick="showSceneBuilder()">
         🎬 สร้าง Template แบบง่าย
     </button>
+</div>
+
+<!-- Info Panel - Scene Pro Mode -->
+<div class="info-panel" id="sceneproInfo" style="display: none;">
+    <div class="info-section">
+        <h3>🎬 Scene Pro - โฆษณาสินค้า</h3>
+        <div class="tip-card">
+            <h4>📸 วิธีใช้ง่ายๆ</h4>
+            <p>1. แนบรูปสินค้าหรือโลโก้ (ถ้ามี)<br>
+               2. เขียนบทพูดหรือข้อความโฆษณา<br>
+               3. AI จะสร้าง Prompt ฉากโฆษณาระดับ Professional!</p>
+        </div>
+        <div class="tip-card">
+            <h4>🛍️ เหมาะกับ</h4>
+            <p>• Product Showcase<br>
+               • Beauty Shot<br>
+               • Food Commercial<br>
+               • Fashion & Lifestyle</p>
+        </div>
+        <div class="tip-card">
+            <h4>💡 ตัวอย่าง</h4>
+            <p>"สร้างฉากโฆษณาน้ำหอม ขวดแก้วใส พื้นหลังหรูหรา"<br>
+               "Product shot กาแฟ มีควันลอย แสงเช้า"</p>
+        </div>
+    </div>
 </div>
 
 <!-- Info Panel - Image Mode -->
