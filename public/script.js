@@ -1471,7 +1471,19 @@ case 'scenepro':
     // เพิ่มข้อความต้อนรับสำหรับ Scene Pro
     if (!localStorage.getItem('sceneProWelcomeShown')) {
         setTimeout(() => {
-            addMessage('🎬 ยินดีต้อนรับสู่ Scene Pro!\n\n✨ โหมดพิเศษสำหรับสร้างฉากโฆษณาสินค้าแบบมืออาชีพ\n\n📸 วิธีใช้ง่ายๆ:\n1. แนบรูปสินค้าหรือโลโก้ (ถ้ามี)\n2. เขียนบทพูดหรือข้อความโฆษณา\n3. AI จะสร้าง Prompt ฉากโฆษณาระดับ Professional ให้ทันที!\n\n🛍️ เหมาะกับ:\n• Product Showcase\n• Beauty Shot\n• Food Commercial\n• Fashion & Lifestyle\n\nลองเริ่มด้วยการแนบรูปสินค้าและเขียนบทพูดสั้นๆ ดูสิ!', 'assistant');
+            addMessage('🎬 ยินดีต้อนรับสู่ Scene Pro!\n\n' +
+                      '✨ โหมดพิเศษสำหรับสร้างฉากโฆษณาสินค้าแบบมืออาชีพ\n\n' +
+                      '📸 วิธีใช้ง่ายๆ:\n' +
+                      '1. แนบรูปสินค้าที่มีนายแบบนางแบบยืนพูด (ถ้ามี) หรือ แค่รูปสินค้า\n' +
+                      '2. เขียนบทพูดหรือข้อความโฆษณา (โดยไม่ต้องระบุว่าคือบทพูด AI จะรับรู้ได้เอง)\n' +
+                      '3. AI จะสร้าง Prompt ฉากโฆษณาระดับ Professional ให้ทันที!\n\n' +
+                      '🛍️ เหมาะกับ:\n' +
+                      '• Product Showcase\n' +
+                      '• Beauty Shot\n' +
+                      '• Food Commercial\n' +
+                      '• Fashion & Lifestyle\n' +
+                      '• เหมาะสำหรับโฆษณาที่ต้องการจบในฉากเดียว\n\n' +
+                      'ลองเริ่มด้วยการแนบรูปสินค้าและเขียนบทพูดสั้นๆ ดูสิ!', 'assistant');
             localStorage.setItem('sceneProWelcomeShown', 'true');
         }, 500);
     }
