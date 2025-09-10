@@ -4086,61 +4086,101 @@ function copyPrompt(button) {
             fullText = text;
         }
     } else {
-        // Original method for other modes
-        const text = promptElement.textContent || promptElement.innerText || '';
-        
-        // ตรวจสอบว่าเป็น JSON format หรือไม่ (มี ```json)
-        if (text.includes('```json') && text.includes('```')) {
-            // Extract JSON content
-            const jsonStart = text.indexOf('```json');
-            const jsonEnd = text.lastIndexOf('```');
+        // ตรวจสอบว่าเป็นโหมด Prompt Master หรือไม่
+        if (currentMode === 'promptmaster' || currentMode === 'multichar') {
+            // สำหรับ Prompt Master ให้ดึงเฉพาะส่วนที่อยู่ระหว่าง ```
+            const htmlContent = promptElement.innerHTML;
             
-            if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-                // Get HTML content to preserve formatting
-                const htmlContent = promptElement.innerHTML;
+            console.log('=== Copy Prompt Debug ===');
+            console.log('Current Mode:', currentMode);
+            console.log('HTML Content:', htmlContent);
+            
+            // แปลง HTML เป็น text ก่อน
+            let textContent = htmlContent
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<\/div>/gi, '\n')
+                .replace(/<\/p>/gi, '\n')
+                .replace(/<[^>]+>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .replace(/&quot;/g, '"')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&amp;/g, '&')
+                .trim();
+            
+            console.log('Text Content after conversion:', textContent);
+            
+            // หาส่วนที่อยู่ระหว่าง ``` 
+            const codeBlockMatch = textContent.match(/```[\s\S]*?\n([\s\S]*?)```/);
+            console.log('Code Block Match:', codeBlockMatch);
+            
+            if (codeBlockMatch && codeBlockMatch[1]) {
+                // คัดลอกเฉพาะส่วนที่อยู่ระหว่าง ``` โดยไม่รวม ```
+                fullText = codeBlockMatch[1].trim();
+                console.log('Extracted text between ```:', fullText);
+            } else {
+                // ถ้าไม่เจอ ``` ให้ใช้ text ทั้งหมด
+                fullText = textContent;
+                console.log('No ``` found, using full text:', fullText);
+            }
+            console.log('=== End Debug ===');
+        } else {
+            // Original method for other modes
+            const text = promptElement.textContent || promptElement.innerText || '';
+            
+            // ตรวจสอบว่าเป็น JSON format หรือไม่ (มี ```json)
+            if (text.includes('```json') && text.includes('```')) {
+                // Extract JSON content
+                const jsonStart = text.indexOf('```json');
+                const jsonEnd = text.lastIndexOf('```');
                 
-                // Try to extract formatted JSON from HTML
-                const jsonPattern = /```json([\s\S]*?)```/;
-                const match = htmlContent.match(jsonPattern);
-                
-                if (match && match[1]) {
-                    // Clean up HTML tags but preserve line breaks
-                    let jsonContent = match[1]
-                        .replace(/<br\s*\/?>/gi, '\n')
-                        .replace(/<\/?(div|p|span)[^>]*>/gi, '')
-                        .replace(/&nbsp;/g, ' ')
-                        .replace(/&quot;/g, '"')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/&amp;/g, '&')
-                        .trim();
+                if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+                    // Get HTML content to preserve formatting
+                    const htmlContent = promptElement.innerHTML;
                     
-                    fullText = '```json\n' + jsonContent + '\n```';
+                    // Try to extract formatted JSON from HTML
+                    const jsonPattern = /```json([\s\S]*?)```/;
+                    const match = htmlContent.match(jsonPattern);
+                    
+                    if (match && match[1]) {
+                        // Clean up HTML tags but preserve line breaks
+                        let jsonContent = match[1]
+                            .replace(/<br\s*\/?>/gi, '\n')
+                            .replace(/<\/?(div|p|span)[^>]*>/gi, '')
+                            .replace(/&nbsp;/g, ' ')
+                            .replace(/&quot;/g, '"')
+                            .replace(/&lt;/g, '<')
+                            .replace(/&gt;/g, '>')
+                            .replace(/&amp;/g, '&')
+                            .trim();
+                        
+                        fullText = '```json\n' + jsonContent + '\n```';
+                    } else {
+                        // Fallback: extract from text
+                        fullText = text.substring(jsonStart, jsonEnd + 3).trim();
+                    }
                 } else {
-                    // Fallback: extract from text
-                    fullText = text.substring(jsonStart, jsonEnd + 3).trim();
+                    // Fallback ถ้าหา JSON block ไม่เจอ
+                    fullText = text;
                 }
             } else {
-                // Fallback ถ้าหา JSON block ไม่เจอ
-                fullText = text;
+                // แปลง br tags เป็น newlines
+                const brElements = clonedElement.getElementsByTagName('br');
+                for (let i = brElements.length - 1; i >= 0; i--) {
+                    const br = brElements[i];
+                    const textNode = document.createTextNode('\n');
+                    br.parentNode.replaceChild(textNode, br);
+                }
+                
+                // ดึง text content
+                fullText = clonedElement.textContent || clonedElement.innerText || '';
+                
+                // ทำความสะอาด text
+                fullText = fullText
+                    .replace(/•\s/g, '* ')
+                    .replace(/\n{3,}/g, '\n\n')
+                    .trim();
             }
-        } else {
-            // แปลง br tags เป็น newlines
-            const brElements = clonedElement.getElementsByTagName('br');
-            for (let i = brElements.length - 1; i >= 0; i--) {
-                const br = brElements[i];
-                const textNode = document.createTextNode('\n');
-                br.parentNode.replaceChild(textNode, br);
-            }
-            
-            // ดึง text content
-            fullText = clonedElement.textContent || clonedElement.innerText || '';
-            
-            // ทำความสะอาด text
-            fullText = fullText
-                .replace(/•\s/g, '* ')
-                .replace(/\n{3,}/g, '\n\n')
-                .trim();
         }
     }
     
