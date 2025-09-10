@@ -4088,7 +4088,7 @@ function copyPrompt(button) {
     } else {
         // ตรวจสอบว่าเป็นโหมด Prompt Master หรือไม่
         if (currentMode === 'promptmaster' || currentMode === 'multichar') {
-            // สำหรับ Prompt Master ให้ดึงเฉพาะส่วนที่อยู่ระหว่าง ```
+            // สำหรับ Prompt Master ให้ดึงเฉพาะส่วนที่อยู่ระหว่าง ``` หรือทั้งหมดถ้าไม่มี ```
             const htmlContent = promptElement.innerHTML;
             
             console.log('=== Copy Prompt Debug ===');
@@ -4110,19 +4110,39 @@ function copyPrompt(button) {
             
             console.log('Text Content after conversion:', textContent);
             
-            // หาส่วนที่อยู่ระหว่าง ``` 
-            const codeBlockMatch = textContent.match(/```[\s\S]*?\n([\s\S]*?)```/);
-            console.log('Code Block Match:', codeBlockMatch);
-            
-            if (codeBlockMatch && codeBlockMatch[1]) {
-                // คัดลอกเฉพาะส่วนที่อยู่ระหว่าง ``` โดยไม่รวม ```
-                fullText = codeBlockMatch[1].trim();
-                console.log('Extracted text between ```:', fullText);
+            // ตรวจสอบว่ามี ``` หรือไม่
+            if (textContent.includes('```')) {
+                // พยายามหาทั้งหมดที่อยู่ระหว่าง ``` แรกและ ``` สุดท้าย
+                const firstBacktickIndex = textContent.indexOf('```');
+                const lastBacktickIndex = textContent.lastIndexOf('```');
+                
+                if (firstBacktickIndex !== lastBacktickIndex) {
+                    // มี ``` อย่างน้อย 2 ตัว
+                    // หาตำแหน่งสิ้นสุดของ ``` แรก (บวก 3 สำหรับความยาวของ ```)
+                    let startIndex = firstBacktickIndex + 3;
+                    
+                    // ถ้ามี json หรือข้อความอื่นต่อท้าย ``` ให้ข้ามไปถึงบรรทัดใหม่
+                    const afterFirstBacktick = textContent.substring(startIndex, startIndex + 20);
+                    const newlineIndex = afterFirstBacktick.indexOf('\n');
+                    if (newlineIndex !== -1) {
+                        startIndex = startIndex + newlineIndex + 1;
+                    }
+                    
+                    // ดึงข้อความระหว่าง ``` 
+                    fullText = textContent.substring(startIndex, lastBacktickIndex).trim();
+                    console.log('Extracted text between ```:', fullText);
+                } else {
+                    // มี ``` ตัวเดียว ใช้ข้อความทั้งหมด
+                    fullText = textContent.replace(/```/g, '').trim();
+                    console.log('Single ``` found, using text without ```:', fullText);
+                }
             } else {
-                // ถ้าไม่เจอ ``` ให้ใช้ text ทั้งหมด
+                // ไม่มี ``` เลย ใช้ข้อความทั้งหมด
                 fullText = textContent;
                 console.log('No ``` found, using full text:', fullText);
             }
+            
+            console.log('Final text length:', fullText.length);
             console.log('=== End Debug ===');
         } else {
             // Original method for other modes
