@@ -4088,14 +4088,14 @@ function copyPrompt(button) {
     } else {
         // ตรวจสอบว่าเป็นโหมด Prompt Master หรือไม่
         if (currentMode === 'promptmaster' || currentMode === 'multichar') {
-            // สำหรับ Prompt Master ให้ดึงเฉพาะส่วนที่อยู่ระหว่าง ``` หรือทั้งหมดถ้าไม่มี ```
+            // สำหรับ Prompt Master ให้คัดลอกข้อความทั้งหมดจาก prompt-content
             const htmlContent = promptElement.innerHTML;
             
-            console.log('=== Copy Prompt Debug ===');
-            console.log('Current Mode:', currentMode);
-            console.log('HTML Content:', htmlContent);
+            // ลบ debug logs ออกเพื่อความสะอาด
+            // console.log('=== Copy Prompt Debug ===');
+            // console.log('Current Mode:', currentMode);
             
-            // แปลง HTML เป็น text ก่อน
+            // แปลง HTML เป็น text โดยรักษา formatting ทั้งหมด
             let textContent = htmlContent
                 .replace(/<br\s*\/?>/gi, '\n')
                 .replace(/<\/div>/gi, '\n')
@@ -4106,44 +4106,27 @@ function copyPrompt(button) {
                 .replace(/&lt;/g, '<')
                 .replace(/&gt;/g, '>')
                 .replace(/&amp;/g, '&')
+                .replace(/\n\n+/g, '\n\n') // ลดบรรทัดว่างที่มากเกินไป
                 .trim();
             
-            console.log('Text Content after conversion:', textContent);
+            // ตรวจสอบว่ามี ``` ครอบหรือไม่
+            const backtickPattern = /^```(?:json)?\s*\n([\s\S]*)\n```$/;
+            const match = textContent.match(backtickPattern);
             
-            // ตรวจสอบว่ามี ``` หรือไม่
-            if (textContent.includes('```')) {
-                // พยายามหาทั้งหมดที่อยู่ระหว่าง ``` แรกและ ``` สุดท้าย
-                const firstBacktickIndex = textContent.indexOf('```');
-                const lastBacktickIndex = textContent.lastIndexOf('```');
-                
-                if (firstBacktickIndex !== lastBacktickIndex) {
-                    // มี ``` อย่างน้อย 2 ตัว
-                    // หาตำแหน่งสิ้นสุดของ ``` แรก (บวก 3 สำหรับความยาวของ ```)
-                    let startIndex = firstBacktickIndex + 3;
-                    
-                    // ถ้ามี json หรือข้อความอื่นต่อท้าย ``` ให้ข้ามไปถึงบรรทัดใหม่
-                    const afterFirstBacktick = textContent.substring(startIndex, startIndex + 20);
-                    const newlineIndex = afterFirstBacktick.indexOf('\n');
-                    if (newlineIndex !== -1) {
-                        startIndex = startIndex + newlineIndex + 1;
-                    }
-                    
-                    // ดึงข้อความระหว่าง ``` 
-                    fullText = textContent.substring(startIndex, lastBacktickIndex).trim();
-                    console.log('Extracted text between ```:', fullText);
-                } else {
-                    // มี ``` ตัวเดียว ใช้ข้อความทั้งหมด
-                    fullText = textContent.replace(/```/g, '').trim();
-                    console.log('Single ``` found, using text without ```:', fullText);
-                }
+            if (match) {
+                // ถ้ามี ``` ครอบ ให้เอาเฉพาะส่วนที่อยู่ข้างใน
+                fullText = match[1].trim();
             } else {
-                // ไม่มี ``` เลย ใช้ข้อความทั้งหมด
-                fullText = textContent;
-                console.log('No ``` found, using full text:', fullText);
+                // ถ้าไม่มี ``` ครอบ หรือไม่ตรงรูปแบบ ให้ใช้ทั้งหมด
+                // แต่ถ้ามี ``` บางส่วน ให้ลบออก
+                fullText = textContent.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```$/, '').trim();
             }
             
-            console.log('Final text length:', fullText.length);
-            console.log('=== End Debug ===');
+            // ตรวจสอบว่าได้ข้อความหรือไม่
+            if (!fullText || fullText.length === 0) {
+                // ถ้าไม่ได้อะไรเลย ให้ใช้ text content ดั้งเดิม
+                fullText = textContent;
+            }
         } else {
             // Original method for other modes
             const text = promptElement.textContent || promptElement.innerText || '';
