@@ -4310,8 +4310,14 @@ function copyPrompt(button) {
     }
     }
     
-    // สำหรับ Prompt Master - ตัดที่ "All dialogue is AUDIO ONLY" + ```
-    if (currentMode === 'promptmaster' || finalPrompt.includes('AUDIO ONLY')) {
+    // สำหรับ Prompt Master - ใช้ fullText ที่ได้จากการ extract ``` แล้ว
+    if (currentMode === 'promptmaster' || currentMode === 'multichar') {
+        // ถ้าไม่ได้ตั้ง finalPrompt ให้ใช้ fullText
+        if (!finalPrompt || finalPrompt.length === 0) {
+            finalPrompt = fullText;
+        }
+        
+        // ตรวจสอบว่ามี "All dialogue is AUDIO ONLY" หรือไม่
         const audioOnlyIndex = finalPrompt.indexOf('All dialogue is AUDIO ONLY');
         if (audioOnlyIndex !== -1) {
             // หา ``` หลังจาก AUDIO ONLY
@@ -4326,8 +4332,16 @@ function copyPrompt(button) {
     }
     
     // ลบบรรทัดว่างท้าย
-    finalPrompt = finalPrompt.replace(/\n\s*\n\s*$/g, '\n');
+    if (finalPrompt) {
+        finalPrompt = finalPrompt.replace(/\n\s*\n\s*$/g, '\n');
+    }
     
+    // ถ้ายังไม่ได้ finalPrompt ให้ใช้ fullText
+    if (!finalPrompt || finalPrompt.length === 0) {
+        finalPrompt = fullText;
+    }
+    
+    // ตรวจสอบอีกครั้ง
     if (!finalPrompt || finalPrompt.length === 0) {
         showNotification('❌ ไม่พบข้อความที่จะ copy', 'error');
         return;
