@@ -21,7 +21,8 @@ const ASSISTANT_CONFIGS = {
         character: process.env.CHARACTER_ASSISTANT_ID,
         multichar: process.env.MULTI_CHARACTER_ASSISTANT_ID,
         chat: process.env.CHAT_ASSISTANT_ID,
-        scenepro: process.env.SCENEPRO_ASSISTANT_ID || 'asst_K7Jay6fMFkHG92ipYIEwBjIG'  // Scene Pro Assistant ID
+        scenepro: process.env.SCENEPRO_ASSISTANT_ID || 'asst_K7Jay6fMFkHG92ipYIEwBjIG',  // Scene Pro Assistant ID
+        sora2: process.env.SORA2_ASSISTANT_ID || 'asst_YOUR_SORA2_ASSISTANT_ID_HERE'  // Sora 2 Assistant ID
     }
 };
 

@@ -1437,6 +1437,7 @@ function switchMode(mode) {
     document.getElementById('characterInfo').style.display = 'none';
     document.getElementById('multicharInfo').style.display = 'none';
     document.getElementById('imageInfo').style.display = 'none';
+    document.getElementById('sora2Info').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
     document.getElementById('sceneproInfo').style.display = 'none';
     document.getElementById('characterLibrary').classList.remove('active');
@@ -1470,6 +1471,34 @@ case 'promptmaster':
     loadChatHistory('multichar');
     break;
     
+
+case 'sora2':
+    document.getElementById('sora2Info').style.display = 'block';
+    messageInput.placeholder = "บรรยายวิดีโอที่ต้องการสร้างด้วย Sora 2...";
+    sendButton.innerHTML = 'สร้าง Sora 2 Prompt ✨';
+    modeNotice.innerHTML = '💡 <strong>Sora 2 Mode:</strong> AI จะช่วยสร้าง Prompt สำหรับ Sora 2';
+    modeNotice.classList.add('active');
+    uploadSection.style.display = 'flex';
+    const uploadBtnSora2 = uploadSection.querySelector('.upload-btn');
+    if (uploadBtnSora2) uploadBtnSora2.style.display = '';
+    
+    const enhanceSectionSora2 = document.getElementById('enhanceSection');
+    if (enhanceSectionSora2) enhanceSectionSora2.style.display = 'none';
+    document.getElementById('clearChatBtn').style.display = 'none';
+    document.getElementById('clearHistoryBtn').style.display = 'block';
+    document.getElementById('chatInfo').style.display = 'none';
+    
+    loadChatHistory('sora2');
+    break;
+        case 'sora2':
+            message = `สวัสดีครับ! ผมคือ Sora 2 Prompt Generator ✨<br><br>
+                      ผมช่วยสร้าง Prompt <strong>ภาษาอังกฤษ</strong> สำหรับสร้างวิดีโอด้วย Sora 2 จาก OpenAI<br><br>
+                      💡 <strong>วิธีใช้:</strong> บอกผมเป็นภาษาไทยว่าต้องการวิดีโอแบบไหน<br>
+                      ✨ ผมจะแปลงเป็น Prompt อังกฤษที่ละเอียด พร้อมเทคนิคการถ่ายทำ
+                      🎬 พร้อมใช้กับ Sora 2 ทันที!<br><br>
+                      🎯 <strong>Tip:</strong> บรรยายฉาก แสง สี การเคลื่อนไหว ให้ละเอียดเท่าไหร่ ยิ่งได้วิดีโอสวยมากขึ้น!`;
+            break;
+
 case 'scenepro':
     document.getElementById('sceneproInfo').style.display = 'block';
     messageInput.placeholder = "แนบรูปสินค้า + เขียนบทพูด หรือบรรยายฉากโฆษณาที่ต้องการ...";
@@ -1745,6 +1774,15 @@ function addWelcomeMessage(mode) {
                       💡 <strong>ลองถาม:</strong> "ช่วยอธิบายprompt รุปภาพที่แนบไป หน่อย" หรือ "ขอสูตรแกงเขียวหวาน..."`;
             break;
             
+        case 'sora2':
+            message = `สวัสดีครับ! ผมคือ Sora 2 Prompt Generator ✨<br><br>
+                      ผมช่วยสร้าง Prompt <strong>ภาษาอังกฤษ</strong> สำหรับสร้างวิดีโอด้วย Sora 2 จาก OpenAI<br><br>
+                      💡 <strong>วิธีใช้:</strong> บอกผมเป็นภาษาไทยว่าต้องการวิดีโอแบบไหน<br>
+                      ✨ ผมจะแปลงเป็น Prompt อังกฤษที่ละเอียด พร้อมเทคนิคการถ่ายทำ
+                      🎬 พร้อมใช้กับ Sora 2 ทันที!<br><br>
+                      🎯 <strong>Tip:</strong> บรรยายฉาก แสง สี การเคลื่อนไหว ให้ละเอียดเท่าไหร่ ยิ่งได้วิดีโอสวยมากขึ้น!`;
+            break;
+
         case 'scenepro':
             // ลบ localStorage เพื่อให้แสดงข้อความต้อนรับใหม่
             localStorage.removeItem('sceneProWelcomeShownV2');
@@ -6943,6 +6981,15 @@ function loadMobileInfo(mode) {
             `;
             break;
             
+        case 'sora2':
+            message = `สวัสดีครับ! ผมคือ Sora 2 Prompt Generator ✨<br><br>
+                      ผมช่วยสร้าง Prompt <strong>ภาษาอังกฤษ</strong> สำหรับสร้างวิดีโอด้วย Sora 2 จาก OpenAI<br><br>
+                      💡 <strong>วิธีใช้:</strong> บอกผมเป็นภาษาไทยว่าต้องการวิดีโอแบบไหน<br>
+                      ✨ ผมจะแปลงเป็น Prompt อังกฤษที่ละเอียด พร้อมเทคนิคการถ่ายทำ
+                      🎬 พร้อมใช้กับ Sora 2 ทันที!<br><br>
+                      🎯 <strong>Tip:</strong> บรรยายฉาก แสง สี การเคลื่อนไหว ให้ละเอียดเท่าไหร่ ยิ่งได้วิดีโอสวยมากขึ้น!`;
+            break;
+
         case 'scenepro':
             infoHTML = quickActionsHTML + `
                 <h4>🎬 Scene Pro - โฆษณาสินค้า</h4>
