@@ -1437,6 +1437,7 @@ function switchMode(mode) {
     document.getElementById('characterInfo').style.display = 'none';
     document.getElementById('multicharInfo').style.display = 'none';
     document.getElementById('imageInfo').style.display = 'none';
+    document.getElementById('sora2Info').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
     document.getElementById('sceneproInfo').style.display = 'none';
     document.getElementById('characterLibrary').classList.remove('active');
