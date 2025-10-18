@@ -1473,7 +1473,7 @@ case 'promptmaster':
     
 
 case 'sora2':
-    document.getElementById('multicharInfo').style.display = 'block';
+    document.getElementById('sora2Info').style.display = 'block';
     messageInput.placeholder = "บรรยายวิดีโอที่ต้องการสร้างด้วย Sora 2...";
     sendButton.innerHTML = 'สร้าง Sora 2 Prompt ✨';
     modeNotice.innerHTML = '💡 <strong>Sora 2 Mode:</strong> AI จะช่วยสร้าง Prompt สำหรับ Sora 2';

@@ -34,7 +34,8 @@
       "Bash(else)",
       "Bash(echo \"❌ $id NOT FOUND\")",
       "Bash(fi)",
-      "Bash(done)"
+      "Bash(done)",
+      "Read(//tmp/**)"
     ],
     "deny": []
   }
