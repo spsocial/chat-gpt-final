@@ -1437,7 +1437,6 @@ function switchMode(mode) {
     document.getElementById('characterInfo').style.display = 'none';
     document.getElementById('multicharInfo').style.display = 'none';
     document.getElementById('imageInfo').style.display = 'none';
-    document.getElementById('sora2Info').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
     document.getElementById('sceneproInfo').style.display = 'none';
     document.getElementById('characterLibrary').classList.remove('active');
@@ -1473,7 +1472,7 @@ case 'promptmaster':
     
 
 case 'sora2':
-    document.getElementById('sora2Info').style.display = 'block';
+    document.getElementById('multicharInfo').style.display = 'block';
     messageInput.placeholder = "บรรยายวิดีโอที่ต้องการสร้างด้วย Sora 2...";
     sendButton.innerHTML = 'สร้าง Sora 2 Prompt ✨';
     modeNotice.innerHTML = '💡 <strong>Sora 2 Mode:</strong> AI จะช่วยสร้าง Prompt สำหรับ Sora 2';
@@ -1488,7 +1487,7 @@ case 'sora2':
     document.getElementById('clearHistoryBtn').style.display = 'block';
     document.getElementById('chatInfo').style.display = 'none';
     
-    loadChatHistory('sora2');
+    loadChatHistory('multichar');
     break;
         case 'sora2':
             message = `สวัสดีครับ! ผมคือ Sora 2 Prompt Generator ✨<br><br>
