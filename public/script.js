@@ -1612,30 +1612,6 @@ case 'image':
     loadChatHistory('image');
     break;
 
-case 'imagegen':
-    document.getElementById('imageGenInfo').style.display = 'block';
-    messageInput.placeholder = "พิมพ์ Prompt ภาษา English...";
-    sendButton.innerHTML = 'สร้างภาพ 🎨';
-    modeNotice.innerHTML = '💡 <strong>Image Mode:</strong> พิมพ์/พูดไทยได้ แต่ต้องกดปรับปรุง Prompt';
-    modeNotice.classList.add('active');
-    
-    // ซ่อน upload section ทั้งหมด
-    uploadSection.style.display = 'none';
-    
-    // แสดง enhance section  
-    const enhanceSectionImageGen = document.getElementById('enhanceSection');
-    if (enhanceSectionImageGen) enhanceSectionImageGen.style.display = 'flex';
-    document.getElementById('clearChatBtn').style.display = 'none';
-    document.getElementById('clearHistoryBtn').style.display = 'none';
-    document.getElementById('chatInfo').style.display = 'none';
-
-    // ซ่อนปุ่ม Template Form
-    const templateBtnImage2 = document.getElementById('templateButtonSection');
-    if (templateBtnImage2) templateBtnImage2.style.display = 'none';
-    
-    loadChatHistory('imagegen');
-    break;
-
     case 'chat':
     document.getElementById('chatInfo').style.display = 'block';
     messageInput.placeholder = "พิมพ์ถามอะไรก็ได้ หรือแนบรูปมาวิเคราะห์...";
@@ -1667,12 +1643,7 @@ case 'imagegen':
     document.querySelectorAll('.info-panel').forEach(panel => {
         panel.style.display = 'none';
     });
-    
-    // Show correct info panel
-    if (mode === 'imagegen') {
-        document.getElementById('imageGenInfo').style.display = 'block';
-    }
-    
+
 }
 
 // ========== CHAT HISTORY MANAGEMENT ==========
@@ -1764,12 +1735,6 @@ function addWelcomeMessage(mode) {
             message = `สวัสดีครับ! ผมคือ Image Prompt Creator 🖼️<br><br>
                       ผมช่วยสร้าง Prompt สำหรับสร้างรูปภาพโดยเฉพาะ<br><br>
                       💡 <strong>Tip:</strong> บอกแค่ไอเดีย ผมจะสร้าง prompt ที่ละเอียดสำหรับ AI สร้างภาพ`;
-            break;
-            
-        case 'imagegen':
-            message = `สวัสดีครับ! ผมคือ AI Image Generator 🎨<br><br>
-                      เลือก Model และพิมพ์คำอธิบายภาพที่ต้องการเป็นภาษาอังกฤษ<br><br>
-                      💡 <strong>ตัวอย่าง:</strong> "A cute cat wearing sunglasses, digital art style"`;
             break;
 
         case 'chat':
@@ -3653,18 +3618,8 @@ window.sendMessage = async function() {
         const data = await response.json();
         
         removeMessage(loadingId);
-        
+
         if (response.ok) {
-            if (currentMode === 'imagegen') {
-        // ส่งไปสร้างภาพแทน
-        removeMessage(loadingId);
-        generateImage(message);
-        // Reset processing state for imagegen
-        isProcessing = false;
-        input.disabled = false;
-        document.getElementById('sendButton').disabled = false;
-        return;
-    }
     if (currentMode === 'chat') {
         // AI Chat mode
         removeMessage(loadingId);
@@ -4408,9 +4363,6 @@ function addLoadingMessage() {
         case 'image':
             loadingText = 'กำลังสร้าง Image Prompt ที่ละเอียด...';
             break;
-        case 'imagegen':
-            loadingText = 'กำลังสร้างภาพตาม prompt ของคุณ...';
-            break;
         default:
             loadingText = 'กำลังสร้าง Cinematic Prompt สำหรับ Vdo ขั้นเทพ...';
     }
@@ -4897,11 +4849,6 @@ function processVoiceCommands(text) {
     }
     
     return false;
-}
-
-// Function to switch to Image Gen mode
-function switchToImageGen() {
-    switchMode('imagegen');
 }
 
 // Function to open external image generation
@@ -7042,103 +6989,6 @@ function loadMobileInfo(mode) {
         <p>• สร้าง prompt สำหรับรูปภาพโดยเฉพาะ</p>
         <p>• บอกแค่ไอเดีย AI จะสร้าง prompt ที่ละเอียด</p>
         <p>• สามารถสร้างภาพได้ทันที</p>
-    `;
-    break;
-    
-        case 'imagegen':
-    infoHTML = quickActionsHTML + `
-        <h4>🎨 Image Generator</h4>
-        
-        <div style="margin: 16px 0;">
-            <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
-                ✨ เลือก Model:
-            </label>
-            
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label style="
-                    display: flex;
-                    align-items: center;
-                    padding: 12px;
-                    background: #262626;
-                    border: 2px solid #9333ea;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">
-                    <input type="radio" name="mobileImageModel" value="flux-schnell" checked style="margin-right: 12px;">
-                    <div>
-                        <div style="font-weight: 600;">Express Mode</div>
-                        <div style="font-size: 12px; color: #a1a1aa;">💰 0.15 เครดิต | ⚡ เร็ว 5-8 วินาที</div>
-                    </div>
-                </label>
-                
-                <label style="
-                    display: flex;
-                    align-items: center;
-                    padding: 12px;
-                    background: #262626;
-                    border: 2px solid #404040;
-                    border-radius: 8px;
-                    cursor: pointer;
-                ">
-                    <input type="radio" name="mobileImageModel" value="flux-dev" style="margin-right: 12px;">
-                    <div>
-                        <div style="font-weight: 600;">Premium Mode</div>
-                        <div style="font-size: 12px; color: #a1a1aa;">💰 0.20 เครดิต | ✨ คุณภาพสูง</div>
-                    </div>
-                </label>
-        
-        <div style="margin: 16px 0;">
-            <label style="display: block; margin-bottom: 8px; color: #9333ea; font-weight: 600;">
-                📐 Aspect Ratio:
-            </label>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button onclick="setMobileRatio('1:1')" class="mobile-ratio-btn" style="
-                    padding: 8px 16px;
-                    background: #9333ea;
-                    border: 1px solid #404040;
-                    border-radius: 6px;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">1:1</button>
-                <button onclick="setMobileRatio('16:9')" class="mobile-ratio-btn" style="
-                    padding: 8px 16px;
-                    background: #262626;
-                    border: 1px solid #404040;
-                    border-radius: 6px;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">16:9</button>
-                <button onclick="setMobileRatio('9:16')" class="mobile-ratio-btn" style="
-                    padding: 8px 16px;
-                    background: #262626;
-                    border: 1px solid #404040;
-                    border-radius: 6px;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">9:16</button>
-                <button onclick="setMobileRatio('4:3')" class="mobile-ratio-btn" style="
-                    padding: 8px 16px;
-                    background: #262626;
-                    border: 1px solid #404040;
-                    border-radius: 6px;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">4:3</button>
-                <button onclick="setMobileRatio('3:4')" class="mobile-ratio-btn" style="
-                    padding: 8px 16px;
-                    background: #262626;
-                    border: 1px solid #404040;
-                    border-radius: 6px;
-                    color: white;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">3:4</button>
-            </div>
-        </div>
     `;
     break;
             
@@ -10382,7 +10232,6 @@ const buttonObserver = new MutationObserver(function(mutations) {
             
         case 'chat':
         case 'image':
-        case 'imagegen':
         case 'library':
             templateBtn.style.display = 'none';
             templateBtn.style.visibility = 'hidden';
@@ -10409,7 +10258,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const templateBtn = document.getElementById('templateButtonSection');
         const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
         
-        if (currentMode === 'chat' || currentMode === 'image' || currentMode === 'imagegen') {
+        if (currentMode === 'chat' || currentMode === 'image') {
             if (templateBtn) {
                 templateBtn.style.display = 'none';
                 templateBtn.style.visibility = 'hidden';

@@ -150,18 +150,11 @@
         <span class="mode-icon">🖼️</span>
         <span class="mode-text">Image Prompt</span>
     </button>
-    <!-- ย้าย Image Gen มาตรงนี้ พร้อมเพิ่ม class พิเศษ -->
-    <button class="mode-btn new-feature" data-mode="imagegen" onclick="switchMode('imagegen')">
-        <span class="mode-icon">🎨</span>
-        <span class="mode-text">Image Gen</span>
+    <button class="mode-btn new-feature-chat" data-mode="chat" onclick="switchMode('chat')">
+        <span class="mode-icon">💬</span>
+        <span class="mode-text">AI Chat</span>
         <span class="new-badge">NEW!</span>
     </button>
-     <!-- เพิ่มปุ่ม AI Chat ตรงนี้ -->
-    <button class="mode-btn new-feature-chat" data-mode="chat" onclick="switchMode('chat')">
-    <span class="mode-icon">💬</span>
-    <span class="mode-text">AI Chat</span>
-    <span class="new-badge">NEW!</span>
-</button>
     <button class="mode-btn" data-mode="character" onclick="switchMode('character')">
         <span class="mode-icon">🧙</span>
         <span class="mode-text">Character Creator</span>
@@ -178,7 +171,6 @@
     <option value="promptmaster">🎥 Prompt Master</option>
     <option value="scenepro">🎬 Scene Pro ✨NEW!</option>
     <option value="image">🖼️ Image Prompt</option>
-    <option value="imagegen">🎨 Image Gen ✨NEW!</option>
     <option value="chat">💬 AI Chat ✨NEW!</option>
     <option value="character">🧙 Character Creator</option>
     <option value="library">🗂️ My Characters</option>
@@ -566,56 +558,6 @@
                 <li>ลองใช้ Quick Templates เพื่อเริ่มต้นอย่างรวดเร็ว</li>
                 <li>สามารถปรับแต่ง prompt ที่ได้อีกครั้งในภายหลัง</li>
             </ul>
-        </div>
-    </div>
-</div>
-
-<!-- Info Panel - Image Gen Mode -->
-<div class="info-panel" id="imageGenInfo" style="display: none;">
-    <div class="info-section">
-        <h3>🎨 Image Generator</h3>
-        <div class="tip-card">
-            <h4>✨ เลือก Model</h4>
-            <div class="model-selector">
-                <!-- Model 1: Express Mode -->
-                <label class="model-option">
-                    <input type="radio" name="imageModel" value="flux-schnell" checked>
-                    <div class="model-card">
-                        <div class="model-name">Express Mode</div>
-                        <div class="model-price">💰 0.15 เครดิต</div>
-                        <div class="model-desc">⚡ สร้างเร็ว 5-8 วินาที</div>
-                    </div>
-                </label>
-
-                <!-- Model 2: Premium Mode -->
-                <label class="model-option">
-                    <input type="radio" name="imageModel" value="flux-dev">
-                    <div class="model-card">
-                        <div class="model-name">Premium Mode</div>
-                        <div class="model-price">💰 0.20 เครดิต</div>
-                        <div class="model-desc">✨ คุณภาพสูง รายละเอียดดี</div>
-                    </div>
-                </label>
-            </div>
-        </div>
-        
-        <div class="tip-card">
-            <h4>📐 Aspect Ratio</h4>
-            <div class="ratio-selector">
-                <button class="ratio-btn active" data-ratio="1:1">1:1</button>
-                <button class="ratio-btn" data-ratio="16:9">16:9</button>
-                <button class="ratio-btn" data-ratio="9:16">9:16</button>
-                <button class="ratio-btn" data-ratio="4:3">4:3</button>
-                <button class="ratio-btn" data-ratio="3:4">3:4</button>
-            </div>
-        </div>
-        
-        <div class="tip-card">
-            <h4>💡 Tips</h4>
-            <p>• พิมพ์ prompt เป็นภาษาอะไรก็ได้</p>
-            <p>• ยิ่งบรรยายละเอียด ภาพยิ่งตรงใจ</p>
-            <p>• ใช้คำอย่าง "realistic", "detailed", "8k"</p>
-            <p>• กด "ปรับปรุง Prompt" เพื่อ prompt ที่ดีขึ้น</p>
         </div>
     </div>
 </div>
