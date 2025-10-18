@@ -25,7 +25,16 @@
       "Bash(python3:*)",
       "Bash(git reset:*)",
       "Bash(npm run lint)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(for id in generalInfo characterInfo multicharInfo imageInfo chatInfo sceneproInfo)",
+      "Bash(do)",
+      "Bash(if grep -q \"id=\"\"$id\"\"\" \"/mnt/c/Users/Acer/Desktop/รวมโปรเจ็คเขียนเว็บ/chat-gpt-final/public/index.html\")",
+      "Bash(then)",
+      "Bash(echo \"✅ $id exists\")",
+      "Bash(else)",
+      "Bash(echo \"❌ $id NOT FOUND\")",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": []
   }
