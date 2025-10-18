@@ -1465,6 +1465,7 @@ case 'promptmaster':
     if (enhanceSection1) enhanceSection1.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'none';
     document.getElementById('clearHistoryBtn').style.display = 'block';
+    console.log("✅ clearHistoryBtn should be visible now");
     document.getElementById('chatInfo').style.display = 'none';
     
     loadChatHistory('multichar');
@@ -1535,6 +1536,7 @@ case 'character':
     
     const enhanceSection2 = document.getElementById('enhanceSection');
     if (enhanceSection2) enhanceSection2.style.display = 'none';
+    console.log("📋 Character template button:", charTemplateBtnChar, "Display:", charTemplateBtnChar ? charTemplateBtnChar.style.display : "not found");
     document.getElementById('clearChatBtn').style.display = 'none';
     document.getElementById('clearHistoryBtn').style.display = 'none';
     document.getElementById('chatInfo').style.display = 'none';
@@ -7233,6 +7235,40 @@ function clearChatHistory() {
 
 // Export function
 window.clearChatHistory = clearChatHistory;
+
+// ฟังก์ชันล้างประวัติสำหรับโหมดปัจจุบัน
+function clearCurrentModeHistory() {
+    const modeName = {
+        'promptmaster': 'Prompt Master',
+        'scenepro': 'Scene Pro',
+        'character': 'Character',
+        'multichar': 'Multi-Character',
+        'image': 'Image'
+    }[currentMode] || currentMode;
+
+    if (confirm(`ต้องการล้างประวัติการสนทนาของ ${modeName} หรือไม่?`)) {
+        // ล้างประวัติในหน่วยความจำ
+        if (chatHistory[currentMode]) {
+            chatHistory[currentMode] = '';
+        }
+        
+        // ล้างใน localStorage
+        const storageKey = `veo_${currentMode}_history_${userId}`;
+        localStorage.removeItem(storageKey);
+        
+        // ล้างหน้าจอและแสดงข้อความต้อนรับใหม่
+        clearChat();
+        addWelcomeMessage(currentMode);
+        
+        // แสดง notification
+        showNotification('🗑️ ล้างประวัติแล้ว', 'success');
+        
+        console.log(`✅ Cleared history for ${currentMode} mode`);
+    }
+}
+
+// Export function
+window.clearCurrentModeHistory = clearCurrentModeHistory;
 
 // ========== CHAT LOCALSTORAGE SYSTEM ==========
 
