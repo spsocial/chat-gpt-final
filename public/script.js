@@ -1481,12 +1481,16 @@ case 'sora2':
     uploadSection.style.display = 'flex';
     const uploadBtnSora2 = uploadSection.querySelector('.upload-btn');
     if (uploadBtnSora2) uploadBtnSora2.style.display = '';
-    
+
     const enhanceSectionSora2 = document.getElementById('enhanceSection');
     if (enhanceSectionSora2) enhanceSectionSora2.style.display = 'none';
     document.getElementById('clearChatBtn').style.display = 'none';
     document.getElementById('clearHistoryBtn').style.display = 'block';
     document.getElementById('chatInfo').style.display = 'none';
+
+    // ซ่อนปุ่ม Template Form สำหรับ Sora 2
+    const templateBtnSora2 = document.getElementById('templateButtonSection');
+    if (templateBtnSora2) templateBtnSora2.style.display = 'none';
 
     loadChatHistory('sora2');
     break;

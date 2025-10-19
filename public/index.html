@@ -2488,9 +2488,15 @@ window.updateTemplatePreview = function() {
 window.generateFromTemplate = function() {
     console.log('Generating prompt from template...');
     console.log('Current mode:', currentMode);
-    
+
+    // ตรวจสอบว่าอยู่ใน Prompt Master mode หรือไม่
+    if (currentMode !== 'promptmaster' && currentMode !== 'multichar') {
+        alert('⚠️ ฟีเจอร์นี้ใช้ได้เฉพาะโหมด Prompt Master เท่านั้น');
+        return;
+    }
+
     let prompt = '';
-    
+
     try {
         // ดึงข้อมูลจากฟอร์ม
         const getValue = (id) => {
