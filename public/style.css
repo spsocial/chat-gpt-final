@@ -6573,7 +6573,8 @@ body.mode-character #characterTemplateButtonSection {
     body.mode-image #imageInfo,
     body.mode-character #characterInfo,
     body.mode-chat #chatInfo,
-    body.mode-imagegen #imageGenInfo {
+    body.mode-imagegen #imageGenInfo,
+    body.mode-sora2 #sora2Info {
         display: block !important;
     }
     

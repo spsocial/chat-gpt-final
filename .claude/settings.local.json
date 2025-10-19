@@ -35,7 +35,10 @@
       "Bash(echo \"❌ $id NOT FOUND\")",
       "Bash(fi)",
       "Bash(done)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(awk 'NR>=1390 && NR<=1420' style.css)",
+      "Bash(awk -F: '$1 > 194 && $1 < 250 {print}')",
+      "Bash(awk 'NR==194,/^[[:space:]]*<\\/div>.*main-content/ {print NR\"\"\"\": \"\"\"\"$0}' index.html)"
     ],
     "deny": []
   }
