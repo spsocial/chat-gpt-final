@@ -10332,17 +10332,19 @@ const buttonObserver = new MutationObserver(function(mutations) {
             charTemplateBtn.style.display = 'none';
             charTemplateBtn.style.visibility = 'hidden';
             break;
-            
+
         case 'character':
             templateBtn.style.display = 'none';
             templateBtn.style.visibility = 'hidden';
             charTemplateBtn.style.display = 'inline-block';
             charTemplateBtn.style.visibility = 'visible';
             break;
-            
+
         case 'chat':
         case 'image':
         case 'library':
+        case 'sora2':
+        case 'scenepro':
             templateBtn.style.display = 'none';
             templateBtn.style.visibility = 'hidden';
             charTemplateBtn.style.display = 'none';
@@ -10367,8 +10369,8 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(() => {
         const templateBtn = document.getElementById('templateButtonSection');
         const charTemplateBtn = document.getElementById('characterTemplateButtonSection');
-        
-        if (currentMode === 'chat' || currentMode === 'image') {
+
+        if (currentMode === 'chat' || currentMode === 'image' || currentMode === 'sora2' || currentMode === 'scenepro' || currentMode === 'library') {
             if (templateBtn) {
                 templateBtn.style.display = 'none';
                 templateBtn.style.visibility = 'hidden';
