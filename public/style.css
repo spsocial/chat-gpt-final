@@ -578,8 +578,9 @@
 
         .message {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             animation: messageSlide 0.3s ease;
+            margin-bottom: 12px;
         }
 
         @keyframes messageSlide {
@@ -618,8 +619,8 @@
 
         .message-content {
             max-width: 70%;
-            padding: 16px;
-            border-radius: 16px;
+            padding: 12px;
+            border-radius: 12px;
             background: var(--surface-light);
         }
         
@@ -677,9 +678,9 @@
         .veo3-prompt {
             background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
             border: 1px solid rgba(147, 51, 234, 0.3);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 12px;
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 10px;
         }
 
         .prompt-header {
@@ -706,9 +707,9 @@
         .character-profile {
             background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
             border: 1px solid rgba(236, 72, 153, 0.3);
-            padding: 20px;
-            border-radius: 12px;
-            margin-top: 12px;
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 10px;
         }
 
         .profile-actions {
@@ -721,10 +722,10 @@
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             font-weight: 500;
             transition: all 0.3s ease;
             font-family: 'Kanit', sans-serif;
@@ -2859,18 +2860,18 @@ line-clamp: 3;
 /* Share Button in Prompt */
 .prompt-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 16px;
+    gap: 6px;
+    margin-top: 10px;
 }
 
 .share-btn {
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     transition: all 0.3s ease;
     font-family: 'Kanit', sans-serif;
@@ -2889,10 +2890,10 @@ line-clamp: 3;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     transition: all 0.3s ease;
     font-family: 'Kanit', sans-serif;
@@ -2906,10 +2907,10 @@ line-clamp: 3;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     transition: all 0.3s ease;
     font-family: 'Kanit', sans-serif;
@@ -2983,10 +2984,10 @@ line-clamp: 3;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px 20px;
-    border-radius: 8px;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     transition: all 0.3s ease;
     font-family: 'Kanit', sans-serif;
