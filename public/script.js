@@ -1487,8 +1487,8 @@ case 'sora2':
     document.getElementById('clearChatBtn').style.display = 'none';
     document.getElementById('clearHistoryBtn').style.display = 'block';
     document.getElementById('chatInfo').style.display = 'none';
-    
-    loadChatHistory('multichar');
+
+    loadChatHistory('sora2');
     break;
         case 'sora2':
             message = `สวัสดีครับ! ผมคือ Sora 2 Prompt Generator ✨<br><br>
@@ -3925,8 +3925,31 @@ function formatVeoPrompt(response) {
         </div>
         `;
     }
-    
-    // Default format for other modes
+
+    // Check if this is sora2 mode
+    if (currentMode === 'sora2') {
+        return `
+        <div>✨ Sora-2 Prompt สำเร็จแล้ว!</div>
+        <div class="veo3-prompt">
+            <div class="prompt-header">🎬 Sora-2 Prompt:</div>
+            <div class="prompt-content" id="promptContent-${promptId}">${formattedResponse}</div>
+            <div class="prompt-actions">
+                <button class="copy-btn" onclick="copyPrompt(this)">📋 Copy Prompt</button>
+                <button class="favorite-btn ${isFav ? 'favorited' : ''}" id="favBtn-${promptId}" onclick="toggleFavorite('${promptId}')">
+                    ${isFav ? '⭐ Favorited' : '⭐ Add to Favorites'}
+                </button>
+                <button class="share-btn" onclick="sharePromptById('${promptId}')">
+                    📤 Share
+                </button>
+                <button class="json-btn" onclick="requestJSON('${promptId}')">
+                    📄 JSON
+                </button>
+            </div>
+        </div>
+        `;
+    }
+
+    // Default format for other modes (Veo/Prompt Master)
     return `
     <div>✨ Veo Prompt สำเร็จแล้ว!</div>
     <div class="veo3-prompt">
@@ -7289,7 +7312,8 @@ function clearCurrentModeHistory() {
         'scenepro': 'Scene Pro',
         'character': 'Character',
         'multichar': 'Multi-Character',
-        'image': 'Image'
+        'image': 'Image',
+        'sora2': 'Sora 2'
     }[currentMode] || currentMode;
 
     if (confirm(`ต้องการล้างประวัติการสนทนาของ ${modeName} หรือไม่?`)) {
