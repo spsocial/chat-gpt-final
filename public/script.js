@@ -4080,31 +4080,60 @@ function copyPrompt(button) {
         // Extract only English prompt for image mode
         const html = promptElement.innerHTML;
         const text = promptElement.textContent;
-        
+
         // Try to find the English section using different patterns
         const englishStart = text.indexOf('🇺🇸 **English Prompt');
         const thaiStart = text.indexOf('🇹🇭 **พ้อม');
-        
+
         if (englishStart !== -1 && thaiStart !== -1) {
             // Get text between English and Thai sections
             let englishSection = text.substring(englishStart, thaiStart).trim();
-            
+
             // Remove the header and bullet
             englishSection = englishSection
                 .replace(/🇺🇸\s*\*\*English Prompt\*[\*•]?\s*/g, '')
                 .replace(/^1\.\s*/, '') // Remove numbering if present
                 .trim();
-            
+
             // Remove the divider line and any trailing numbers
             englishSection = englishSection
                 .replace(/---\s*$/m, '')
                 .replace(/---\s*\d+\.?\s*$/m, '')
                 .trim();
-            
+
             fullText = englishSection;
         } else {
             // Fallback to original method
             fullText = text;
+        }
+    } else if (currentMode === 'sora2') {
+        // Special handling for Sora-2 mode
+        const htmlContent = promptElement.innerHTML;
+
+        // แปลง HTML เป็น text โดยรักษา formatting
+        let textContent = htmlContent
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<\/div>/gi, '\n')
+            .replace(/<\/p>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&quot;/g, '"')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/\n\n+/g, '\n\n')
+            .trim();
+
+        // ลบ ``` code block markers ถ้ามี
+        const backtickPattern = /^```\s*\n([\s\S]*)\n```$/;
+        const match = textContent.match(backtickPattern);
+
+        if (match) {
+            // ถ้ามี ``` ครอบ ให้เอาเฉพาะส่วนที่อยู่ข้างใน
+            fullText = match[1].trim();
+        } else {
+            // ถ้าไม่มี ``` ครอบ หรือไม่ตรงรูปแบบ ให้ลบ ``` ที่อาจมีบางส่วน
+            fullText = textContent.replace(/^```\s*\n?/, '').replace(/\n?```$/, '').trim();
         }
     } else {
         // ตรวจสอบว่าเป็นโหมด Prompt Master หรือไม่
