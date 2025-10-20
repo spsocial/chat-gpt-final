@@ -1420,7 +1420,7 @@ function switchMode(mode) {
     document.body.classList.add(`mode-${mode}`);
     
     // Save current chat history before switching
-    if (currentMode === 'promptmaster' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image' || currentMode === 'scenepro') {
+    if (currentMode === 'promptmaster' || currentMode === 'character' || currentMode === 'multichar' || currentMode === 'image' || currentMode === 'scenepro' || currentMode === 'sora2') {
         saveChatHistory(currentMode);
     }
     
@@ -1683,7 +1683,7 @@ case 'image':
 // ========== CHAT HISTORY MANAGEMENT ==========
 function saveChatHistory(mode) {
     const chatMessages = document.getElementById('chatMessages');
-    if (mode === 'promptmaster' || mode === 'character' || mode === 'multichar' || mode === 'image' || mode === 'scenepro') {
+    if (mode === 'promptmaster' || mode === 'character' || mode === 'multichar' || mode === 'image' || mode === 'scenepro' || mode === 'sora2') {
         chatHistory[mode] = chatMessages.innerHTML;
     }
 }
@@ -1692,8 +1692,8 @@ function loadChatHistory(mode) {
     console.log(`📘 loadChatHistory called for ${mode} mode`);
     const chatMessages = document.getElementById('chatMessages');
     
-    // ใช้ PromptStorage สำหรับ promptmaster, multichar และ scenepro
-    if (mode === 'promptmaster' || mode === 'multichar' || mode === 'scenepro') {
+    // ใช้ PromptStorage สำหรับ promptmaster, multichar, scenepro และ sora2
+    if (mode === 'promptmaster' || mode === 'multichar' || mode === 'scenepro' || mode === 'sora2') {
         console.log(`📘 Using PromptStorage for ${mode}`);
         PromptStorage.display(mode);
         return;
