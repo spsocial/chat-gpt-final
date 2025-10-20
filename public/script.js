@@ -3948,6 +3948,9 @@ function formatVeoPrompt(response) {
                 <button class="json-btn" onclick="requestJSON('${promptId}')">
                     📄 JSON
                 </button>
+                <button class="create-video-btn" onclick="window.open('https://prompt-d-studio.up.railway.app/', '_blank')">
+                    🎬 สร้างคลิป
+                </button>
             </div>
         </div>
         `;

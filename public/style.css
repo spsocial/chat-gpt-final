@@ -2925,8 +2925,36 @@ line-clamp: 3;
     color: white;
 }
 
+/* Create Video Button Style */
+.create-video-btn {
+    background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: 'Kanit', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(236, 72, 153, 0.25);
+}
+
+.create-video-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(236, 72, 153, 0.4);
+}
+
 @media (max-width: 768px) {
     .json-btn {
+        padding: 5px 8px !important;
+        font-size: 10px !important;
+    }
+
+    .create-video-btn {
         padding: 5px 8px !important;
         font-size: 10px !important;
     }
@@ -8304,7 +8332,7 @@ body.mode-character #characterTemplateButtonSection {
     .message-content p { font-size: 13px !important; }
 
     /* ลดขนาดปุ่ม */
-    .copy-btn, .save-btn, .share-btn, .favorite-btn, .continue-btn, .json-btn {
+    .copy-btn, .save-btn, .share-btn, .favorite-btn, .continue-btn, .json-btn, .create-video-btn {
         padding: 5px 10px !important;
         font-size: 11px !important;
     }
