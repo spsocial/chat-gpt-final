@@ -5928,7 +5928,7 @@ function showSceneBuilder() {
     modal.innerHTML = `
         <div class="scene-modal-content">
             <button class="close-modal" onclick="closeSceneBuilder()">✕</button>
-            <h2>🎭 สร้าง Prompt master</h2>
+            <h2>🎭 สร้าง Prompt VEO3.1</h2>
             
             <div class="scene-form">
                 <!-- 1. สถานที่ -->
@@ -7344,12 +7344,12 @@ window.clearChatHistory = clearChatHistory;
 // ฟังก์ชันล้างประวัติสำหรับโหมดปัจจุบัน
 function clearCurrentModeHistory() {
     const modeName = {
-        'promptmaster': 'Prompt Master',
-        'scenepro': 'Scene Pro',
+        'promptmaster': 'Prompt VEO3.1',
+        'scenepro': 'Prompt Scene Pro',
         'character': 'Character',
         'multichar': 'Multi-Character',
         'image': 'Image',
-        'sora2': 'Sora 2'
+        'sora2': 'Prompt SORA2'
     }[currentMode] || currentMode;
 
     if (confirm(`ต้องการล้างประวัติการสนทนาของ ${modeName} หรือไม่?`)) {
@@ -8180,10 +8180,10 @@ window.checkPromptStorage = function() {
 // Function to clear current mode history
 window.clearCurrentModeHistory = function() {
     if (currentMode === 'promptmaster' || currentMode === 'multichar' || currentMode === 'image' || currentMode === 'scenepro') {
-        const modeName = currentMode === 'promptmaster' ? 'Prompt Master' : 
-                        currentMode === 'multichar' ? 'Prompt Master' :
+        const modeName = currentMode === 'promptmaster' ? 'Prompt VEO3.1' :
+                        currentMode === 'multichar' ? 'Prompt VEO3.1' :
                         currentMode === 'image' ? 'Image Prompt' :
-                        'Scene Pro';
+                        'Prompt Scene Pro';
         if (confirm(`ต้องการล้างประวัติ ${modeName} ทั้งหมดหรือไม่?\n\nประวัติการสนทนาจะถูกลบถาวร`)) {
             if (currentMode === 'scenepro') {
                 PromptStorage.clear('scenepro');
